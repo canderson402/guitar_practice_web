@@ -1,0 +1,898 @@
+/* ===== THEME SYSTEM ===== */
+
+/* Theme Background Styles */
+.app {
+  position: relative;
+  overflow: hidden;
+}
+
+
+/* ===== FOREST THEME BACKGROUND ===== */
+.theme-forest {
+  background: linear-gradient(to bottom, #e8f5e9 0%, #c8e6c9 100%);
+}
+
+
+/* ===== MOUNTAIN THEME BACKGROUND ===== */
+.theme-mountain {
+  background: linear-gradient(to bottom, #e3f2fd 0%, #bbdefb 50%, #e1f5fe 100%);
+}
+
+
+/* ===== DESERT THEME BACKGROUND ===== */
+.theme-desert {
+  background: linear-gradient(to bottom, #fff3e0 0%, #ffe0b2 40%, #ffccbc 100%);
+}
+
+
+/* Force consistent toggle dimensions across all themes */
+.card-toggle {
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  width: fit-content !important;
+  justify-content: space-between !important;
+  flex-direction: row !important;
+}
+
+.card-toggle .toggle-content {
+  display: flex !important;
+  align-items: center !important;
+  height: 28px !important;
+  flex: 1 !important;
+  overflow: visible !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.card-toggle .drag-icon {
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* Theme Selector Styles */
+.theme-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-selector label {
+  font-weight: 600;
+  color: #333;
+}
+
+.theme-selector select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+/* ===== FOREST THEME ===== */
+.theme-forest .card-toggle.metronome {
+  background: linear-gradient(135deg, #3a4a3a 0%, #5a6b5a 100%);
+  border-color: #3a4a3a;
+  color: white;
+}
+
+.theme-forest .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #2b3b2b 0%, #4b5c4b 100%);
+  box-shadow: 0 4px 12px rgba(58, 74, 58, 0.4);
+}
+
+.theme-forest .card-toggle.timer {
+  background: linear-gradient(135deg, #8b4513 0%, #cd853f 100%);
+  border-color: #8b4513;
+  color: white;
+}
+
+.theme-forest .card-toggle.timer.active {
+  background: linear-gradient(135deg, #7c3604 0%, #be7630 100%);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+.theme-forest .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #2d5a2d 0%, #4a8f4a 100%);
+  border-color: #2d5a2d;
+  color: white;
+}
+
+.theme-forest .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #1e4b1e 0%, #3b803b 100%);
+  box-shadow: 0 4px 12px rgba(45, 90, 45, 0.4);
+}
+
+.theme-forest .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #5a7a3a 0%, #7d9e5d 100%);
+  border-color: #5a7a3a;
+  color: white;
+}
+
+.theme-forest .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #4b6b2b 0%, #6e8f4e 100%);
+  box-shadow: 0 4px 12px rgba(90, 122, 58, 0.4);
+}
+
+.theme-forest .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #6b4423 0%, #8b6433 100%);
+  border-color: #6b4423;
+  color: white;
+}
+
+.theme-forest .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #5c3514 0%, #7c5524 100%);
+  box-shadow: 0 4px 12px rgba(107, 68, 35, 0.4);
+}
+
+/* Forest Card Headers */
+.theme-forest .card-header.metronome {
+  background: linear-gradient(135deg, #3a4a3a 0%, #5a6b5a 100%);
+  border-bottom-color: #2b3b2b;
+}
+
+.theme-forest .card-header.timer {
+  background: linear-gradient(135deg, #8b4513 0%, #cd853f 100%);
+  border-bottom-color: #7c3604;
+}
+
+.theme-forest .card-header.noteSelector {
+  background: linear-gradient(135deg, #2d5a2d 0%, #4a8f4a 100%);
+  border-bottom-color: #1e4b1e;
+}
+
+.theme-forest .card-header.practiceProgress {
+  background: linear-gradient(135deg, #5a7a3a 0%, #7d9e5d 100%);
+  border-bottom-color: #4b6b2b;
+}
+
+.theme-forest .card-header.guitarNeck {
+  background: linear-gradient(135deg, #6b4423 0%, #8b6433 100%);
+  border-bottom-color: #5c3514;
+}
+
+/* ===== MOUNTAIN THEME ===== */
+.theme-mountain .card-toggle.metronome {
+  background: linear-gradient(135deg, #2c4875 0%, #4a6fa5 100%);
+  border-color: #2c4875;
+  color: white;
+}
+
+.theme-mountain .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #1d3966 0%, #3b6096 100%);
+  box-shadow: 0 4px 12px rgba(44, 72, 117, 0.4);
+}
+
+.theme-mountain .card-toggle.timer {
+  background: linear-gradient(135deg, #5c6b7a 0%, #8a99a8 100%);
+  border-color: #5c6b7a;
+  color: white;
+}
+
+.theme-mountain .card-toggle.timer.active {
+  background: linear-gradient(135deg, #4d5c6b 0%, #7b8a99 100%);
+  box-shadow: 0 4px 12px rgba(92, 107, 122, 0.4);
+}
+
+.theme-mountain .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #6a4c93 0%, #9a6cc2 100%);
+  border-color: #6a4c93;
+  color: white;
+}
+
+.theme-mountain .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #5b3d84 0%, #8b5db3 100%);
+  box-shadow: 0 4px 12px rgba(106, 76, 147, 0.4);
+}
+
+.theme-mountain .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #4a7c89 0%, #6fa2b5 100%);
+  border-color: #4a7c89;
+  color: white;
+}
+
+.theme-mountain .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #3b6d7a 0%, #6093a6 100%);
+  box-shadow: 0 4px 12px rgba(74, 124, 137, 0.4);
+}
+
+.theme-mountain .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #8b4513 0%, #cd853f 100%);
+  border-color: #8b4513;
+  color: white;
+}
+
+.theme-mountain .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #7c3604 0%, #be7630 100%);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+/* Mountain Card Headers */
+.theme-mountain .card-header.metronome {
+  background: linear-gradient(135deg, #2c4875 0%, #4a6fa5 100%);
+  border-bottom-color: #1d3966;
+}
+
+.theme-mountain .card-header.timer {
+  background: linear-gradient(135deg, #5c6b7a 0%, #8a99a8 100%);
+  border-bottom-color: #4d5c6b;
+}
+
+.theme-mountain .card-header.noteSelector {
+  background: linear-gradient(135deg, #6a4c93 0%, #9a6cc2 100%);
+  border-bottom-color: #5b3d84;
+}
+
+.theme-mountain .card-header.practiceProgress {
+  background: linear-gradient(135deg, #4a7c89 0%, #6fa2b5 100%);
+  border-bottom-color: #3b6d7a;
+}
+
+.theme-mountain .card-header.guitarNeck {
+  background: linear-gradient(135deg, #8b4513 0%, #cd853f 100%);
+  border-bottom-color: #7c3604;
+}
+
+/* ===== DESERT THEME ===== */
+.theme-desert .card-toggle.metronome {
+  background: linear-gradient(135deg, #d2691e 0%, #ff8c42 100%);
+  border-color: #d2691e;
+  color: white;
+}
+
+.theme-desert .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #c35a0f 0%, #f07d33 100%);
+  box-shadow: 0 4px 12px rgba(210, 105, 30, 0.4);
+}
+
+.theme-desert .card-toggle.timer {
+  background: linear-gradient(135deg, #cd853f 0%, #daa520 100%);
+  border-color: #cd853f;
+  color: white;
+}
+
+.theme-desert .card-toggle.timer.active {
+  background: linear-gradient(135deg, #be7630 0%, #cb9611 100%);
+  box-shadow: 0 4px 12px rgba(205, 133, 63, 0.4);
+}
+
+.theme-desert .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #b22222 0%, #dc143c 100%);
+  border-color: #b22222;
+  color: white;
+}
+
+.theme-desert .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #a31313 0%, #cd052d 100%);
+  box-shadow: 0 4px 12px rgba(178, 34, 34, 0.4);
+}
+
+.theme-desert .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+  border-color: #8b4513;
+  color: white;
+}
+
+.theme-desert .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #7c3604 0%, #91431e 100%);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+.theme-desert .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #9932cc 0%, #ba55d3 100%);
+  border-color: #9932cc;
+  color: white;
+}
+
+.theme-desert .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #8a23bd 0%, #ab46c4 100%);
+  box-shadow: 0 4px 12px rgba(153, 50, 204, 0.4);
+}
+
+/* Desert Card Headers */
+.theme-desert .card-header.metronome {
+  background: linear-gradient(135deg, #d2691e 0%, #ff8c42 100%);
+  border-bottom-color: #c35a0f;
+}
+
+.theme-desert .card-header.timer {
+  background: linear-gradient(135deg, #cd853f 0%, #daa520 100%);
+  border-bottom-color: #be7630;
+}
+
+.theme-desert .card-header.noteSelector {
+  background: linear-gradient(135deg, #b22222 0%, #dc143c 100%);
+  border-bottom-color: #a31313;
+}
+
+.theme-desert .card-header.practiceProgress {
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+  border-bottom-color: #7c3604;
+}
+
+.theme-desert .card-header.guitarNeck {
+  background: linear-gradient(135deg, #9932cc 0%, #ba55d3 100%);
+  border-bottom-color: #8a23bd;
+}
+
+/* ===== THEME BACKGROUNDS ===== */
+
+/* Forest Theme Background */
+.app.theme-forest {
+  position: relative;
+  background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 25%, #81c784 50%, #66bb6a 75%, #4caf50 100%);
+}
+
+/* Mountain Theme Background */
+.app.theme-mountain {
+  position: relative;
+  background: linear-gradient(to bottom right, #e3f2fd, #90caf9);
+}
+
+/* Desert Theme Background */
+.app.theme-desert {
+  position: relative;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 25%, #ffcc80 50%, #ffb74d 75%, #ffa726 100%);
+}
+
+/* Ocean Theme Background */
+.app.theme-ocean {
+  position: relative;
+  background: linear-gradient(135deg, #e0f2f1 0%, #80deea 35%, #4dd0e1 60%, #26c6da 85%, #00acc1 100%);
+}
+
+/* 80s Theme Background */
+.app.theme-eighties {
+  position: relative;
+  background: linear-gradient(135deg, #ff1744 0%, #e91e63 20%, #9c27b0 40%, #673ab7 60%, #3f51b5 80%, #2196f3 100%);
+}
+
+/* 90s Theme Background */
+.app.theme-nineties {
+  position: relative;
+  background: linear-gradient(135deg, #76ff03 0%, #00e676 25%, #00bcd4 50%, #536dfe 75%, #d500f9 100%);
+}
+
+/* Mars Theme Background */
+.app.theme-mars {
+  position: relative;
+  background: linear-gradient(135deg, #ffccbc 0%, #ff8a65 25%, #ff5722 50%, #d84315 75%, #bf360c 100%);
+}
+
+/* Metal Theme Background */
+.app.theme-metal {
+  position: relative;
+  background: linear-gradient(135deg, #263238 0%, #37474f 25%, #455a64 50%, #546e7a 75%, #607d8b 100%);
+}
+
+/* Disco Theme Background */
+.app.theme-disco {
+  position: relative;
+  background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 25%, #ab47bc 50%, #ba68c8 75%, #ce93d8 100%);
+}
+
+/* ===== OCEAN THEME ===== */
+.theme-ocean .card-toggle.metronome {
+  background: linear-gradient(135deg, #006064 0%, #00838f 100%);
+  border-color: #006064;
+  color: white;
+}
+
+.theme-ocean .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
+  box-shadow: 0 4px 12px rgba(0, 96, 100, 0.4);
+}
+
+.theme-ocean .card-toggle.timer {
+  background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%);
+  border-color: #0277bd;
+  color: white;
+}
+
+.theme-ocean .card-toggle.timer.active {
+  background: linear-gradient(135deg, #01579b 0%, #0277bd 100%);
+  box-shadow: 0 4px 12px rgba(2, 119, 189, 0.4);
+}
+
+.theme-ocean .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #00acc1 0%, #00bcd4 100%);
+  border-color: #00acc1;
+  color: white;
+}
+
+.theme-ocean .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #00838f 0%, #0097a7 100%);
+  box-shadow: 0 4px 12px rgba(0, 172, 193, 0.4);
+}
+
+.theme-ocean .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #0097a7 0%, #00acc1 100%);
+  border-color: #0097a7;
+  color: white;
+}
+
+.theme-ocean .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #006064 0%, #00838f 100%);
+  box-shadow: 0 4px 12px rgba(0, 151, 167, 0.4);
+}
+
+.theme-ocean .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
+  border-color: #004d40;
+  color: white;
+}
+
+.theme-ocean .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+  box-shadow: 0 4px 12px rgba(0, 77, 64, 0.4);
+}
+
+/* Ocean Card Headers */
+.theme-ocean .card-header.metronome {
+  background: linear-gradient(135deg, #006064 0%, #00838f 100%);
+  border-bottom-color: #004d40;
+}
+
+.theme-ocean .card-header.timer {
+  background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%);
+  border-bottom-color: #01579b;
+}
+
+.theme-ocean .card-header.noteSelector {
+  background: linear-gradient(135deg, #00acc1 0%, #00bcd4 100%);
+  border-bottom-color: #00838f;
+}
+
+.theme-ocean .card-header.practiceProgress {
+  background: linear-gradient(135deg, #0097a7 0%, #00acc1 100%);
+  border-bottom-color: #006064;
+}
+
+.theme-ocean .card-header.guitarNeck {
+  background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
+  border-bottom-color: #1b5e20;
+}
+
+/* ===== 80s THEME ===== */
+.theme-eighties .card-toggle.metronome {
+  background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+  border-color: #e91e63;
+  color: white;
+}
+
+.theme-eighties .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #c2185b 0%, #d81b60 100%);
+  box-shadow: 0 4px 12px rgba(233, 30, 99, 0.4);
+}
+
+.theme-eighties .card-toggle.timer {
+  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+  border-color: #9c27b0;
+  color: white;
+}
+
+.theme-eighties .card-toggle.timer.active {
+  background: linear-gradient(135deg, #7b1fa2 0%, #8e24aa 100%);
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+}
+
+.theme-eighties .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #673ab7 0%, #9575cd 100%);
+  border-color: #673ab7;
+  color: white;
+}
+
+.theme-eighties .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #512da8 0%, #5e35b1 100%);
+  box-shadow: 0 4px 12px rgba(103, 58, 183, 0.4);
+}
+
+.theme-eighties .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #3f51b5 0%, #7986cb 100%);
+  border-color: #3f51b5;
+  color: white;
+}
+
+.theme-eighties .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #303f9f 0%, #3949ab 100%);
+  box-shadow: 0 4px 12px rgba(63, 81, 181, 0.4);
+}
+
+.theme-eighties .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%);
+  border-color: #2196f3;
+  color: white;
+}
+
+.theme-eighties .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #1976d2 0%, #1e88e5 100%);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+/* 80s Card Headers */
+.theme-eighties .card-header.metronome {
+  background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+  border-bottom-color: #c2185b;
+}
+
+.theme-eighties .card-header.timer {
+  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+  border-bottom-color: #7b1fa2;
+}
+
+.theme-eighties .card-header.noteSelector {
+  background: linear-gradient(135deg, #673ab7 0%, #9575cd 100%);
+  border-bottom-color: #512da8;
+}
+
+.theme-eighties .card-header.practiceProgress {
+  background: linear-gradient(135deg, #3f51b5 0%, #7986cb 100%);
+  border-bottom-color: #303f9f;
+}
+
+.theme-eighties .card-header.guitarNeck {
+  background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%);
+  border-bottom-color: #1976d2;
+}
+
+/* ===== 90s THEME ===== */
+.theme-nineties .card-toggle.metronome {
+  background: linear-gradient(135deg, #00e676 0%, #69f0ae 100%);
+  border-color: #00e676;
+  color: #1a237e;
+}
+
+.theme-nineties .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
+  box-shadow: 0 4px 12px rgba(0, 230, 118, 0.4);
+}
+
+.theme-nineties .card-toggle.timer {
+  background: linear-gradient(135deg, #00bcd4 0%, #4dd0e1 100%);
+  border-color: #00bcd4;
+  color: #1a237e;
+}
+
+.theme-nineties .card-toggle.timer.active {
+  background: linear-gradient(135deg, #00acc1 0%, #00bcd4 100%);
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.4);
+}
+
+.theme-nineties .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #536dfe 0%, #8c9eff 100%);
+  border-color: #536dfe;
+  color: white;
+}
+
+.theme-nineties .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #3d5afe 0%, #536dfe 100%);
+  box-shadow: 0 4px 12px rgba(83, 109, 254, 0.4);
+}
+
+.theme-nineties .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #d500f9 0%, #ea80fc 100%);
+  border-color: #d500f9;
+  color: white;
+}
+
+.theme-nineties .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #aa00ff 0%, #d500f9 100%);
+  box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4);
+}
+
+.theme-nineties .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #76ff03 0%, #b2ff59 100%);
+  border-color: #76ff03;
+  color: #1a237e;
+}
+
+.theme-nineties .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #64dd17 0%, #76ff03 100%);
+  box-shadow: 0 4px 12px rgba(118, 255, 3, 0.4);
+}
+
+/* 90s Card Headers */
+.theme-nineties .card-header.metronome {
+  background: linear-gradient(135deg, #00e676 0%, #69f0ae 100%);
+  border-bottom-color: #00c853;
+}
+
+.theme-nineties .card-header.timer {
+  background: linear-gradient(135deg, #00bcd4 0%, #4dd0e1 100%);
+  border-bottom-color: #00acc1;
+}
+
+.theme-nineties .card-header.noteSelector {
+  background: linear-gradient(135deg, #536dfe 0%, #8c9eff 100%);
+  border-bottom-color: #3d5afe;
+}
+
+.theme-nineties .card-header.practiceProgress {
+  background: linear-gradient(135deg, #d500f9 0%, #ea80fc 100%);
+  border-bottom-color: #aa00ff;
+}
+
+.theme-nineties .card-header.guitarNeck {
+  background: linear-gradient(135deg, #76ff03 0%, #b2ff59 100%);
+  border-bottom-color: #64dd17;
+}
+
+/* ===== MARS THEME ===== */
+.theme-mars .card-toggle.metronome {
+  background: linear-gradient(135deg, #d84315 0%, #ff5722 100%);
+  border-color: #d84315;
+  color: white;
+}
+
+.theme-mars .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #bf360c 0%, #e64a19 100%);
+  box-shadow: 0 4px 12px rgba(216, 67, 21, 0.4);
+}
+
+.theme-mars .card-toggle.timer {
+  background: linear-gradient(135deg, #ff5722 0%, #ff7043 100%);
+  border-color: #ff5722;
+  color: white;
+}
+
+.theme-mars .card-toggle.timer.active {
+  background: linear-gradient(135deg, #e64a19 0%, #ff5722 100%);
+  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
+}
+
+.theme-mars .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #ff6e40 0%, #ff8a65 100%);
+  border-color: #ff6e40;
+  color: white;
+}
+
+.theme-mars .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #ff5722 0%, #ff6e40 100%);
+  box-shadow: 0 4px 12px rgba(255, 110, 64, 0.4);
+}
+
+.theme-mars .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #8d6e63 0%, #a1887f 100%);
+  border-color: #8d6e63;
+  color: white;
+}
+
+.theme-mars .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #6d4c41 0%, #795548 100%);
+  box-shadow: 0 4px 12px rgba(141, 110, 99, 0.4);
+}
+
+.theme-mars .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #5d4037 0%, #795548 100%);
+  border-color: #5d4037;
+  color: white;
+}
+
+.theme-mars .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #4e342e 0%, #5d4037 100%);
+  box-shadow: 0 4px 12px rgba(93, 64, 55, 0.4);
+}
+
+/* Mars Card Headers */
+.theme-mars .card-header.metronome {
+  background: linear-gradient(135deg, #d84315 0%, #ff5722 100%);
+  border-bottom-color: #bf360c;
+}
+
+.theme-mars .card-header.timer {
+  background: linear-gradient(135deg, #ff5722 0%, #ff7043 100%);
+  border-bottom-color: #e64a19;
+}
+
+.theme-mars .card-header.noteSelector {
+  background: linear-gradient(135deg, #ff6e40 0%, #ff8a65 100%);
+  border-bottom-color: #ff5722;
+}
+
+.theme-mars .card-header.practiceProgress {
+  background: linear-gradient(135deg, #8d6e63 0%, #a1887f 100%);
+  border-bottom-color: #6d4c41;
+}
+
+.theme-mars .card-header.guitarNeck {
+  background: linear-gradient(135deg, #5d4037 0%, #795548 100%);
+  border-bottom-color: #4e342e;
+}
+
+/* ===== DARK METAL THEME ===== */
+.theme-metal .card-toggle.metronome {
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+  border-color: #000000;
+  color: #e0e0e0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.theme-metal .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #000000 0%, #141414 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-color: #333333;
+}
+
+.theme-metal .card-toggle.timer {
+  background: linear-gradient(135deg, #1c1c1c 0%, #2b2b2b 100%);
+  border-color: #0f0f0f;
+  color: #e0e0e0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.theme-metal .card-toggle.timer.active {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1f1f1f 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-color: #2a2a2a;
+}
+
+.theme-metal .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #1a1f23 0%, #2c3439 100%);
+  border-color: #0e1214;
+  color: #e0e0e0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.theme-metal .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #0f1518 0%, #212830 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border-color: #1d2327;
+}
+
+.theme-metal .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #1e1e1e 0%, #333333 100%);
+  border-color: #111111;
+  color: #e0e0e0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.theme-metal .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #0c0c0c 0%, #282828 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  border-color: #2d2d2d;
+}
+
+.theme-metal .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #141b1f 0%, #25353d 100%);
+  border-color: #0a0e10;
+  color: #e0e0e0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.theme-metal .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #0b1115 0%, #1a2a32 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.88), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  border-color: #1f2c33;
+}
+
+/* Dark Metal Card Headers */
+.theme-metal .card-header.metronome {
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  border-bottom-color: #0a0a0a;
+  color: #cccccc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.theme-metal .card-header.timer {
+  background: linear-gradient(135deg, #0f0f0f 0%, #2b2b2b 100%);
+  border-bottom-color: #080808;
+  color: #cccccc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.theme-metal .card-header.noteSelector {
+  background: linear-gradient(135deg, #0e1214 0%, #2c3439 100%);
+  border-bottom-color: #080b0d;
+  color: #cccccc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.theme-metal .card-header.practiceProgress {
+  background: linear-gradient(135deg, #111111 0%, #333333 100%);
+  border-bottom-color: #090909;
+  color: #cccccc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.theme-metal .card-header.guitarNeck {
+  background: linear-gradient(135deg, #0a0e10 0%, #25353d 100%);
+  border-bottom-color: #060809;
+  color: #cccccc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+
+/* ===== DISCO THEME ===== */
+.theme-disco .card-toggle.metronome {
+  background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%);
+  border-color: #6a1b9a;
+  color: white;
+}
+
+.theme-disco .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%);
+  box-shadow: 0 4px 12px rgba(106, 27, 154, 0.4);
+}
+
+.theme-disco .card-toggle.timer {
+  background: linear-gradient(135deg, #ab47bc 0%, #ce93d8 100%);
+  border-color: #ab47bc;
+  color: white;
+}
+
+.theme-disco .card-toggle.timer.active {
+  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+  box-shadow: 0 4px 12px rgba(171, 71, 188, 0.4);
+}
+
+.theme-disco .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #8e24aa 0%, #ba68c8 100%);
+  border-color: #8e24aa;
+  color: white;
+}
+
+.theme-disco .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #7b1fa2 0%, #ab47bc 100%);
+  box-shadow: 0 4px 12px rgba(142, 36, 170, 0.4);
+}
+
+.theme-disco .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #9c27b0 0%, #ce93d8 100%);
+  border-color: #9c27b0;
+  color: white;
+}
+
+.theme-disco .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #8e24aa 0%, #ba68c8 100%);
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+}
+
+.theme-disco .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%);
+  border-color: #4a148c;
+  color: white;
+}
+
+.theme-disco .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #38006b 0%, #4a148c 100%);
+  box-shadow: 0 4px 12px rgba(74, 20, 140, 0.4);
+}
+
+/* Disco Card Headers */
+.theme-disco .card-header.metronome {
+  background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%);
+  border-bottom-color: #4a148c;
+}
+
+.theme-disco .card-header.timer {
+  background: linear-gradient(135deg, #ab47bc 0%, #ce93d8 100%);
+  border-bottom-color: #9c27b0;
+}
+
+.theme-disco .card-header.noteSelector {
+  background: linear-gradient(135deg, #8e24aa 0%, #ba68c8 100%);
+  border-bottom-color: #7b1fa2;
+}
+
+.theme-disco .card-header.practiceProgress {
+  background: linear-gradient(135deg, #9c27b0 0%, #ce93d8 100%);
+  border-bottom-color: #8e24aa;
+}
+
+.theme-disco .card-header.guitarNeck {
+  background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%);
+  border-bottom-color: #38006b;
+}
+

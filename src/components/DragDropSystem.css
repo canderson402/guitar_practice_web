@@ -1,0 +1,245 @@
+/* Enhanced Drag and Drop System Styles */
+
+.enhanced-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.vertical-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.horizontal-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  align-items: start;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Drop Zone Styles */
+.drop-zone {
+  height: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s ease;
+  position: relative;
+  margin: 4px 0;
+}
+
+.drop-zone.active {
+  opacity: 1;
+  height: 60px;
+  margin: 8px 0;
+}
+
+.drop-indicator {
+  width: 100%;
+  height: 100%;
+  background: rgba(33, 150, 243, 0.1);
+  border: 2px dashed #2196F3;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: pulse-drop-zone 1.5s ease-in-out infinite;
+}
+
+.drop-line {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  right: 10px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #2196F3 50%, transparent 100%);
+  border-radius: 2px;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+.drop-text {
+  background: #2196F3;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+/* Animations */
+@keyframes pulse-drop-zone {
+  0%, 100% {
+    background: rgba(33, 150, 243, 0.1);
+    border-color: rgba(33, 150, 243, 0.5);
+  }
+  50% {
+    background: rgba(33, 150, 243, 0.2);
+    border-color: #2196F3;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Dragging States */
+.draggable-card.dragging {
+  transform: rotate(3deg);
+  opacity: 0.3;
+  z-index: 1000;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.drag-overlay {
+  transform: rotate(5deg) !important;
+  opacity: 0.95 !important;
+  z-index: 1000 !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  cursor: grabbing !important;
+}
+
+.drag-overlay .card {
+  border: 2px solid #2196F3;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.4);
+}
+
+.drag-overlay .card-header {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+}
+
+.drag-overlay .card-title {
+  color: white;
+}
+
+.drag-overlay .drag-handle-icon .dot {
+  background: white;
+}
+
+/* Hover Effects for Better UX */
+.card-container:not(.dragging):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.card-container:not(.dragging):hover .card-header {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+/* Preview States */
+.cards-container-preview {
+  opacity: 0.8;
+}
+
+.card-preview-ghost {
+  opacity: 0.5;
+  border: 2px dashed #ccc;
+  background: transparent;
+}
+
+/* Layout Transition Animations */
+.card-container {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.column {
+  transition: all 0.3s ease;
+}
+
+.vertical-section {
+  transition: all 0.3s ease;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1199px) {
+  .horizontal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .column {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .drop-zone.horizontal {
+    max-width: 500px;
+    margin: 8px auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .enhanced-cards-container {
+    gap: 10px;
+  }
+  
+  .vertical-section, .horizontal-section, .column {
+    gap: 10px;
+  }
+  
+  .drop-zone.active {
+    height: 40px;
+    margin: 6px 0;
+  }
+  
+  .drop-text {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  .drop-indicator,
+  .drop-line,
+  .card-container,
+  .column,
+  .vertical-section {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Focus States for Keyboard Navigation */
+.card-container:focus-within {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.drag-handle-overlay:focus {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+  border-radius: 8px;
+}

@@ -1,38 +1,405 @@
-.App {
-  text-align: center;
+* {
+  box-sizing: border-box;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+.app {
   min-height: 100vh;
+  background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+.app-header {
+  background-color: #333;
+  color: white;
+  padding: 12px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.header-theme-selector {
+  position: relative;
+}
+
+.header-theme-selector select {
+  padding: 6px 12px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #444;
+  color: white;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.header-theme-selector select:hover {
+  background: #555;
+}
+
+.header-theme-selector select:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+
+.app-main {
+  flex: 1;
+  padding: 20px 15px;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.card-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+.card-toggle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 4px;
+  padding: 4px 8px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+  font-size: 12px;
+  position: relative;
+  width: fit-content;
+  height: 28px !important;
+  box-sizing: border-box;
+  white-space: nowrap !important;
+  overflow: visible;
+  flex-shrink: 0;
+  flex-direction: row !important;
+}
+
+.card-toggle .toggle-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  height: 28px !important;
+  overflow: visible !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.card-toggle span {
+  white-space: nowrap;
+  overflow: visible;
+  line-height: 1;
+  flex: 1;
+}
+
+.card-toggle:active {
+  cursor: grabbing;
+}
+
+.card-toggle.dragging {
+  opacity: 0.7;
+  transform: rotate(5deg) scale(1.05);
+  z-index: 1000;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  cursor: grabbing;
+}
+
+.card-toggle span {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.card-toggle input[type="checkbox"] {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Base toggle styles - themes will override colors */
+
+/* Drag Icon in Toggle Buttons - Force consistent positioning */
+.drag-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0 !important;
+  width: 12px !important;
+  height: 28px !important;
+  margin: 0 !important;
+  position: relative !important;
+}
+
+.card-toggle:hover .drag-icon {
+  opacity: 1;
+}
+
+.drag-dots {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 1px !important;
+  width: 8px !important;
+  height: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.drag-dots .dot {
+  width: 1.5px;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.card-toggle:hover .drag-dots .dot {
+  background: white;
+  transform: scale(1.2);
+}
+
+.card-toggle.dragging .drag-dots .dot {
+  background: white;
+  animation: pulse-dots 0.6s ease-in-out infinite alternate;
+}
+
+.card-toggle input[type="checkbox"] {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dots {
+  from { opacity: 0.7; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.2); }
+}
+
+.card-toggle:hover {
+  border-color: #999;
+}
+
+.card-toggle.active {
+  background-color: #4CAF50;
+  border-color: #4CAF50;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.card-toggle input[type="checkbox"] {
+  margin: 0;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.vertical-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.horizontal-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  align-items: start;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.card-container {
+  width: 100%;
+}
+
+.vertical-card {
+  width: 100%;
+  max-width: none;
+}
+
+.cards-container .card-container {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.cards-container .card-container[data-layout="vertical"] {
+  max-width: none;
+}
+
+.cards-container .card-container[data-layout="horizontal"] {
+  max-width: 500px;
+  margin: 0 auto;
+  height: fit-content;
+}
+
+@media (min-width: 1000px) {
+  .cards-container .card-container[data-layout="horizontal"] {
+    max-width: none;
+    margin: 0;
   }
-  to {
-    transform: rotate(360deg);
+}
+
+/* Two-column layout for larger screens */
+@media (min-width: 1000px) {
+  .horizontal-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    align-items: start;
+    width: 100%;
+  }
+  
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+/* Responsive layout */
+@media (max-width: 1199px) {
+  .horizontal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .column {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+.draggable-card {
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.drag-handle-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 45px; /* Height of card header */
+  z-index: 10;
+  cursor: grab;
+  background: transparent;
+  border-radius: 8px 8px 0 0;
+}
+
+.drag-handle-overlay:active {
+  cursor: grabbing;
+}
+
+.draggable-card.dragging {
+  transform: rotate(3deg);
+  opacity: 0.8;
+  z-index: 1000;
+}
+
+.draggable-card.dragging .drag-handle-overlay {
+  cursor: grabbing;
+}
+
+.draggable-card.dragging .card-header {
+  background: linear-gradient(135deg, #dee2e6 0%, #ced4da 100%);
+  cursor: grabbing;
+}
+
+.draggable-card.dragging .drag-handle-icon {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.draggable-card.dragging .dot {
+  background: #495057;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 10px;
+  }
+  
+  .app-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .app-main {
+    padding: 15px 8px;
+  }
+  
+  .card-controls {
+    padding: 8px;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .card-toggle {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .cards-container {
+    gap: 10px;
+  }
+  
+  .cards-container .card-container {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-main {
+    padding: 10px 5px;
+  }
+  
+  .card-controls {
+    padding: 6px;
+    gap: 6px;
+  }
+  
+  .card-toggle {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .cards-container {
+    gap: 8px;
   }
 }

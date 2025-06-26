@@ -1,0 +1,117 @@
+/* Simple and Clean Drag & Drop Styles */
+
+.simple-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vertical-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.horizontal-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  align-items: start;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Card Styles */
+.simple-card-container {
+  width: 100%;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: relative;
+}
+
+.simple-card-container:hover {
+  transform: translateY(-1px);
+}
+
+.simple-card-container.dragging {
+  opacity: 0.7;
+  transform: rotate(2deg);
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Simple Drag Handle */
+.simple-drag-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 45px; /* Cover entire header */
+  z-index: 10;
+  cursor: grab;
+  background: transparent;
+  border-radius: 8px 8px 0 0;
+}
+
+.simple-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Dragging state for header */
+.simple-card-container.dragging .card-header {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+}
+
+.simple-card-container.dragging .card-title {
+  color: white;
+}
+
+.simple-card-container.dragging .drag-handle-icon .dot {
+  background: white;
+}
+
+/* Responsive behavior */
+@media (max-width: 1199px) {
+  .horizontal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .column {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .simple-cards-container {
+    gap: 10px;
+  }
+  
+  .vertical-section, .horizontal-section, .column {
+    gap: 10px;
+  }
+}
+
+/* Focus states for accessibility */
+.simple-card-container:focus-within {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.simple-drag-handle:focus {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
