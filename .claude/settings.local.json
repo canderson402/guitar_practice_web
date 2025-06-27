@@ -6,7 +6,8 @@
       "Bash(npm run build:*)",
       "Bash(rg:*)",
       "Bash(find:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "WebFetch(domain:www.all-guitar-chords.com)"
     ],
     "deny": []
   }

@@ -1,0 +1,584 @@
+.guitar-neck {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.neck-info {
+  text-align: center;
+}
+
+.neck-controls {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.fret-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+}
+
+.fret-toggle:hover {
+  background: #e9ecef;
+}
+
+.fret-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: inherit;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  margin: 0;
+}
+
+.fret-toggle input[type="checkbox"] {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.scale-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.scale-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #212529;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-bottom: 5px;
+}
+
+.legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: transparent;
+  padding: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: white;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.legend-item:hover {
+  background: #e9ecef;
+}
+
+.legend-item input[type="checkbox"] {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* Checked state styling for legend items - Black text mode */
+.black-text-mode .legend-item:has(input:checked).root-item {
+  background: #87CEEB;
+  color: black;
+  border-color: #4682B4;
+}
+
+.black-text-mode .legend-item:has(input:checked).scale-item {
+  background: #90EE90;
+  color: black;
+  border-color: #32CD32;
+}
+
+.black-text-mode .legend-item:has(input:checked).current-item {
+  background: #FFD700;
+  color: black;
+  border-color: #FFA500;
+}
+
+/* Checked state styling for legend items - White text mode */
+.white-text-mode .legend-item:has(input:checked).root-item {
+  background: #1E90FF;
+  color: white;
+  border-color: #0000CD;
+}
+
+.white-text-mode .legend-item:has(input:checked).scale-item {
+  background: #228B22;
+  color: white;
+  border-color: #006400;
+}
+
+.white-text-mode .legend-item:has(input:checked).current-item {
+  background: #FF8C00;
+  color: white;
+  border-color: #FF4500;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+}
+
+.legend-dot.root {
+  background: #007bff;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.legend-dot.scale {
+  background: #28a745;
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.legend-dot.current {
+  background: #ffc107;
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+
+.no-selection {
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  background: white;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+/* FRETBOARD DESIGN */
+.fretboard {
+  display: flex;
+  gap: 0;
+  padding: 30px 0;
+  width: 100%;
+  justify-content: flex-start;
+  overflow-x: auto;
+  min-width: 0;
+  align-items: flex-start;
+  max-width: 100%;
+  position: relative;
+}
+
+
+.string-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px 0;
+  width: 40px;
+  flex-shrink: 0;
+  position: relative;
+  margin-right: 5px;
+  height: 220px;
+}
+
+.string-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #495057;
+  text-align: center;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.frets-container {
+  display: flex;
+  gap: 0;
+  justify-content: flex-start;
+  overflow: visible;
+  min-width: 0;
+  flex: 1;
+  width: 100%;
+  position: relative;
+}
+
+
+.fret:not(:first-child) {
+  background: linear-gradient(to bottom, #2c2c2c 0%, #1a1a1a 50%, #2c2c2c 100%);
+}
+
+.fret:nth-child(2) {
+  box-shadow: 
+    inset 0 2px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Left border for first fret as pseudo-element with lower z-index */
+.fret:nth-child(2)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #1a0f08;
+  z-index: 0;
+}
+
+
+/* FRET STYLING */
+.fret {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  transition: all 0.3s ease;
+  min-width: 45px;
+  z-index: 1;
+}
+
+/* Fretwire as pseudo-element with lower z-index */
+.fret:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+  z-index: 0;
+}
+
+.fret:first-child {
+  flex: 0.5;
+  background: transparent;
+  border-radius: 0;
+  min-width: 20px;
+}
+
+/* Nut as pseudo-element with lower z-index */
+.fret:first-child::after {
+  background: #999;
+  width: 4px;
+}
+
+
+/* More uniform fret spacing with less dramatic size reduction */
+.fret:nth-child(2) { flex: 1.1; }
+.fret:nth-child(3) { flex: 1.05; }
+.fret:nth-child(4) { flex: 1.0; }
+.fret:nth-child(5) { flex: 0.98; }
+.fret:nth-child(6) { flex: 0.95; }
+.fret:nth-child(7) { flex: 0.92; }
+.fret:nth-child(8) { flex: 0.9; }
+.fret:nth-child(9) { flex: 0.87; }
+.fret:nth-child(10) { flex: 0.85; }
+.fret:nth-child(11) { flex: 0.82; }
+.fret:nth-child(12) { flex: 0.8; }
+.fret:nth-child(13) { flex: 0.78; }
+.fret:nth-child(n+14) { flex: 0.75; }
+
+.fret-number {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  color: #495057;
+  font-weight: 600;
+  background: transparent;
+}
+
+.fret:first-child .fret-number {
+  background: transparent;
+  color: #212529;
+  font-weight: 700;
+}
+
+/* Bold fret numbers for fret marker positions */
+.fret:nth-child(4) .fret-number,   /* fret 3 */
+.fret:nth-child(6) .fret-number,   /* fret 5 */
+.fret:nth-child(8) .fret-number,   /* fret 7 */
+.fret:nth-child(10) .fret-number,  /* fret 9 */
+.fret:nth-child(13) .fret-number,  /* fret 12 */
+.fret:nth-child(16) .fret-number,  /* fret 15 */
+.fret:nth-child(18) .fret-number,  /* fret 17 */
+.fret:nth-child(20) .fret-number,  /* fret 19 */
+.fret:nth-child(22) .fret-number,  /* fret 21 */
+.fret:nth-child(25) .fret-number {  /* fret 24 */
+  font-weight: 700;
+}
+
+/* FRET MARKERS */
+.fret-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  z-index: 2;
+}
+
+.marker-dot {
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle at 30% 30%, #e9ecef, #adb5bd);
+  border-radius: 50%;
+  box-shadow: 
+    inset 0 2px 0 rgba(255, 255, 255, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  border: 2px solid #6c757d;
+}
+
+.marker-dot.double {
+  margin: 5px 0;
+}
+
+
+/* STRINGS */
+.strings {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 220px;
+  padding: 8px 0;
+  position: relative;
+}
+
+.string-container {
+  position: relative;
+  height: 35px;
+  display: flex;
+  align-items: center;
+}
+
+/* Guitar strings mimicking .10 gauge set */
+.guitar-string {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 1px;
+}
+
+/* High E string (.010) - thinnest */
+.guitar-string.string-0 {
+  height: 1px;
+  background: #E0E0E0;
+}
+
+/* B string (.013) */
+.guitar-string.string-1 {
+  height: 1.3px;
+  background: #D8D8D8;
+}
+
+/* G string (.017) */
+.guitar-string.string-2 {
+  height: 1.7px;
+  background: #D0D0D0;
+}
+
+/* D string (.026) - wound, slightly warmer */
+.guitar-string.string-3 {
+  height: 2.6px;
+  background: #C8C8C0;
+}
+
+/* A string (.036) - wound, slightly warmer */
+.guitar-string.string-4 {
+  height: 3.6px;
+  background: #C0C0B8;
+}
+
+/* Low E string (.046) - thickest, wound, slightly warmer */
+.guitar-string.string-5 {
+  height: 4.6px;
+  background: #B8B8B0;
+}
+
+
+/* NOTE POSITIONS */
+.note-position {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0;
+  visibility: hidden;
+}
+
+
+.note-position.visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Black text color scheme */
+.note-position.black-text.in-scale {
+  opacity: 1;
+  visibility: visible;
+  background: #90EE90;
+  border: 1px solid #32CD32;
+}
+
+.note-position.black-text.root {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: #87CEEB !important;
+  border: 1px solid #4682B4 !important;
+}
+
+.note-position.black-text.current {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: #FFD700 !important;
+  border: 1px solid #FFA500 !important;
+  z-index: 4;
+}
+
+/* White text color scheme */
+.note-position.white-text.in-scale {
+  opacity: 1;
+  visibility: visible;
+  background: #228B22;
+  border: 1px solid #006400;
+}
+
+.note-position.white-text.root {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: #1E90FF !important;
+  border: 1px solid #0000CD !important;
+}
+
+.note-position.white-text.current {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: #FF8C00 !important;
+  border: 1px solid #FF4500 !important;
+  z-index: 4;
+}
+
+
+.note-position.black-text .note-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: black;
+  letter-spacing: 0.3px;
+}
+
+.note-position.white-text .note-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.3px;
+}
+
+.note-position:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.note-position.current:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 1200px) {
+  .fret { min-width: 25px; }
+  .fret:first-child { flex: 0.8; min-width: 25px; }
+  
+  .strings { height: 200px; padding: 8px 0; }
+  .string-container { height: 30px; }
+  .note-position { width: 26px; height: 26px; }
+  .note-label { font-size: 11px; }
+  .string-labels { width: 35px; padding: 8px 0; }
+  .string-label { font-size: 14px; height: 30px; }
+}
+
+@media (max-width: 768px) {
+  .guitar-neck { padding: 15px; gap: 15px; }
+  .fretboard { padding: 20px 0; }
+  .scale-name { font-size: 20px; }
+  .legend { gap: 15px; padding: 12px 20px; }
+  .legend-item { font-size: 12px; }
+  .legend-dot { width: 12px; height: 12px; }
+  
+  .fret { min-width: 20px; }
+  .fret:first-child { flex: 0.8; min-width: 20px; }
+  
+  .strings { height: 160px; padding: 6px 0; }
+  .string-container { height: 25px; }
+  .note-position { width: 24px; height: 24px; }
+  .note-label { font-size: 10px; }
+  .string-labels { width: 30px; padding: 6px 0; }
+  .string-label { font-size: 12px; height: 25px; }
+  .fret-number { font-size: 12px; top: -30px; }
+}
+
+@media (max-width: 480px) {
+  .guitar-neck { padding: 10px; gap: 10px; }
+  .fretboard { padding: 15px 0; }
+  .scale-name { font-size: 18px; }
+  .legend { gap: 10px; padding: 10px 15px; flex-direction: column; }
+  
+  .fret { min-width: 15px; }
+  .fret:first-child { flex: 0.8; min-width: 15px; }
+  
+  .strings { height: 130px; padding: 5px 0; }
+  .string-container { height: 20px; }
+  .note-position { width: 22px; height: 22px; }
+  .note-label { font-size: 9px; }
+  .string-labels { width: 25px; padding: 5px 0; }
+  .string-label { font-size: 10px; height: 20px; }
+  .fret-number { font-size: 10px; top: -25px; }
+}
