@@ -13,6 +13,7 @@ interface MetronomeState {
   currentBeat: number;
   beatsPerMeasure: number;
   subdivision: 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet';
+  emphasizeFirstBeat: boolean;
 }
 
 interface NoteState {
@@ -53,6 +54,7 @@ interface StoreState {
   setCurrentBeat: (beat: number) => void;
   setBeatsPerMeasure: (beats: number) => void;
   setSubdivision: (subdivision: 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet') => void;
+  setEmphasizeFirstBeat: (emphasize: boolean) => void;
   
   // Note actions
   setSelectedNote: (note: string | null) => void;
@@ -86,6 +88,7 @@ export const useStore = create<StoreState>((set) => ({
     currentBeat: 0,
     beatsPerMeasure: 4,
     subdivision: 'quarter',
+    emphasizeFirstBeat: true,
   },
   note: {
     selectedNote: 'C',
@@ -136,6 +139,9 @@ export const useStore = create<StoreState>((set) => ({
   })),
   setSubdivision: (subdivision) => set((state) => ({ 
     metronome: { ...state.metronome, subdivision } 
+  })),
+  setEmphasizeFirstBeat: (emphasizeFirstBeat) => set((state) => ({ 
+    metronome: { ...state.metronome, emphasizeFirstBeat } 
   })),
   
   // Note actions

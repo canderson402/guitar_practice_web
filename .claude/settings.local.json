@@ -7,7 +7,15 @@
       "Bash(rg:*)",
       "Bash(find:*)",
       "Bash(pkill:*)",
-      "WebFetch(domain:www.all-guitar-chords.com)"
+      "WebFetch(domain:www.all-guitar-chords.com)",
+      "Bash(npm start)",
+      "Bash(npm start)",
+      "Bash(npm run build:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

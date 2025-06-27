@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import './Metronome.css';
 
 export const Metronome: React.FC = () => {
-  const { metronome, setMetronomePlaying, setBpm, setCurrentBeat, setBeatsPerMeasure, setSubdivision } = useStore();
+  const { metronome, setMetronomePlaying, setBpm, setCurrentBeat, setBeatsPerMeasure, setSubdivision, setEmphasizeFirstBeat } = useStore();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   
@@ -16,7 +16,7 @@ export const Metronome: React.FC = () => {
     };
   }, []);
   
-  const playClick = (isAccent: boolean) => {
+  const playClick = (isAccent: boolean, isFirstBeat: boolean) => {
     if (!audioContextRef.current) return;
     
     const osc = audioContextRef.current.createOscillator();
@@ -25,13 +25,26 @@ export const Metronome: React.FC = () => {
     osc.connect(gainNode);
     gainNode.connect(audioContextRef.current.destination);
     
-    osc.frequency.value = isAccent ? 1000 : 800;
-    gainNode.gain.value = 0.3;
+    // More metronome-like frequencies - higher pitched and crisp
+    if (metronome.emphasizeFirstBeat && isFirstBeat) {
+      // First beat of measure - higher pitch for emphasis
+      osc.frequency.value = 1760; // High A
+    } else if (isAccent) {
+      // Downbeats - medium high pitch
+      osc.frequency.value = 1320; // E above high C
+    } else {
+      // Off-beats - slightly lower but still crisp
+      osc.frequency.value = 1056; // C above high C
+    }
+    
+    // Adjust volume and make it more crisp
+    gainNode.gain.value = isFirstBeat && metronome.emphasizeFirstBeat ? 0.4 : 0.3;
     
     const now = audioContextRef.current.currentTime;
     osc.start(now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
-    osc.stop(now + 0.03);
+    // Sharper attack and quicker decay for more metronome-like sound
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+    osc.stop(now + 0.02);
   };
   
   useEffect(() => {
@@ -89,7 +102,9 @@ export const Metronome: React.FC = () => {
       const tick = () => {
         // Accent on downbeats (first subdivision of each beat)
         const isAccent = subdivisionCount === 0;
-        playClick(isAccent);
+        // First beat of the measure (beat 0)
+        const isFirstBeat = beat === 0 && subdivisionCount === 0;
+        playClick(isAccent, isFirstBeat);
         
         // Update beat display only on quarter note beats (every notesPerBeat clicks)
         if (subdivisionCount === 0) {
@@ -117,7 +132,7 @@ export const Metronome: React.FC = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [metronome.isPlaying, metronome.bpm, metronome.beatsPerMeasure, metronome.subdivision, setCurrentBeat]);
+  }, [metronome.isPlaying, metronome.bpm, metronome.beatsPerMeasure, metronome.subdivision, metronome.emphasizeFirstBeat, setCurrentBeat]);
   
   const handleBpmChange = (delta: number) => {
     const newBpm = Math.max(40, Math.min(300, metronome.bpm + delta));
@@ -160,6 +175,17 @@ export const Metronome: React.FC = () => {
           <option value={6}>6/8</option>
           <option value={7}>7/8</option>
         </select>
+      </div>
+      
+      <div className="emphasis-control">
+        <label className="emphasis-checkbox">
+          <input
+            type="checkbox"
+            checked={metronome.emphasizeFirstBeat}
+            onChange={(e) => setEmphasizeFirstBeat(e.target.checked)}
+          />
+          Emphasize First Beat
+        </label>
       </div>
       
       <div className="subdivision-control">

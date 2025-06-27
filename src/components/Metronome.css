@@ -98,6 +98,31 @@
   cursor: pointer;
 }
 
+.emphasis-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emphasis-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.emphasis-checkbox:hover {
+  color: #333;
+}
+
+.emphasis-checkbox input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
 .subdivision-control {
   display: flex;
   align-items: center;
