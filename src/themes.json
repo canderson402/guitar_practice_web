@@ -1,0 +1,341 @@
+{
+  "themes": {
+    "forest": {
+ "name": "Forest",
+ "icon": "🌲",
+ "background": {
+   "type": "gradient",
+   "direction": "135deg",
+   "colors": ["#1a2f1a", "#2d4a2d", "#3d5a3d", "#4a6b4a", "#5d7a5d"]
+ },
+ "components": {
+   "metronome": {
+     "base": ["#2a3d2a", "#3f5a3f"],
+     "active": ["#1f2e1f", "#344a34"],
+     "border": "#2a3d2a"
+   },
+   "timer": {
+     "base": ["#6b4a8b", "#8f6bb8"],
+     "active": ["#5c3b7c", "#805ca9"],
+     "border": "#6b4a8b"
+   },
+   "noteSelector": {
+     "base": ["#1a3d3d", "#2d6b6b"],
+     "active": ["#0f2e2e", "#1e5c5c"],
+     "border": "#1a3d3d"
+   },
+   "practiceProgress": {
+     "base": ["#4d3d1a", "#7a6b2d"],
+     "active": ["#3e2e0f", "#6b5c1e"],
+     "border": "#4d3d1a"
+   },
+   "guitarNeck": {
+     "base": ["#3d2a1a", "#6b4a2d"],
+     "active": ["#2e1f0f", "#5c3b1e"],
+     "border": "#3d2a1a"
+   }
+ }
+},
+    "mountain": {
+      "name": "Mountain",
+      "icon": "🏔️",
+      "background": {
+        "type": "gradient",
+        "direction": "to bottom right",
+        "colors": ["#e3f2fd", "#90caf9"]
+      },
+      "components": {
+        "metronome": {
+          "base": ["#2c4875", "#4a6fa5"],
+          "active": ["#1d3966", "#3b6096"],
+          "border": "#2c4875"
+        },
+        "timer": {
+          "base": ["#5c6b7a", "#8a99a8"],
+          "active": ["#4d5c6b", "#7b8a99"],
+          "border": "#5c6b7a"
+        },
+        "noteSelector": {
+          "base": ["#6a4c93", "#9a6cc2"],
+          "active": ["#5b3d84", "#8b5db3"],
+          "border": "#6a4c93"
+        },
+        "practiceProgress": {
+          "base": ["#4a7c89", "#6fa2b5"],
+          "active": ["#3b6d7a", "#6093a6"],
+          "border": "#4a7c89"
+        },
+        "guitarNeck": {
+          "base": ["#8b4513", "#cd853f"],
+          "active": ["#7c3604", "#be7630"],
+          "border": "#8b4513"
+        }
+      }
+    },
+    "desert": {
+      "name": "Desert",
+      "icon": "🏜️",
+      "background": {
+        "type": "gradient",
+        "direction": "135deg",
+        "colors": ["#fff3e0", "#ffe0b2", "#ffcc80", "#ffb74d", "#ffa726"]
+      },
+      "components": {
+        "metronome": {
+          "base": ["#d2691e", "#ff8c42"],
+          "active": ["#c35a0f", "#f07d33"],
+          "border": "#d2691e"
+        },
+        "timer": {
+          "base": ["#cd853f", "#daa520"],
+          "active": ["#be7630", "#cb9611"],
+          "border": "#cd853f"
+        },
+        "noteSelector": {
+          "base": ["#b22222", "#dc143c"],
+          "active": ["#a31313", "#cd052d"],
+          "border": "#b22222"
+        },
+        "practiceProgress": {
+          "base": ["#8b4513", "#a0522d"],
+          "active": ["#7c3604", "#91431e"],
+          "border": "#8b4513"
+        },
+        "guitarNeck": {
+          "base": ["#9932cc", "#ba55d3"],
+          "active": ["#8a23bd", "#ab46c4"],
+          "border": "#9932cc"
+        }
+      }
+    },
+    "ocean": {
+      "name": "Ocean",
+      "icon": "🌊",
+      "background": {
+        "type": "gradient",
+        "direction": "135deg",
+        "colors": ["#e0f2f1", "#80deea", "#4dd0e1", "#26c6da", "#00acc1"]
+      },
+      "components": {
+        "metronome": {
+          "base": ["#006064", "#00838f"],
+          "active": ["#004d40", "#00695c"],
+          "border": "#006064"
+        },
+        "timer": {
+          "base": ["#0277bd", "#0288d1"],
+          "active": ["#01579b", "#0277bd"],
+          "border": "#0277bd"
+        },
+        "noteSelector": {
+          "base": ["#00acc1", "#00bcd4"],
+          "active": ["#00838f", "#0097a7"],
+          "border": "#00acc1"
+        },
+        "practiceProgress": {
+          "base": ["#0097a7", "#00acc1"],
+          "active": ["#006064", "#00838f"],
+          "border": "#0097a7"
+        },
+        "guitarNeck": {
+          "base": ["#004d40", "#00695c"],
+          "active": ["#1b5e20", "#2e7d32"],
+          "border": "#004d40"
+        }
+      }
+    },
+    "eighties": {
+      "name": "80s",
+      "icon": "🎸",
+      "background": {
+        "type": "gradient",
+        "direction": "135deg",
+        "colors": ["#ff1744", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3"]
+      },
+      "components": {
+        "metronome": {
+          "base": ["#e91e63", "#f06292"],
+          "active": ["#c2185b", "#d81b60"],
+          "border": "#e91e63"
+        },
+        "timer": {
+          "base": ["#9c27b0", "#ba68c8"],
+          "active": ["#7b1fa2", "#8e24aa"],
+          "border": "#9c27b0"
+        },
+        "noteSelector": {
+          "base": ["#673ab7", "#9575cd"],
+          "active": ["#512da8", "#5e35b1"],
+          "border": "#673ab7"
+        },
+        "practiceProgress": {
+          "base": ["#3f51b5", "#7986cb"],
+          "active": ["#303f9f", "#3949ab"],
+          "border": "#3f51b5"
+        },
+        "guitarNeck": {
+          "base": ["#2196f3", "#64b5f6"],
+          "active": ["#1976d2", "#1e88e5"],
+          "border": "#2196f3"
+        }
+      }
+    },
+    "nineties": {
+      "name": "90s",
+      "icon": "📼",
+      "background": {
+        "type": "gradient",
+        "direction": "135deg",
+        "colors": ["#76ff03", "#00e676", "#00bcd4", "#536dfe", "#d500f9"]
+      },
+      "components": {
+        "metronome": {
+          "base": ["#00e676", "#69f0ae"],
+          "active": ["#00c853", "#00e676"],
+          "border": "#00e676",
+          "textColor": "#1a237e"
+        },
+        "timer": {
+          "base": ["#00bcd4", "#4dd0e1"],
+          "active": ["#00acc1", "#00bcd4"],
+          "border": "#00bcd4",
+          "textColor": "#1a237e"
+        },
+        "noteSelector": {
+          "base": ["#536dfe", "#8c9eff"],
+          "active": ["#3d5afe", "#536dfe"],
+          "border": "#536dfe"
+        },
+        "practiceProgress": {
+          "base": ["#d500f9", "#ea80fc"],
+          "active": ["#aa00ff", "#d500f9"],
+          "border": "#d500f9"
+        },
+        "guitarNeck": {
+          "base": ["#76ff03", "#b2ff59"],
+          "active": ["#64dd17", "#76ff03"],
+          "border": "#76ff03",
+          "textColor": "#1a237e"
+        }
+      }
+    },
+    "mars": {
+      "name": "Mars",
+      "icon": "🚀",
+      "background": {
+        "type": "gradient",
+        "direction": "135deg",
+        "colors": ["#ffccbc", "#ff8a65", "#ff5722", "#d84315", "#bf360c"]
+      },
+      "components": {
+        "metronome": {
+          "base": ["#d84315", "#ff5722"],
+          "active": ["#bf360c", "#e64a19"],
+          "border": "#d84315"
+        },
+        "timer": {
+          "base": ["#ff5722", "#ff7043"],
+          "active": ["#e64a19", "#ff5722"],
+          "border": "#ff5722"
+        },
+        "noteSelector": {
+          "base": ["#ff6e40", "#ff8a65"],
+          "active": ["#ff5722", "#ff6e40"],
+          "border": "#ff6e40"
+        },
+        "practiceProgress": {
+          "base": ["#8d6e63", "#a1887f"],
+          "active": ["#6d4c41", "#795548"],
+          "border": "#8d6e63"
+        },
+        "guitarNeck": {
+          "base": ["#5d4037", "#795548"],
+          "active": ["#4e342e", "#5d4037"],
+          "border": "#5d4037"
+        }
+      }
+    },
+    "metal": {
+      "name": "Metal",
+      "icon": "🤘",
+      "background": {
+        "type": "gradient",
+        "direction": "135deg",
+        "colors": ["#263238", "#37474f", "#455a64", "#546e7a", "#607d8b"]
+      },
+      "components": {
+        "metronome": {
+          "base": ["#0d0d0d", "#1a1a1a"],
+          "active": ["#000000", "#141414"],
+          "border": "#000000",
+          "textColor": "#e0e0e0",
+          "innerShadow": "rgba(255, 255, 255, 0.1)"
+        },
+        "timer": {
+          "base": ["#1c1c1c", "#2b2b2b"],
+          "active": ["#0a0a0a", "#1f1f1f"],
+          "border": "#0f0f0f",
+          "textColor": "#e0e0e0",
+          "innerShadow": "rgba(255, 255, 255, 0.08)"
+        },
+        "noteSelector": {
+          "base": ["#1a1f23", "#2c3439"],
+          "active": ["#0f1518", "#212830"],
+          "border": "#0e1214",
+          "textColor": "#e0e0e0",
+          "innerShadow": "rgba(255, 255, 255, 0.06)"
+        },
+        "practiceProgress": {
+          "base": ["#1e1e1e", "#333333"],
+          "active": ["#0c0c0c", "#282828"],
+          "border": "#111111",
+          "textColor": "#e0e0e0",
+          "innerShadow": "rgba(255, 255, 255, 0.07)"
+        },
+        "guitarNeck": {
+          "base": ["#141b1f", "#25353d"],
+          "active": ["#0b1115", "#1a2a32"],
+          "border": "#0a0e10",
+          "textColor": "#e0e0e0",
+          "innerShadow": "rgba(255, 255, 255, 0.05)"
+        }
+      }
+    },
+    "disco": {
+      "name": "Disco",
+      "icon": "🕺",
+      "background": {
+        "type": "gradient",
+        "direction": "135deg",
+        "colors": ["#6a1b9a", "#8e24aa", "#ab47bc", "#ba68c8", "#ce93d8"]
+      },
+      "components": {
+        "metronome": {
+          "base": ["#6a1b9a", "#8e24aa"],
+          "active": ["#4a148c", "#7b1fa2"],
+          "border": "#6a1b9a"
+        },
+        "timer": {
+          "base": ["#ab47bc", "#ce93d8"],
+          "active": ["#9c27b0", "#ba68c8"],
+          "border": "#ab47bc"
+        },
+        "noteSelector": {
+          "base": ["#8e24aa", "#ba68c8"],
+          "active": ["#7b1fa2", "#ab47bc"],
+          "border": "#8e24aa"
+        },
+        "practiceProgress": {
+          "base": ["#9c27b0", "#ce93d8"],
+          "active": ["#8e24aa", "#ba68c8"],
+          "border": "#9c27b0"
+        },
+        "guitarNeck": {
+          "base": ["#4a148c", "#6a1b9a"],
+          "active": ["#38006b", "#4a148c"],
+          "border": "#4a148c"
+        }
+      }
+    }
+  }
+}

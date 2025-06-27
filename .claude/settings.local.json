@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npm run deploy:*)"
+      "Bash(npm run deploy:*)",
+      "Bash(npm run build:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   }

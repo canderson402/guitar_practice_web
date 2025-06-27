@@ -39,7 +39,7 @@ interface StoreState {
   metronome: MetronomeState;
   note: NoteState;
   cards: CardInfo[];
-  theme: 'forest' | 'mountain' | 'desert' | 'ocean' | 'eighties' | 'nineties' | 'mars' | 'metal' | 'disco';
+  theme: string;
   
   // Timer actions
   setTimerRunning: (isRunning: boolean) => void;
@@ -70,7 +70,7 @@ interface StoreState {
   reorderCards: (startIndex: number, endIndex: number) => void;
   
   // Theme management
-  setTheme: (theme: 'forest' | 'mountain' | 'desert' | 'ocean' | 'eighties' | 'nineties' | 'mars' | 'metal' | 'disco') => void;
+  setTheme: (theme: string) => void;
 }
 
 export const useStore = create<StoreState>((set) => ({

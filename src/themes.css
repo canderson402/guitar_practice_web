@@ -24,6 +24,11 @@
   background: linear-gradient(to bottom, #fff3e0 0%, #ffe0b2 40%, #ffccbc 100%);
 }
 
+/* ===== DEFAULT THEME BACKGROUND ===== */
+.theme-default {
+  background: linear-gradient(to bottom, #F8F9FA 0%, #FFFFFF 100%);
+}
+
 
 /* Force consistent toggle dimensions across all themes */
 .card-toggle {
@@ -381,6 +386,12 @@
 .app.theme-disco {
   position: relative;
   background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 25%, #ab47bc 50%, #ba68c8 75%, #ce93d8 100%);
+}
+
+/* Default Theme Background */
+.app.theme-default {
+  position: relative;
+  background: linear-gradient(to bottom, #F8F9FA 0%, #FFFFFF 100%);
 }
 
 /* ===== OCEAN THEME ===== */
@@ -813,6 +824,88 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
+
+/* ===== DEFAULT THEME ===== */
+.theme-default .card-toggle.metronome {
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  border-color: #1D4ED8;
+  color: white;
+}
+
+.theme-default .card-toggle.metronome.active {
+  background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.theme-default .card-toggle.timer {
+  background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
+  border-color: #6D28D9;
+  color: white;
+}
+
+.theme-default .card-toggle.timer.active {
+  background: linear-gradient(135deg, #6D28D9 0%, #7C3AED 100%);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.theme-default .card-toggle.noteSelector {
+  background: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
+  border-color: #0E7490;
+  color: white;
+}
+
+.theme-default .card-toggle.noteSelector.active {
+  background: linear-gradient(135deg, #0E7490 0%, #0891B2 100%);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+}
+
+.theme-default .card-toggle.practiceProgress {
+  background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+  border-color: #EA580C;
+  color: white;
+}
+
+.theme-default .card-toggle.practiceProgress.active {
+  background: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.theme-default .card-toggle.guitarNeck {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  border-color: #047857;
+  color: white;
+}
+
+.theme-default .card-toggle.guitarNeck.active {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+/* Default Card Headers */
+.theme-default .card-header.metronome {
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  border-bottom-color: #1D4ED8;
+}
+
+.theme-default .card-header.timer {
+  background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
+  border-bottom-color: #6D28D9;
+}
+
+.theme-default .card-header.noteSelector {
+  background: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
+  border-bottom-color: #0E7490;
+}
+
+.theme-default .card-header.practiceProgress {
+  background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+  border-bottom-color: #EA580C;
+}
+
+.theme-default .card-header.guitarNeck {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  border-bottom-color: #047857;
+}
 
 /* ===== DISCO THEME ===== */
 .theme-disco .card-toggle.metronome {

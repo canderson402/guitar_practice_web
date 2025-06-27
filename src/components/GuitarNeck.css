@@ -109,10 +109,11 @@
   gap: 6px;
   padding: 8px 0;
   width: 100%;
-  justify-content: center;
-  overflow-x: hidden;
+  justify-content: flex-start;
+  overflow-x: auto;
   min-width: 0;
   align-items: center;
+  max-width: 100%;
 }
 
 .string-labels {
@@ -134,8 +135,10 @@
 .frets-container {
   display: flex;
   gap: 1px;
-  justify-content: center;
-  overflow: hidden;
+  justify-content: flex-start;
+  overflow: visible;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .fret {

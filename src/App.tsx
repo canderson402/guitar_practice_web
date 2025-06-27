@@ -8,6 +8,7 @@ import { NoteSelector } from './components/NoteSelector';
 import { GuitarNeck } from './components/GuitarNeck';
 import { PracticeProgress } from './components/PracticeProgress';
 import { useStore } from './store/useStore';
+import { themes, injectThemeStyles } from './utils/themeGenerator';
 import {
   DndContext,
   closestCenter,
@@ -76,6 +77,11 @@ const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
 
 function App() {
   const { cards, reorderCards, theme, setTheme } = useStore();
+  
+  // Inject dynamic theme styles on mount
+  React.useEffect(() => {
+    injectThemeStyles();
+  }, []);
   
   // Apply theme class to document body
   React.useEffect(() => {
@@ -174,15 +180,11 @@ function App() {
         <h1>Guitar Practice</h1>
         <div className="header-theme-selector">
           <select value={theme} onChange={(e) => setTheme(e.target.value as any)}>
-            <option value="forest">🌲 Forest</option>
-            <option value="mountain">🏔️ Mountain</option>
-            <option value="desert">🏜️ Desert</option>
-            <option value="ocean">🌊 Ocean</option>
-            <option value="eighties">🎸 80s</option>
-            <option value="nineties">📼 90s</option>
-            <option value="mars">🚀 Mars</option>
-            <option value="metal">🤘 Metal</option>
-            <option value="disco">🕺 Disco</option>
+            {Object.entries(themes).map(([themeId, themeData]) => (
+              <option key={themeId} value={themeId}>
+                {themeData.icon} {themeData.name}
+              </option>
+            ))}
           </select>
         </div>
       </header>
