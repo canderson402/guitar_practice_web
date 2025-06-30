@@ -153,33 +153,103 @@ export const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 
 // Simple major and minor chord progressions
 export const majorProgressions = {
-  'I - IV - V': ['I', 'IV', 'V'],
-  'I - V - vi - IV': ['I', 'V', 'vi', 'IV'],
-  'I - vi - IV - V': ['I', 'vi', 'IV', 'V'],
-  'ii - V - I': ['ii', 'V', 'I'],
-  'vi - IV - I - V': ['vi', 'IV', 'I', 'V'],
-  'I - iii - IV - V': ['I', 'iii', 'IV', 'V'],
-  'I - IV - vi - V': ['I', 'IV', 'vi', 'V'],
-  'I - bVII - IV': ['I', 'bVII', 'IV'],
-  '12-Bar Blues': ['I7', 'I7', 'I7', 'I7', 'IV7', 'IV7', 'I7', 'I7', 'V7', 'IV7', 'I7', 'V7'],
-  'Simple Blues': ['I7', 'IV7', 'V7'],
-  'Country': ['I', 'IV', 'I', 'V'],
-  'Jazz ii-V-I': ['ii7', 'V7', 'Imaj7'],
+  // Classic and Traditional
+  'I - IV - V': { chords: ['I', 'IV', 'V'], quality: 'Bright, triumphant, fundamental rock/folk foundation' },
+  'I - V - vi - IV': { chords: ['I', 'V', 'vi', 'IV'], quality: 'Anthemic, emotional, modern pop staple' },
+  'I - vi - IV - V': { chords: ['I', 'vi', 'IV', 'V'], quality: 'Classic 50s progression, nostalgic, doo-wop' },
+  'ii - V - I': { chords: ['ii', 'V', 'I'], quality: 'Sophisticated jazz cadence, smooth resolution' },
+  
+  // Pop and Rock
+  'vi - IV - I - V': { chords: ['vi', 'IV', 'I', 'V'], quality: 'Modern alternative, bittersweet, introspective' },
+  'I - iii - IV - V': { chords: ['I', 'iii', 'IV', 'V'], quality: 'Uplifting, slightly melancholic, Beatles-esque' },
+  'I - IV - vi - V': { chords: ['I', 'IV', 'vi', 'V'], quality: 'Versatile pop progression, balanced emotions' },
+  'I - bVII - IV': { chords: ['I', 'bVII', 'IV'], quality: 'Rock power progression, Mixolydian flavor' },
+  'I - V - IV': { chords: ['I', 'V', 'IV'], quality: 'Simple rock progression, direct and powerful' },
+  'I - vi - II - V': { chords: ['I', 'vi', 'II', 'V'], quality: 'Sophisticated pop, secondary dominant tension' },
+  'I - III - vi - IV': { chords: ['I', 'III', 'vi', 'IV'], quality: 'Dramatic, unexpected major III creates tension' },
+  
+  // Blues and Country
+  '12-Bar Blues': { chords: ['I7', 'I7', 'I7', 'I7', 'IV7', 'IV7', 'I7', 'I7', 'V7', 'IV7', 'I7', 'V7'], quality: 'Classic blues structure, soulful and gritty' },
+  'Simple Blues': { chords: ['I7', 'IV7', 'V7'], quality: 'Basic blues turnaround, raw and authentic' },
+  '8-Bar Blues': { chords: ['I7', 'V7', 'IV7', 'IV7', 'I7', 'V7', 'I7', 'V7'], quality: 'Compact blues form, punchy and direct' },
+  'Country': { chords: ['I', 'IV', 'I', 'V'], quality: 'Traditional country/folk, simple and honest' },
+  'Country Waltz': { chords: ['I', 'IV', 'I', 'V7'], quality: 'Classic country waltz, gentle and flowing' },
+  'Outlaw Country': { chords: ['I', 'bVII', 'IV', 'I'], quality: 'Rebellious country rock, edgy and defiant' },
+  
+  // Jazz
+  'Jazz ii-V-I': { chords: ['ii7', 'V7', 'Imaj7'], quality: 'Essential jazz cadence, sophisticated and smooth' },
+  'Jazz Turnaround': { chords: ['Imaj7', 'VI7', 'ii7', 'V7'], quality: 'Classic jazz ending, creates circular motion' },
+  'Rhythm Changes A': { chords: ['Imaj7', 'vi7', 'ii7', 'V7'], quality: 'Jazz standard progression, bebop essential' },
+  'Modal Jazz': { chords: ['Imaj7', 'IVmaj7'], quality: 'Open modal sound, spacious and contemplative' },
+  'Jazz Blues': { chords: ['I7', 'IV7', 'I7', 'I7', 'IV7', '#IV°7', 'I7', 'VI7', 'ii7', 'V7', 'I7', 'V7'], quality: 'Sophisticated blues with jazz substitutions' },
+  
+  // Folk and Acoustic
+  'Folk I-V': { chords: ['I', 'V', 'I', 'V'], quality: 'Simple folk pattern, storytelling foundation' },
+  'Celtic': { chords: ['I', 'bVII', 'I', 'V'], quality: 'Traditional Celtic sound, mystical and ancient' },
+  'Campfire': { chords: ['I', 'vi', 'IV', 'I'], quality: 'Warm acoustic progression, intimate and friendly' },
+  
+  // Gospel and Soul
+  'Gospel': { chords: ['I', 'IV', 'I/V', 'V'], quality: 'Traditional gospel, uplifting and spiritual' },
+  'Soul': { chords: ['Imaj7', 'IIImaj7', 'vi7', 'IVmaj7'], quality: 'Smooth soul progression, rich and emotional' },
+  'Neo-Soul': { chords: ['Imaj9', 'vi9', 'ii9', 'V13'], quality: 'Modern soul sound, complex and sophisticated' },
+  
+  // Progressive and Alternative
+  'Progressive': { chords: ['I', 'bII', 'IV', 'V'], quality: 'Unexpected chromatic movement, avant-garde' },
+  'Dream Pop': { chords: ['Imaj7', 'IVmaj7', 'vi7', 'IVmaj7'], quality: 'Ethereal and floating, atmospheric' },
+  'Math Rock': { chords: ['I', 'III', 'bVI', 'IV'], quality: 'Angular and unexpected, intellectually engaging' },
 };
 
 export const minorProgressions = {
-  'i - iv - V': ['i', 'iv', 'V'],
-  'i - bVI - bVII': ['i', 'bVI', 'bVII'],
-  'i - bVII - IV': ['i', 'bVII', 'IV'],
-  'i - iv - i - V': ['i', 'iv', 'i', 'V'],
-  'i - v - i': ['i', 'v', 'i'],
-  'vi - IV - I - V': ['vi', 'IV', 'I', 'V'],
-  'Minor Blues': ['i7', 'iv7', 'V7'],
-  'Sad Progression': ['i', 'bVI', 'iv', 'V'],
-  'Dorian': ['i', 'IV'],
-  'Rock Minor': ['i', 'bVII', 'IV'],
-  'Jazz Minor ii-V': ['ii°', 'V7', 'i'],
-  'Andalusian': ['i', 'bVII', 'bVI', 'V'],
+  // Classic Minor
+  'i - iv - V': { chords: ['i', 'iv', 'V'], quality: 'Traditional minor, dramatic tension and resolution' },
+  'i - bVI - bVII': { chords: ['i', 'bVI', 'bVII'], quality: 'Epic rock progression, powerful and driving' },
+  'i - bVII - IV': { chords: ['i', 'bVII', 'IV'], quality: 'Dorian rock sound, hopeful darkness' },
+  'i - iv - i - V': { chords: ['i', 'iv', 'i', 'V'], quality: 'Classic minor turnaround, melancholic journey' },
+  'i - v - i': { chords: ['i', 'v', 'i'], quality: 'Dark and brooding, medieval quality' },
+  
+  // Pop and Alternative Minor
+  'vi - IV - I - V': { chords: ['vi', 'IV', 'I', 'V'], quality: 'Relative major movement, bittersweet pop' },
+  'i - III - bVII - IV': { chords: ['i', 'III', 'bVII', 'IV'], quality: 'Modern alternative, emotionally complex' },
+  'i - bVI - III - bVII': { chords: ['i', 'bVI', 'III', 'bVII'], quality: 'Cinematic and grand, film score quality' },
+  'i - v - bVI - IV': { chords: ['i', 'v', 'bVI', 'IV'], quality: 'Introspective indie, contemplative mood' },
+  
+  // Blues and Soul Minor
+  'Minor Blues': { chords: ['i7', 'iv7', 'V7'], quality: 'Classic minor blues, raw and emotional' },
+  '12-Bar Minor Blues': { chords: ['i7', 'i7', 'i7', 'i7', 'iv7', 'iv7', 'i7', 'i7', 'V7', 'iv7', 'i7', 'V7'], quality: 'Extended minor blues, deep and soulful' },
+  'Soul Minor': { chords: ['i7', 'iv7', 'bVII7', 'III7'], quality: 'Smooth minor soul, sophisticated sadness' },
+  
+  // Emotional and Dramatic
+  'Sad Progression': { chords: ['i', 'bVI', 'iv', 'V'], quality: 'Deeply melancholic, tearjerker progression' },
+  'Heartbreak': { chords: ['i', 'v', 'i', 'iv'], quality: 'Sorrowful and resigned, emotional weight' },
+  'Lament': { chords: ['i', 'bVII', 'bVI', 'v'], quality: 'Descending sadness, baroque-inspired grief' },
+  'Tragic': { chords: ['i', 'iv', 'v', 'i'], quality: 'Dark classical progression, inevitable sorrow' },
+  
+  // Modal Minor
+  'Dorian': { chords: ['i', 'IV'], quality: 'Modal brightness in minor, Celtic/folk feel' },
+  'Phrygian': { chords: ['i', 'bII', 'i', 'bvii'], quality: 'Spanish/Middle Eastern flavor, exotic darkness' },
+  'Aeolian Classic': { chords: ['i', 'bVI', 'bVII', 'i'], quality: 'Natural minor movement, ancient and timeless' },
+  
+  // Rock and Metal
+  'Rock Minor': { chords: ['i', 'bVII', 'IV'], quality: 'Hard rock staple, aggressive yet melodic' },
+  'Metal Riff': { chords: ['i', 'bII', 'i', 'bVI'], quality: 'Heavy metal darkness, chromatic tension' },
+  'Grunge': { chords: ['i', 'bIII', 'bVI', 'bVII'], quality: 'Alternative rock angst, raw emotion' },
+  'Progressive Metal': { chords: ['i', 'bII', 'III', 'v'], quality: 'Complex and dark, technically sophisticated' },
+  
+  // Jazz Minor
+  'Jazz Minor ii-V': { chords: ['ii°', 'V7', 'i'], quality: 'Jazz minor cadence, sophisticated resolution' },
+  'Minor Jazz Blues': { chords: ['i6', 'iv7', 'i6', 'i6', 'iv7', 'iv7', 'i6', 'VI7', 'ii°7', 'V7', 'i6', 'V7'], quality: 'Jazz interpretation of minor blues' },
+  'Modal Minor Jazz': { chords: ['i7', 'bIImaj7', 'i7', 'bIImaj7'], quality: 'Dark modal jazz, mysterious and floating' },
+  
+  // World and Folk
+  'Andalusian': { chords: ['i', 'bVII', 'bVI', 'V'], quality: 'Flamenco progression, passionate and fiery' },
+  'Celtic Minor': { chords: ['i', 'bVII', 'i', 'v'], quality: 'Traditional Celtic sadness, haunting beauty' },
+  'Eastern European': { chords: ['i', 'iv', 'V', 'i'], quality: 'Gypsy/Klezmer feel, dancing through tears' },
+  'Middle Eastern': { chords: ['i', 'bII', 'v', 'i'], quality: 'Exotic scales, mysterious and ancient' },
+  
+  // Electronic and Modern
+  'Dark Electronic': { chords: ['i', 'i', 'bVI', 'V'], quality: 'Synth-based darkness, modern production' },
+  'Trap Minor': { chords: ['i', 'bVI', 'bIII', 'bVII'], quality: 'Modern hip-hop minor, atmospheric and moody' },
+  'Ambient Minor': { chords: ['i7', 'iv7', 'bVII7', 'i7'], quality: 'Floating and ethereal, spacious soundscape' },
 };
 
 // Scale suggestions for major vs minor

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
-import { notes, scales, getScaleChords, majorProgressions, minorProgressions, scaleSuggestions, musicalStyles } from '../data/musicData';
+import { notes, scales, getScaleChords, majorProgressions, minorProgressions, scaleSuggestions } from '../data/musicData';
 import './ChordProgression.css';
 
 export const ChordProgression: React.FC = () => {
@@ -12,7 +12,7 @@ export const ChordProgression: React.FC = () => {
     setCurrentChordIndex,
     setChordAutoAdvance,
     setChordKeyType,
-    setChordSelectedStyle
+    setChordShowProgression
   } = useStore();
   
   const barCountRef = useRef(0);
@@ -119,7 +119,11 @@ export const ChordProgression: React.FC = () => {
   const getProgressionChords = () => {
     if (!chordProgression.selectedProgression || !note.selectedNote) return [];
     
-    const progression = (availableProgressions as any)[chordProgression.selectedProgression] || [];
+    const progressionData = (availableProgressions as any)[chordProgression.selectedProgression];
+    if (!progressionData) return [];
+    
+    // Handle both old array format and new object format
+    const progression = Array.isArray(progressionData) ? progressionData : progressionData.chords || [];
     
     return progression.map((roman: string) => romanToChord(roman, note.selectedNote!))
                      .filter((chord: any) => chord !== null);
@@ -213,29 +217,31 @@ export const ChordProgression: React.FC = () => {
     setCurrentChordIndex(0);
     barCountRef.current = 0;
   };
-
-  // Generate YouTube search URL for backing track
-  const generateBackingTrackSearch = () => {
-    if (!note.selectedNote || !note.selectedScale) return;
-    
-    const key = note.selectedNote;
-    const keyType = chordProgression.keyType;
-    const style = chordProgression.selectedStyle;
-    
-    // Create search query
-    const searchQuery = `${key} ${keyType} ${style} backing track jam track`;
-    const encodedQuery = encodeURIComponent(searchQuery);
-    const youtubeUrl = `https://www.youtube.com/results?search_query=${encodedQuery}`;
-    
-    // Open in new tab
-    window.open(youtubeUrl, '_blank');
-  };
   
   return (
     <div className="chord-progression">
+      {/* Warning message */}
+      <div className="warning-message">
+        ⚠️ Work in progress: Not all chords are correct
+      </div>
+      
       {/* Top controls */}
       <div className="top-controls">
         <div className="progression-controls">
+          <div className="control-group">
+            <label>
+              <input 
+                type="checkbox" 
+                checked={chordProgression.showProgression}
+                onChange={(e) => setChordShowProgression(e.target.checked)}
+                disabled={!note.selectedNote || !note.selectedScale}
+              />
+              Show Progression
+            </label>
+          </div>
+          
+          {chordProgression.showProgression && (
+            <>
           <div className="control-group">
             <label>Key Type:</label>
             <select 
@@ -281,9 +287,13 @@ export const ChordProgression: React.FC = () => {
               Next Chord
             </button>
           )}
+            </>
+          )}
         </div>
         
         <div className="right-column">
+          {chordProgression.showProgression && (
+          <>
           <div className="auto-advance">
             {/* Auto-advance controls */}
             <div className="control-group">
@@ -317,36 +327,7 @@ export const ChordProgression: React.FC = () => {
               </div>
             )}
           </div>
-          
-          {/* Backing Track Section - separate box underneath auto-advance */}
-          {note.selectedNote && note.selectedScale && (
-            <div className="backing-track-section">
-              <div className="backing-track-header">
-                <h4>Backing Track</h4>
-              </div>
-              <div className="backing-track-controls">
-                <div className="control-group">
-                  <label>Style:</label>
-                  <select 
-                    value={chordProgression.selectedStyle} 
-                    onChange={(e) => setChordSelectedStyle(e.target.value)}
-                    className="select-input"
-                  >
-                    {musicalStyles.map(style => (
-                      <option key={style} value={style}>{style}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <button 
-                  onClick={generateBackingTrackSearch}
-                  className="backing-track-button"
-                  title={`Search for ${note.selectedNote || ''} ${chordProgression.keyType} ${chordProgression.selectedStyle} backing tracks`}
-                >
-                  🎵 Find Backing Track
-                </button>
-              </div>
-            </div>
+          </>
           )}
         </div>
       </div>
@@ -354,7 +335,22 @@ export const ChordProgression: React.FC = () => {
       {/* Current chord display or select progression message */}
       {note.selectedNote && note.selectedScale && (
         <div className="chord-content">
-          {!chordProgression.selectedProgression ? (
+          {!chordProgression.showProgression ? (
+            // Show scale chords when progression mode is off
+            <div className="scale-chords-display">
+              <div className="scale-label">
+                Chords in {note.selectedNote} {note.selectedScale}
+              </div>
+              <div className="scale-chords">
+                {scaleChords.map((chord, i) => (
+                  <div key={i} className="scale-chord">
+                    <div className="chord-name">{chord.note}{chord.symbol}</div>
+                    <div className="chord-roman">{chord.roman}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : !chordProgression.selectedProgression ? (
             <div className="no-progression-message">
               Select a progression to show chords
             </div>
@@ -393,6 +389,15 @@ export const ChordProgression: React.FC = () => {
                 <div className="progression-label">
                   {chordProgression.selectedProgression} in {note.selectedNote} {note.selectedScale}
                 </div>
+                {(() => {
+                  const progressionData = (availableProgressions as any)[chordProgression.selectedProgression];
+                  const quality = progressionData && !Array.isArray(progressionData) ? progressionData.quality : null;
+                  return quality ? (
+                    <div className="progression-quality">
+                      {quality}
+                    </div>
+                  ) : null;
+                })()}
                 <div className="progression-chords">
                   {progressionChords.map((chord: any, i: number) => (
                     <span 
@@ -411,8 +416,8 @@ export const ChordProgression: React.FC = () => {
         </div>
       )}
       
-      {/* Scale chords - show below progression */}
-      {scaleChords.length > 0 && (
+      {/* Scale chords - show below progression when progression mode is on */}
+      {chordProgression.showProgression && scaleChords.length > 0 && (
         <div className="scale-chords">
           <div className="scale-chords-label">
             Chords in {note.selectedNote} {note.selectedScale}:

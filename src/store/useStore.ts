@@ -35,6 +35,7 @@ interface ChordProgressionState {
   barsPerChord: number;
   keyType: 'major' | 'minor';
   selectedStyle: string;
+  showProgression: boolean;
 }
 
 interface CardInfo {
@@ -85,6 +86,7 @@ interface StoreState {
   setChordBarsPerChord: (bars: number) => void;
   setChordKeyType: (keyType: 'major' | 'minor') => void;
   setChordSelectedStyle: (style: string) => void;
+  setChordShowProgression: (show: boolean) => void;
   
   // Card management
   toggleCard: (cardId: string) => void;
@@ -131,13 +133,14 @@ export const useStore = create<StoreState>((set) => ({
     barsPerChord: 2,
     keyType: 'major',
     selectedStyle: 'Rock',
+    showProgression: false,
   },
   cards: [
     { id: 'practiceProgress', title: 'Session Status', isActive: true, layout: 'horizontal', isMinimized: false },
     { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal', isMinimized: false },
     { id: 'timer', title: 'Timer', isActive: true, layout: 'horizontal', isMinimized: false },
     { id: 'noteSelector', title: 'Scale', isActive: true, layout: 'horizontal', isMinimized: false },
-    { id: 'chordProgression', title: 'Chord Progression', isActive: true, layout: 'horizontal', isMinimized: false },
+    { id: 'chordProgression', title: 'Chord', isActive: true, layout: 'horizontal', isMinimized: false },
     { id: 'guitarNeck', title: 'Fretboard', isActive: true, layout: 'vertical', isMinimized: false },
   ],
   theme: 'forest',
@@ -228,6 +231,9 @@ export const useStore = create<StoreState>((set) => ({
   })),
   setChordSelectedStyle: (selectedStyle) => set((state) => ({
     chordProgression: { ...state.chordProgression, selectedStyle }
+  })),
+  setChordShowProgression: (showProgression) => set((state) => ({
+    chordProgression: { ...state.chordProgression, showProgression }
   })),
   
   // Card management
