@@ -7,8 +7,10 @@ import { Timer } from './components/Timer';
 import { NoteSelector } from './components/NoteSelector';
 import { GuitarNeck } from './components/GuitarNeck';
 import { PracticeProgress } from './components/PracticeProgress';
+import { ChordProgression } from './components/ChordProgression';
 import { useStore } from './store/useStore';
 import { themes, injectThemeStyles } from './utils/themeGenerator';
+import { cardTemplates } from './data/musicData';
 import {
   DndContext,
   closestCenter,
@@ -76,7 +78,7 @@ const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
 };
 
 function App() {
-  const { cards, reorderCards, theme, setTheme } = useStore();
+  const { cards, reorderCards, theme, setTheme, applyTemplate, toggleCardMinimized } = useStore();
   
   // Inject dynamic theme styles on mount
   React.useEffect(() => {
@@ -124,6 +126,8 @@ function App() {
         return <GuitarNeck />;
       case 'practiceProgress':
         return <PracticeProgress />;
+      case 'chordProgression':
+        return <ChordProgression />;
       default:
         return null;
     }
@@ -178,14 +182,27 @@ function App() {
     <div className={`app theme-${theme}`}>
       <header className="app-header">
         <h1>Guitar Practice</h1>
-        <div className="header-theme-selector">
-          <select value={theme} onChange={(e) => setTheme(e.target.value as any)}>
-            {Object.entries(themes).map(([themeId, themeData]) => (
-              <option key={themeId} value={themeId}>
-                {themeData.icon} {themeData.name}
-              </option>
-            ))}
-          </select>
+        <div className="header-controls">
+          <div className="header-selector">
+            <label>Template:</label>
+            <select defaultValue="all" onChange={(e) => e.target.value && applyTemplate(e.target.value)}>
+              {cardTemplates.map(template => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="header-selector">
+            <label>Theme:</label>
+            <select value={theme} onChange={(e) => setTheme(e.target.value as any)}>
+              {Object.entries(themes).map(([themeId, themeData]) => (
+                <option key={themeId} value={themeId}>
+                  {themeData.icon} {themeData.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </header>
       
@@ -215,7 +232,12 @@ function App() {
             if (element.type === 'vertical') {
               return (
                 <div key={element.key} className="card-container vertical-card" data-layout={element.card.layout}>
-                  <Card title={element.card.title} isActive={element.card.isActive}>
+                  <Card 
+                    title={element.card.title} 
+                    isActive={element.card.isActive}
+                    isMinimized={element.card.isMinimized}
+                    onToggleMinimized={() => toggleCardMinimized(element.card.id)}
+                  >
                     {renderCardContent(element.card)}
                   </Card>
                 </div>
@@ -229,7 +251,12 @@ function App() {
                   <div className="column">
                     {leftCards.map((card: any) => (
                       <div key={card.id} className="card-container" data-layout={card.layout}>
-                        <Card title={card.title} isActive={card.isActive}>
+                        <Card 
+                          title={card.title} 
+                          isActive={card.isActive}
+                          isMinimized={card.isMinimized}
+                          onToggleMinimized={() => toggleCardMinimized(card.id)}
+                        >
                           {renderCardContent(card)}
                         </Card>
                       </div>
@@ -238,7 +265,12 @@ function App() {
                   <div className="column">
                     {rightCards.map((card: any) => (
                       <div key={card.id} className="card-container" data-layout={card.layout}>
-                        <Card title={card.title} isActive={card.isActive}>
+                        <Card 
+                          title={card.title} 
+                          isActive={card.isActive}
+                          isMinimized={card.isMinimized}
+                          onToggleMinimized={() => toggleCardMinimized(card.id)}
+                        >
                           {renderCardContent(card)}
                         </Card>
                       </div>

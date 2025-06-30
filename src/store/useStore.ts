@@ -28,17 +28,28 @@ interface NoteState {
   autoAdvanceEnabled: boolean;
 }
 
+interface ChordProgressionState {
+  selectedProgression: string | null;
+  currentChordIndex: number;
+  autoAdvance: boolean;
+  barsPerChord: number;
+  keyType: 'major' | 'minor';
+  selectedStyle: string;
+}
+
 interface CardInfo {
   id: string;
   title: string;
   isActive: boolean;
   layout: 'vertical' | 'horizontal';
+  isMinimized: boolean;
 }
 
 interface StoreState {
   timer: TimerState;
   metronome: MetronomeState;
   note: NoteState;
+  chordProgression: ChordProgressionState;
   cards: CardInfo[];
   theme: string;
   
@@ -67,12 +78,24 @@ interface StoreState {
   setShowNextNote: (show: boolean) => void;
   setAutoAdvanceEnabled: (enabled: boolean) => void;
   
+  // Chord Progression actions
+  setSelectedChordProgression: (progression: string | null) => void;
+  setCurrentChordIndex: (index: number) => void;
+  setChordAutoAdvance: (enabled: boolean) => void;
+  setChordBarsPerChord: (bars: number) => void;
+  setChordKeyType: (keyType: 'major' | 'minor') => void;
+  setChordSelectedStyle: (style: string) => void;
+  
   // Card management
   toggleCard: (cardId: string) => void;
   reorderCards: (startIndex: number, endIndex: number) => void;
+  toggleCardMinimized: (cardId: string) => void;
   
   // Theme management
   setTheme: (theme: string) => void;
+  
+  // Template management
+  applyTemplate: (templateId: string) => void;
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -92,7 +115,7 @@ export const useStore = create<StoreState>((set) => ({
   },
   note: {
     selectedNote: 'C',
-    selectedScale: null,
+    selectedScale: 'Major (Ionian)',
     currentNoteIndex: 0,
     nextNoteIndex: 1,
     changeMode: 'none',
@@ -101,12 +124,21 @@ export const useStore = create<StoreState>((set) => ({
     showNextNote: true,
     autoAdvanceEnabled: true,
   },
+  chordProgression: {
+    selectedProgression: null,
+    currentChordIndex: 0,
+    autoAdvance: false,
+    barsPerChord: 2,
+    keyType: 'major',
+    selectedStyle: 'Rock',
+  },
   cards: [
-    { id: 'practiceProgress', title: 'Session Status', isActive: true, layout: 'horizontal' },
-    { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
-    { id: 'noteSelector', title: 'Scale', isActive: true, layout: 'horizontal' },
-    { id: 'timer', title: 'Timer', isActive: true, layout: 'horizontal' },
-    { id: 'guitarNeck', title: 'Fretboard', isActive: true, layout: 'vertical' },
+    { id: 'practiceProgress', title: 'Session Status', isActive: true, layout: 'horizontal', isMinimized: false },
+    { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal', isMinimized: false },
+    { id: 'timer', title: 'Timer', isActive: true, layout: 'horizontal', isMinimized: false },
+    { id: 'noteSelector', title: 'Scale', isActive: true, layout: 'horizontal', isMinimized: false },
+    { id: 'chordProgression', title: 'Chord Progression', isActive: true, layout: 'horizontal', isMinimized: false },
+    { id: 'guitarNeck', title: 'Fretboard', isActive: true, layout: 'vertical', isMinimized: false },
   ],
   theme: 'forest',
   
@@ -178,6 +210,26 @@ export const useStore = create<StoreState>((set) => ({
     note: { ...state.note, autoAdvanceEnabled } 
   })),
   
+  // Chord Progression actions
+  setSelectedChordProgression: (selectedProgression) => set((state) => ({ 
+    chordProgression: { ...state.chordProgression, selectedProgression } 
+  })),
+  setCurrentChordIndex: (currentChordIndex) => set((state) => ({ 
+    chordProgression: { ...state.chordProgression, currentChordIndex } 
+  })),
+  setChordAutoAdvance: (autoAdvance) => set((state) => ({ 
+    chordProgression: { ...state.chordProgression, autoAdvance } 
+  })),
+  setChordBarsPerChord: (barsPerChord) => set((state) => ({ 
+    chordProgression: { ...state.chordProgression, barsPerChord } 
+  })),
+  setChordKeyType: (keyType) => set((state) => ({ 
+    chordProgression: { ...state.chordProgression, keyType, selectedProgression: null } 
+  })),
+  setChordSelectedStyle: (selectedStyle) => set((state) => ({
+    chordProgression: { ...state.chordProgression, selectedStyle }
+  })),
+  
   // Card management
   toggleCard: (cardId) => set((state) => ({
     cards: state.cards.map(card => 
@@ -192,7 +244,30 @@ export const useStore = create<StoreState>((set) => ({
     newCards.splice(endIndex, 0, removed);
     return { cards: newCards };
   }),
+  toggleCardMinimized: (cardId) => set((state) => ({
+    cards: state.cards.map(card => 
+      card.id === cardId 
+        ? { ...card, isMinimized: !card.isMinimized }
+        : card
+    )
+  })),
   
   // Theme actions
   setTheme: (theme) => set({ theme }),
+  
+  // Template actions
+  applyTemplate: (templateId) => set((state) => {
+    // Import templates here to avoid circular dependency
+    const { cardTemplates } = require('../data/musicData');
+    const template = cardTemplates.find((t: any) => t.id === templateId);
+    
+    if (!template) return state;
+    
+    const updatedCards = state.cards.map(card => ({
+      ...card,
+      isActive: template.cards[card.id as keyof typeof template.cards] ?? card.isActive
+    }));
+    
+    return { cards: updatedCards };
+  }),
 }));

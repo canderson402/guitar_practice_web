@@ -33,6 +33,11 @@
      "base": ["#3d2a1a", "#6b4a2d"],
      "active": ["#2e1f0f", "#5c3b1e"],
      "border": "#3d2a1a"
+   },
+   "chordProgression": {
+     "base": ["#4a3d5c", "#6b5a7d"],
+     "active": ["#3b2e4d", "#5c4b6e"],
+     "border": "#4a3d5c"
    }
  }
 },
@@ -69,6 +74,11 @@
           "base": ["#8b4513", "#cd853f"],
           "active": ["#7c3604", "#be7630"],
           "border": "#8b4513"
+        },
+        "chordProgression": {
+          "base": ["#4a5c7c", "#6a8cbc"],
+          "active": ["#3b4d6d", "#5b7dad"],
+          "border": "#4a5c7c"
         }
       }
     },
@@ -105,6 +115,11 @@
           "base": ["#9932cc", "#ba55d3"],
           "active": ["#8a23bd", "#ab46c4"],
           "border": "#9932cc"
+        },
+        "chordProgression": {
+          "base": ["#d4623e", "#f4825e"],
+          "active": ["#c5532f", "#e5734f"],
+          "border": "#d4623e"
         }
       }
     },
@@ -141,6 +156,11 @@
           "base": ["#004d40", "#00695c"],
           "active": ["#1b5e20", "#2e7d32"],
           "border": "#004d40"
+        },
+        "chordProgression": {
+          "base": ["#1565c0", "#1976d2"],
+          "active": ["#0d47a1", "#1565c0"],
+          "border": "#1565c0"
         }
       }
     },
@@ -177,6 +197,11 @@
           "base": ["#2196f3", "#64b5f6"],
           "active": ["#1976d2", "#1e88e5"],
           "border": "#2196f3"
+        },
+        "chordProgression": {
+          "base": ["#ff4081", "#ff80ab"],
+          "active": ["#f50057", "#ff4081"],
+          "border": "#ff4081"
         }
       }
     },
@@ -216,6 +241,11 @@
           "active": ["#64dd17", "#76ff03"],
           "border": "#76ff03",
           "textColor": "#1a237e"
+        },
+        "chordProgression": {
+          "base": ["#ff6f00", "#ffa726"],
+          "active": ["#e65100", "#ff6f00"],
+          "border": "#ff6f00"
         }
       }
     },
@@ -252,6 +282,11 @@
           "base": ["#5d4037", "#795548"],
           "active": ["#4e342e", "#5d4037"],
           "border": "#5d4037"
+        },
+        "chordProgression": {
+          "base": ["#d32f2f", "#f44336"],
+          "active": ["#b71c1c", "#d32f2f"],
+          "border": "#d32f2f"
         }
       }
     },
@@ -298,6 +333,13 @@
           "border": "#0a0e10",
           "textColor": "#e0e0e0",
           "innerShadow": "rgba(255, 255, 255, 0.05)"
+        },
+        "chordProgression": {
+          "base": ["#1f1413", "#3d2524"],
+          "active": ["#150b0a", "#321a19"],
+          "border": "#100807",
+          "textColor": "#e0e0e0",
+          "innerShadow": "rgba(255, 255, 255, 0.04)"
         }
       }
     },
@@ -334,6 +376,11 @@
           "base": ["#4a148c", "#6a1b9a"],
           "active": ["#38006b", "#4a148c"],
           "border": "#4a148c"
+        },
+        "chordProgression": {
+          "base": ["#e91e63", "#f48fb1"],
+          "active": ["#c2185b", "#e91e63"],
+          "border": "#e91e63"
         }
       }
     }

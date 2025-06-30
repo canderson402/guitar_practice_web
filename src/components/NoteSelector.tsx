@@ -246,39 +246,102 @@ export const NoteSelector: React.FC = () => {
   
   return (
     <div className="note-selector">
-      <div className="selection-controls">
-        <div className="control-group">
-          <label>Root Note:</label>
-          <select 
-            value={note.selectedNote || ''} 
-            onChange={(e) => handleNoteChange(e.target.value || null)}
-            className="select-input"
-          >
-            <option value="">Select a note</option>
-            {notes.map(n => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </div>
-        
-        <div className="control-group">
-          <label>Scale:</label>
-          <select 
-            value={note.selectedScale || ''} 
-            onChange={(e) => handleScaleChange(e.target.value || null)}
-            className="select-input"
-          >
-            <option value="">Chromatic</option>
-            {Object.keys(scales).map(scale => (
-              <option key={scale} value={scale}>{scale}</option>
-            ))}
-          </select>
+      <div className="top-controls">
+        <div className="selection-controls">
+          <div className="control-group">
+            <label>Root Note:</label>
+            <select 
+              value={note.selectedNote || ''} 
+              onChange={(e) => handleNoteChange(e.target.value || null)}
+              className="select-input"
+            >
+              <option value="">Select a note</option>
+              {notes.map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="control-group">
+            <label>Scale:</label>
+            <select 
+              value={note.selectedScale || ''} 
+              onChange={(e) => handleScaleChange(e.target.value || null)}
+              className="select-input"
+            >
+              <option value="">Chromatic</option>
+              {Object.keys(scales).map(scale => (
+                <option key={scale} value={scale}>{scale}</option>
+              ))}
+            </select>
+          </div>
+          
+          {currentNotes.length > 1 && (
+            <button onClick={handleNext} className="next-button">
+              Next Note
+            </button>
+          )}
         </div>
         
         {currentNotes.length > 1 && (
-          <button onClick={handleNext} className="next-button">
-            Next Note
-          </button>
+          <div className="auto-advance">
+            <div className="toggle-controls">
+              <div className="toggle-group">
+                <label>
+                  <input 
+                    type="checkbox" 
+                    checked={note.randomize}
+                    onChange={(e) => setRandomize(e.target.checked)}
+                  />
+                  Randomize
+                </label>
+              </div>
+              
+              <div className="toggle-group">
+                <label>
+                  <input 
+                    type="checkbox" 
+                    checked={note.showNextNote}
+                    onChange={(e) => setShowNextNote(e.target.checked)}
+                  />
+                  Show Next
+                </label>
+              </div>
+            </div>
+            
+            <div className="control-group">
+              <label>Auto-advance:</label>
+              <select 
+                value={note.changeMode} 
+                onChange={(e) => setChangeMode(e.target.value as 'none' | 'bars' | 'time')}
+                className="select-input"
+              >
+                <option value="none">None</option>
+                <option value="bars">bars</option>
+                <option value="time">seconds</option>
+              </select>
+            </div>
+            
+            <div className="control-group">
+              <label>{note.changeMode === 'bars' ? 'Bars:' : note.changeMode === 'time' ? 'Seconds:' : 'Interval:'}</label>
+              <input 
+                type="number" 
+                min="1" 
+                max="16"
+                value={note.changeInterval}
+                onChange={(e) => setChangeInterval(parseInt(e.target.value) || 1)}
+                className="interval-input"
+                disabled={note.changeMode === 'none'}
+              />
+            </div>
+            
+            {note.changeMode !== 'none' && ((note.changeMode === 'bars' && metronome.isPlaying) || 
+              (note.changeMode === 'time' && timer.isRunning)) && (
+              <div className="auto-advance-status">
+                Auto-advancing {note.changeMode === 'bars' ? 'with metronome' : 'with timer'}
+              </div>
+            )}
+          </div>
         )}
       </div>
       
@@ -369,67 +432,6 @@ export const NoteSelector: React.FC = () => {
               )}
             </div>
           </div>
-          
-          {currentNotes.length > 1 && (
-            <div className="auto-advance">
-              <div className="toggle-controls">
-                <div className="toggle-group">
-                  <label>
-                    <input 
-                      type="checkbox" 
-                      checked={note.randomize}
-                      onChange={(e) => setRandomize(e.target.checked)}
-                    />
-                    Randomize
-                  </label>
-                </div>
-                
-                <div className="toggle-group">
-                  <label>
-                    <input 
-                      type="checkbox" 
-                      checked={note.showNextNote}
-                      onChange={(e) => setShowNextNote(e.target.checked)}
-                    />
-                    Show Next
-                  </label>
-                </div>
-              </div>
-              
-              <div className="control-group">
-                <label>Auto-advance:</label>
-                <select 
-                  value={note.changeMode} 
-                  onChange={(e) => setChangeMode(e.target.value as 'none' | 'bars' | 'time')}
-                  className="select-input"
-                >
-                  <option value="none">None</option>
-                  <option value="bars">bars</option>
-                  <option value="time">seconds</option>
-                </select>
-              </div>
-              
-              <div className="control-group">
-                <label>{note.changeMode === 'bars' ? 'Bars:' : note.changeMode === 'time' ? 'Seconds:' : 'Interval:'}</label>
-                <input 
-                  type="number" 
-                  min="1" 
-                  max="16"
-                  value={note.changeInterval}
-                  onChange={(e) => setChangeInterval(parseInt(e.target.value) || 1)}
-                  className="interval-input"
-                  disabled={note.changeMode === 'none'}
-                />
-              </div>
-              
-              {note.changeMode !== 'none' && ((note.changeMode === 'bars' && metronome.isPlaying) || 
-                (note.changeMode === 'time' && timer.isRunning)) && (
-                <div className="auto-advance-status">
-                  Auto-advancing {note.changeMode === 'bars' ? 'with metronome' : 'with timer'}
-                </div>
-              )}
-            </div>
-          )}
         </>
       )}
     </div>

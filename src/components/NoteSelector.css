@@ -1,19 +1,24 @@
 .note-selector {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 16px;
   width: 100%;
   box-sizing: border-box;
   position: relative;
+}
+
+.top-controls {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  align-items: flex-start;
 }
 
 .selection-controls {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 120px;
-  flex-shrink: 0;
+  flex: 1;
   box-sizing: border-box;
 }
 
@@ -29,14 +34,25 @@
   font-weight: 500;
 }
 
+.auto-advance .control-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.auto-advance .control-group label {
+  margin: 0;
+}
+
 .select-input {
-  padding: 6px 8px;
+  padding: 6px 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 14px;
   background: white;
   cursor: pointer;
   transition: border-color 0.2s ease;
+  width: 100%;
 }
 
 .select-input:hover {
@@ -49,9 +65,8 @@
 }
 
 .note-content {
-  flex: 1;
-  margin: 0 12px;
-  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .note-display {
@@ -230,19 +245,17 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px;
+  padding: 12px;
   background: #f9f9f9;
   border-radius: 6px;
   border: 1px solid #e0e0e0;
-  width: 140px;
-  flex-shrink: 0;
   box-sizing: border-box;
-  align-self: flex-start;
-  margin-left: auto;
+  flex: 1;
+  max-width: 50%;
 }
 
 .interval-input {
-  width: 70px;
+  width: 60px;
   padding: 6px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -349,9 +362,9 @@
 
 .toggle-controls {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .toggle-group {
@@ -362,11 +375,12 @@
 .toggle-group label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: 13px;
   color: #666;
   cursor: pointer;
   user-select: none;
+  white-space: nowrap;
 }
 
 .toggle-group input[type="checkbox"] {
@@ -387,36 +401,21 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .note-selector {
+  .top-controls {
     flex-direction: column;
-    gap: 15px;
-    width: 100%;
-  }
-  
-  .note-content {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .selection-controls {
-    width: 100%;
-    min-width: 0;
-  }
-  
-  .note-display {
-    width: 100%;
-    min-width: 0;
+    gap: 12px;
   }
   
   .auto-advance {
-    width: 100%;
+    max-width: 100%;
+  }
+  
+  .select-input {
+    font-size: 13px;
   }
   
   .toggle-controls {
-    flex-direction: row;
-    gap: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
+    gap: 10px;
   }
   
   .current-note {

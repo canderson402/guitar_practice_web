@@ -142,30 +142,65 @@
   box-shadow: 0 4px 12px rgba(107, 68, 35, 0.4);
 }
 
-/* Forest Card Headers */
+/* Forest Card Headers - Force proper flexbox layout */
 .theme-forest .card-header.metronome {
   background: linear-gradient(135deg, #3a4a3a 0%, #5a6b5a 100%);
   border-bottom-color: #2b3b2b;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-forest .card-header.timer {
   background: linear-gradient(135deg, #8b4513 0%, #cd853f 100%);
   border-bottom-color: #7c3604;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-forest .card-header.noteSelector {
   background: linear-gradient(135deg, #2d5a2d 0%, #4a8f4a 100%);
   border-bottom-color: #1e4b1e;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-forest .card-header.practiceProgress {
   background: linear-gradient(135deg, #5a7a3a 0%, #7d9e5d 100%);
   border-bottom-color: #4b6b2b;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-forest .card-header.guitarNeck {
   background: linear-gradient(135deg, #6b4423 0%, #8b6433 100%);
   border-bottom-color: #5c3514;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-forest .card-header.chordProgression {
+  background: linear-gradient(135deg, #3a5a3a 0%, #5a7a5a 100%);
+  border-bottom-color: #2b4b2b;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 /* ===== MOUNTAIN THEME ===== */
@@ -224,30 +259,65 @@
   box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
 }
 
-/* Mountain Card Headers */
+/* Mountain Card Headers - Force proper flexbox layout */
 .theme-mountain .card-header.metronome {
   background: linear-gradient(135deg, #2c4875 0%, #4a6fa5 100%);
   border-bottom-color: #1d3966;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-mountain .card-header.timer {
   background: linear-gradient(135deg, #5c6b7a 0%, #8a99a8 100%);
   border-bottom-color: #4d5c6b;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-mountain .card-header.noteSelector {
   background: linear-gradient(135deg, #6a4c93 0%, #9a6cc2 100%);
   border-bottom-color: #5b3d84;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-mountain .card-header.practiceProgress {
   background: linear-gradient(135deg, #4a7c89 0%, #6fa2b5 100%);
   border-bottom-color: #3b6d7a;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-mountain .card-header.guitarNeck {
   background: linear-gradient(135deg, #8b4513 0%, #cd853f 100%);
   border-bottom-color: #7c3604;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-mountain .card-header.chordProgression {
+  background: linear-gradient(135deg, #4c6a93 0%, #7a9ac2 100%);
+  border-bottom-color: #3d5b84;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 /* ===== DESERT THEME ===== */
@@ -306,30 +376,65 @@
   box-shadow: 0 4px 12px rgba(153, 50, 204, 0.4);
 }
 
-/* Desert Card Headers */
+/* Desert Card Headers - Force proper flexbox layout */
 .theme-desert .card-header.metronome {
   background: linear-gradient(135deg, #d2691e 0%, #ff8c42 100%);
   border-bottom-color: #c35a0f;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-desert .card-header.timer {
   background: linear-gradient(135deg, #cd853f 0%, #daa520 100%);
   border-bottom-color: #be7630;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-desert .card-header.noteSelector {
   background: linear-gradient(135deg, #b22222 0%, #dc143c 100%);
   border-bottom-color: #a31313;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-desert .card-header.practiceProgress {
   background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
   border-bottom-color: #7c3604;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-desert .card-header.guitarNeck {
   background: linear-gradient(135deg, #9932cc 0%, #ba55d3 100%);
   border-bottom-color: #8a23bd;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-desert .card-header.chordProgression {
+  background: linear-gradient(135deg, #b2691e 0%, #dc8c42 100%);
+  border-bottom-color: #a35a0f;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 /* ===== THEME BACKGROUNDS ===== */
@@ -450,30 +555,65 @@
   box-shadow: 0 4px 12px rgba(0, 77, 64, 0.4);
 }
 
-/* Ocean Card Headers */
+/* Ocean Card Headers - Force proper flexbox layout */
 .theme-ocean .card-header.metronome {
   background: linear-gradient(135deg, #006064 0%, #00838f 100%);
   border-bottom-color: #004d40;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-ocean .card-header.timer {
   background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%);
   border-bottom-color: #01579b;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-ocean .card-header.noteSelector {
   background: linear-gradient(135deg, #00acc1 0%, #00bcd4 100%);
   border-bottom-color: #00838f;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-ocean .card-header.practiceProgress {
   background: linear-gradient(135deg, #0097a7 0%, #00acc1 100%);
   border-bottom-color: #006064;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-ocean .card-header.guitarNeck {
   background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
   border-bottom-color: #1b5e20;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-ocean .card-header.chordProgression {
+  background: linear-gradient(135deg, #0096a7 0%, #00abc1 100%);
+  border-bottom-color: #005064;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 /* ===== 80s THEME ===== */
@@ -532,30 +672,65 @@
   box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
 }
 
-/* 80s Card Headers */
+/* 80s Card Headers - Force proper flexbox layout */
 .theme-eighties .card-header.metronome {
   background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
   border-bottom-color: #c2185b;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-eighties .card-header.timer {
   background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
   border-bottom-color: #7b1fa2;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-eighties .card-header.noteSelector {
   background: linear-gradient(135deg, #673ab7 0%, #9575cd 100%);
   border-bottom-color: #512da8;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-eighties .card-header.practiceProgress {
   background: linear-gradient(135deg, #3f51b5 0%, #7986cb 100%);
   border-bottom-color: #303f9f;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-eighties .card-header.guitarNeck {
   background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%);
   border-bottom-color: #1976d2;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-eighties .card-header.chordProgression {
+  background: linear-gradient(135deg, #673ab7 0%, #9575cd 100%);
+  border-bottom-color: #512da8;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 /* ===== 90s THEME ===== */
@@ -614,30 +789,65 @@
   box-shadow: 0 4px 12px rgba(118, 255, 3, 0.4);
 }
 
-/* 90s Card Headers */
+/* 90s Card Headers - Force proper flexbox layout */
 .theme-nineties .card-header.metronome {
   background: linear-gradient(135deg, #00e676 0%, #69f0ae 100%);
   border-bottom-color: #00c853;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-nineties .card-header.timer {
   background: linear-gradient(135deg, #00bcd4 0%, #4dd0e1 100%);
   border-bottom-color: #00acc1;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-nineties .card-header.noteSelector {
   background: linear-gradient(135deg, #536dfe 0%, #8c9eff 100%);
   border-bottom-color: #3d5afe;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-nineties .card-header.practiceProgress {
   background: linear-gradient(135deg, #d500f9 0%, #ea80fc 100%);
   border-bottom-color: #aa00ff;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-nineties .card-header.guitarNeck {
   background: linear-gradient(135deg, #76ff03 0%, #b2ff59 100%);
   border-bottom-color: #64dd17;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-nineties .card-header.chordProgression {
+  background: linear-gradient(135deg, #536dfe 0%, #8c9eff 100%);
+  border-bottom-color: #3d5afe;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 /* ===== MARS THEME ===== */
@@ -696,30 +906,65 @@
   box-shadow: 0 4px 12px rgba(93, 64, 55, 0.4);
 }
 
-/* Mars Card Headers */
+/* Mars Card Headers - Force proper flexbox layout */
 .theme-mars .card-header.metronome {
   background: linear-gradient(135deg, #d84315 0%, #ff5722 100%);
   border-bottom-color: #bf360c;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-mars .card-header.timer {
   background: linear-gradient(135deg, #ff5722 0%, #ff7043 100%);
   border-bottom-color: #e64a19;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-mars .card-header.noteSelector {
   background: linear-gradient(135deg, #ff6e40 0%, #ff8a65 100%);
   border-bottom-color: #ff5722;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-mars .card-header.practiceProgress {
   background: linear-gradient(135deg, #8d6e63 0%, #a1887f 100%);
   border-bottom-color: #6d4c41;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-mars .card-header.guitarNeck {
   background: linear-gradient(135deg, #5d4037 0%, #795548 100%);
   border-bottom-color: #4e342e;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-mars .card-header.chordProgression {
+  background: linear-gradient(135deg, #8d6e63 0%, #a1887f 100%);
+  border-bottom-color: #6d4c41;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 /* ===== DARK METAL THEME ===== */
@@ -788,12 +1033,17 @@
   border-color: #1f2c33;
 }
 
-/* Dark Metal Card Headers */
+/* Dark Metal Card Headers - Force proper flexbox layout */
 .theme-metal .card-header.metronome {
   background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
   border-bottom-color: #0a0a0a;
   color: #cccccc;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-metal .card-header.timer {
@@ -801,6 +1051,11 @@
   border-bottom-color: #080808;
   color: #cccccc;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-metal .card-header.noteSelector {
@@ -808,6 +1063,11 @@
   border-bottom-color: #080b0d;
   color: #cccccc;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-metal .card-header.practiceProgress {
@@ -815,6 +1075,11 @@
   border-bottom-color: #090909;
   color: #cccccc;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-metal .card-header.guitarNeck {
@@ -822,6 +1087,23 @@
   border-bottom-color: #060809;
   color: #cccccc;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-metal .card-header.chordProgression {
+  background: linear-gradient(135deg, #0e1214 0%, #2c3439 100%);
+  border-bottom-color: #080b0d;
+  color: #cccccc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 
@@ -881,30 +1163,65 @@
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
-/* Default Card Headers */
+/* Default Card Headers - Force proper flexbox layout */
 .theme-default .card-header.metronome {
   background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
   border-bottom-color: #1D4ED8;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-default .card-header.timer {
   background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
   border-bottom-color: #6D28D9;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-default .card-header.noteSelector {
   background: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
   border-bottom-color: #0E7490;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-default .card-header.practiceProgress {
   background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
   border-bottom-color: #EA580C;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-default .card-header.guitarNeck {
   background: linear-gradient(135deg, #059669 0%, #10B981 100%);
   border-bottom-color: #047857;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-default .card-header.chordProgression {
+  background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+  border-bottom-color: #7C3AED;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 /* ===== DISCO THEME ===== */
@@ -963,29 +1280,64 @@
   box-shadow: 0 4px 12px rgba(74, 20, 140, 0.4);
 }
 
-/* Disco Card Headers */
+/* Disco Card Headers - Force proper flexbox layout */
 .theme-disco .card-header.metronome {
   background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%);
   border-bottom-color: #4a148c;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-disco .card-header.timer {
   background: linear-gradient(135deg, #ab47bc 0%, #ce93d8 100%);
   border-bottom-color: #9c27b0;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-disco .card-header.noteSelector {
   background: linear-gradient(135deg, #8e24aa 0%, #ba68c8 100%);
   border-bottom-color: #7b1fa2;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-disco .card-header.practiceProgress {
   background: linear-gradient(135deg, #9c27b0 0%, #ce93d8 100%);
   border-bottom-color: #8e24aa;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 
 .theme-disco .card-header.guitarNeck {
   background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%);
   border-bottom-color: #38006b;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-disco .card-header.chordProgression {
+  background: linear-gradient(135deg, #8e24aa 0%, #ba68c8 100%);
+  border-bottom-color: #7b1fa2;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
 }
 

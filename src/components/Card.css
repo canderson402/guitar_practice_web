@@ -16,10 +16,55 @@
   border-bottom: 1px solid #dee2e6;
   padding: 12px 16px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   border-radius: 8px 8px 0 0;
   position: relative;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.card-header:hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+.minimize-indicator {
+  font-size: 16px;
+  color: #6c757d;
+  font-weight: bold;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.card-header:hover .minimize-indicator {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* White indicators for themed headers */
+.card-header.metronome .minimize-indicator,
+.card-header.timer .minimize-indicator,
+.card-header.noteSelector .minimize-indicator,
+.card-header.practiceProgress .minimize-indicator,
+.card-header.guitarNeck .minimize-indicator,
+.card-header.chordProgression .minimize-indicator {
+  color: white;
+}
+
+.card-header.metronome:hover .minimize-indicator,
+.card-header.timer:hover .minimize-indicator,
+.card-header.noteSelector:hover .minimize-indicator,
+.card-header.practiceProgress:hover .minimize-indicator,
+.card-header.guitarNeck:hover .minimize-indicator,
+.card-header.chordProgression:hover .minimize-indicator {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Theme-based card headers defined in themes.css */
@@ -31,6 +76,10 @@
   color: #495057;
   text-align: left;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* White text for all themed headers */
@@ -38,9 +87,25 @@
 .card-header.timer .card-title,
 .card-header.noteSelector .card-title,
 .card-header.practiceProgress .card-title,
-.card-header.guitarNeck .card-title {
+.card-header.guitarNeck .card-title,
+.card-header.chordProgression .card-title {
   color: white;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Force layout for all themed headers */
+.card-header.metronome,
+.card-header.timer,
+.card-header.noteSelector,
+.card-header.practiceProgress,
+.card-header.guitarNeck,
+.card-header.chordProgression {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
 }
 
 .card-content {
@@ -50,5 +115,25 @@
   gap: 10px;
   justify-content: flex-start;
   padding: 16px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.card.minimized {
+  height: auto;
+}
+
+.card.minimized .card-header {
+  border-radius: 8px;
+  border-bottom: none;
+}
+
+.card.minimized .card-content {
+  display: none;
+}
+
+/* Smooth transition for card height */
+.card {
+  transition: height 0.3s ease;
 }
 
