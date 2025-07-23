@@ -1,0 +1,294 @@
+.circle-of-fifths {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 20px;
+}
+
+.circle-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.mode-toggle,
+.display-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  color: #495057;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-button:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.mode-button.active {
+  background: #495057;
+  color: white;
+  border-color: #495057;
+}
+
+.circle-container {
+  position: relative;
+}
+
+.circle-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Outer ring segments */
+.outer-segment {
+  fill: #e9ecef;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.outer-segment:hover {
+  fill: #dee2e6;
+}
+
+.outer-segment.major {
+  fill: #ffb3ba;
+}
+
+.outer-segment.minor {
+  fill: #a8d8ea;
+}
+
+.outer-segment.diminished {
+  fill: #b3ffb3;
+}
+
+.outer-segment.root {
+  fill: var(--accent-color, #ff6b35);
+}
+
+/* Middle ring segments */
+.middle-segment {
+  fill: #f8f9fa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.middle-segment:hover {
+  fill: #e9ecef;
+}
+
+.middle-segment.major {
+  fill: #ffb3ba;
+}
+
+.middle-segment.minor {
+  fill: #a8d8ea;
+}
+
+.middle-segment.diminished {
+  fill: #b3ffb3;
+}
+
+.middle-segment.relative-highlight-major {
+  fill: #ffb3ba;
+}
+
+.middle-segment.relative-highlight-minor {
+  fill: #a8d8ea;
+}
+
+/* Center circle */
+.center-circle {
+  transition: all 0.3s ease;
+}
+
+.note-text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.note-text.outer {
+  font-size: 16px;
+  fill: #333;
+}
+
+.chord-text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.chord-text.middle {
+  font-size: 14px;
+  fill: #333;
+}
+
+.center-note {
+  font-size: 32px;
+  font-weight: 700;
+  fill: #333;
+}
+
+.center-mode {
+  font-size: 14px;
+  font-weight: 500;
+  fill: #666;
+  text-transform: uppercase;
+}
+
+.center-marker {
+  opacity: 0.7;
+}
+
+
+.interval-text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 500;
+  pointer-events: none;
+  user-select: none;
+}
+
+.interval-text.major {
+  font-size: 10px;
+  fill: #fff;
+  opacity: 0.8;
+}
+
+.interval-text.minor {
+  font-size: 9px;
+  fill: #555;
+  opacity: 0.9;
+}
+
+.chord-quality-text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.chord-quality-text.major {
+  font-size: 10px;
+  fill: #fff;
+  opacity: 0.9;
+}
+
+.chord-quality-text.minor {
+  font-size: 9px;
+  fill: #333;
+  opacity: 0.9;
+}
+
+.center-title {
+  fill: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.key-info {
+  text-align: center;
+  color: currentColor;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.current-key {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.key-name {
+  color: var(--accent-color, #ff6b35);
+  font-weight: 700;
+}
+
+.related-keys {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.minor-key {
+  color: var(--accent-color, #ff6b35);
+  font-weight: 600;
+}
+
+/* Legend styles */
+.chord-legend {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  user-select: none;
+  pointer-events: none;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+}
+
+.legend-color.major {
+  background-color: #ffb3ba;
+}
+
+.legend-color.minor {
+  background-color: #a8d8ea;
+}
+
+.legend-color.diminished {
+  background-color: #b3ffb3;
+}
+
+.legend-label {
+  font-size: 12px;
+  color: #495057;
+  margin-right: 8px;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .circle-of-fifths {
+    padding: 10px;
+  }
+  
+  .circle-container svg {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .note-text.major {
+    font-size: 14px;
+  }
+  
+  .note-text.minor {
+    font-size: 11px;
+  }
+  
+  .center-title {
+    font-size: 12px;
+  }
+}

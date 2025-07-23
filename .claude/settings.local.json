@@ -17,7 +17,8 @@
       "Bash(git commit:*)",
       "Bash(grep:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }

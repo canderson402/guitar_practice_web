@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
-import { notes, scales, getScaleNotes, musicalStyles } from '../data/musicData';
+import { notes, scales, getScaleNotes } from '../data/musicData';
 import './NoteSelector.css';
 
 export const NoteSelector: React.FC = () => {
@@ -17,8 +17,7 @@ export const NoteSelector: React.FC = () => {
     setChangeInterval,
     setRandomize,
     setShowNextNote,
-    setAutoAdvanceEnabled,
-    setChordSelectedStyle
+    setAutoAdvanceEnabled
   } = useStore();
   
   const barCountRef = useRef(0);
@@ -256,22 +255,6 @@ export const NoteSelector: React.FC = () => {
     }
   };
   
-  // Generate YouTube search URL for backing track
-  const generateBackingTrackSearch = () => {
-    if (!note.selectedNote || !note.selectedScale) return;
-    
-    const key = note.selectedNote;
-    const keyType = chordProgression.keyType;
-    const style = chordProgression.selectedStyle;
-    
-    // Create search query
-    const searchQuery = `${key} ${keyType} ${style} backing track jam track`;
-    const encodedQuery = encodeURIComponent(searchQuery);
-    const youtubeUrl = `https://www.youtube.com/results?search_query=${encodedQuery}`;
-    
-    // Open in new tab
-    window.open(youtubeUrl, '_blank');
-  };
   
   return (
     <div className="note-selector">
@@ -305,12 +288,8 @@ export const NoteSelector: React.FC = () => {
             </select>
           </div>
           
-          {currentNotes.length > 1 && (
-            <button onClick={handleNext} className="next-button">
-              Next Note
-            </button>
-          )}
         </div>
+        
         
         {currentNotes.length > 1 && (
           <div className="auto-advance">
@@ -399,6 +378,7 @@ export const NoteSelector: React.FC = () => {
                   </div>
                 )}
               </div>
+
               {note.showNextNote && nextNote && (
                 <div className="next-note-indicator">
                     <span className="next-label">Next:</span>
@@ -457,34 +437,16 @@ export const NoteSelector: React.FC = () => {
                       );
                     })}
                   </div>
+                  <div className="scale-controls-below">
+                    <button onClick={handleNext} className="next-button">
+                      Next Note
+                    </button>
+                  </div>
                 </>
               )}
             </div>
           </div>
         </>
-      )}
-      
-      {/* Backing Track Section */}
-      {note.selectedNote && note.selectedScale && (
-        <div className="backing-track-inline">
-          <label>Backing Track:</label>
-          <select 
-            value={chordProgression.selectedStyle} 
-            onChange={(e) => setChordSelectedStyle(e.target.value)}
-            className="style-select"
-          >
-            {musicalStyles.map(style => (
-              <option key={style} value={style}>{style}</option>
-            ))}
-          </select>
-          <button 
-            onClick={generateBackingTrackSearch}
-            className="find-backing-track-button"
-            title={`Search for ${note.selectedNote || ''} ${chordProgression.keyType} ${chordProgression.selectedStyle} backing tracks`}
-          >
-            🎵 Find
-          </button>
-        </div>
       )}
     </div>
   );

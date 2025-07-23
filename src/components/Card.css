@@ -13,7 +13,6 @@
 
 .card-header {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-bottom: 1px solid #dee2e6;
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
@@ -54,7 +53,8 @@
 .card-header.noteSelector .minimize-indicator,
 .card-header.practiceProgress .minimize-indicator,
 .card-header.guitarNeck .minimize-indicator,
-.card-header.chordProgression .minimize-indicator {
+.card-header.chordProgression .minimize-indicator,
+.card-header.circleOfFifths .minimize-indicator {
   color: white;
 }
 
@@ -63,7 +63,8 @@
 .card-header.noteSelector:hover .minimize-indicator,
 .card-header.practiceProgress:hover .minimize-indicator,
 .card-header.guitarNeck:hover .minimize-indicator,
-.card-header.chordProgression:hover .minimize-indicator {
+.card-header.chordProgression:hover .minimize-indicator,
+.card-header.circleOfFifths:hover .minimize-indicator {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -88,7 +89,8 @@
 .card-header.noteSelector .card-title,
 .card-header.practiceProgress .card-title,
 .card-header.guitarNeck .card-title,
-.card-header.chordProgression .card-title {
+.card-header.chordProgression .card-title,
+.card-header.circleOfFifths .card-title {
   color: white;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -99,7 +101,8 @@
 .card-header.noteSelector,
 .card-header.practiceProgress,
 .card-header.guitarNeck,
-.card-header.chordProgression {
+.card-header.chordProgression,
+.card-header.circleOfFifths {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
@@ -126,6 +129,11 @@
 .card.minimized .card-header {
   border-radius: 8px;
   border-bottom: none;
+}
+
+/* Remove all theme-specific borders from card headers */
+.card-header {
+  border-bottom: none !important;
 }
 
 .card.minimized .card-content {

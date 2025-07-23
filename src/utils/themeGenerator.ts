@@ -69,8 +69,8 @@ export function generateThemeCSS(): string {
 
 .theme-${themeId} .card-header.${componentId} {
   background: ${baseGradient};
-  border-bottom-color: ${component.active[0]};${themeId === 'metal' ? `
-  color: #cccccc;
+  border-bottom-color: ${component.active[0]};
+  color: ${textColor};${themeId === 'metal' ? `
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);` : ''}
 }
 `;
@@ -110,6 +110,7 @@ function lightenColor(hex: string, percent: number): string {
   return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
 }
 
+// Updated with Circle of Fifths colors for all themes
 export function injectThemeStyles(): void {
   const styleId = 'dynamic-theme-styles';
   let styleElement = document.getElementById(styleId) as HTMLStyleElement;

@@ -541,84 +541,33 @@
   }
 }
 
-/* Backing Track Section */
-.backing-track-inline {
+
+
+/* Scale controls positioned below scale notes */
+.scale-controls-below {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
+  justify-content: center;
   margin-top: 12px;
-  width: 100%;
-  box-sizing: border-box;
-  justify-content: flex-start;
+  padding-top: 8px;
 }
 
-.backing-track-inline label {
+.next-button {
+  padding: 8px 16px;
   font-size: 13px;
-  color: #666;
-  font-weight: 500;
-  white-space: nowrap;
-  margin-right: 4px;
-}
-
-.style-select {
-  padding: 6px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 13px;
-  background: white;
-  cursor: pointer;
-  min-width: 100px;
-  max-width: 150px;
-  width: 150px;
-}
-
-.style-select:hover {
-  border-color: #999;
-}
-
-.style-select:focus {
-  outline: none;
-  border-color: #4CAF50;
-}
-
-.find-backing-track-button {
-  padding: 6px 12px;
+  background: #007bff;
+  color: white;
   border: none;
   border-radius: 4px;
-  background: #2196F3;
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
-.find-backing-track-button:hover {
-  background: #1976D2;
+.next-button:hover {
+  background: #0056b3;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
 }
 
-.find-backing-track-button:active {
+.next-button:active {
   transform: translateY(0);
-}
-
-@media (max-width: 480px) {
-  .backing-track-inline {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  
-  .style-select {
-    flex: 1 1 100%;
-  }
-  
-  .find-backing-track-button {
-    flex: 1;
-  }
 }

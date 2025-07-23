@@ -38,6 +38,11 @@
      "base": ["#4a3d5c", "#6b5a7d"],
      "active": ["#3b2e4d", "#5c4b6e"],
      "border": "#4a3d5c"
+   },
+   "circleOfFifths": {
+     "base": ["#5a7d4a", "#7d9a6b"],
+     "active": ["#4b6e3b", "#6e8b5c"],
+     "border": "#5a7d4a"
    }
  }
 },
@@ -79,6 +84,11 @@
           "base": ["#4a5c7c", "#6a8cbc"],
           "active": ["#3b4d6d", "#5b7dad"],
           "border": "#4a5c7c"
+        },
+        "circleOfFifths": {
+          "base": ["#7a9cc6", "#a3c4e8"],
+          "active": ["#6b8db7", "#94b5d9"],
+          "border": "#7a9cc6"
         }
       }
     },
@@ -120,6 +130,11 @@
           "base": ["#d4623e", "#f4825e"],
           "active": ["#c5532f", "#e5734f"],
           "border": "#d4623e"
+        },
+        "circleOfFifths": {
+          "base": ["#e4702e", "#ff8c42"],
+          "active": ["#d5611f", "#f07d33"],
+          "border": "#e4702e"
         }
       }
     },
@@ -161,6 +176,11 @@
           "base": ["#1565c0", "#1976d2"],
           "active": ["#0d47a1", "#1565c0"],
           "border": "#1565c0"
+        },
+        "circleOfFifths": {
+          "base": ["#00838f", "#00acc1"],
+          "active": ["#006064", "#00838f"],
+          "border": "#00838f"
         }
       }
     },
@@ -202,6 +222,11 @@
           "base": ["#ff4081", "#ff80ab"],
           "active": ["#f50057", "#ff4081"],
           "border": "#ff4081"
+        },
+        "circleOfFifths": {
+          "base": ["#00bcd4", "#4dd0e1"],
+          "active": ["#0097a7", "#00acc1"],
+          "border": "#00bcd4"
         }
       }
     },
@@ -246,6 +271,11 @@
           "base": ["#ff6f00", "#ffa726"],
           "active": ["#e65100", "#ff6f00"],
           "border": "#ff6f00"
+        },
+        "circleOfFifths": {
+          "base": ["#00e676", "#69f0ae"],
+          "active": ["#00c853", "#00e676"],
+          "border": "#00e676"
         }
       }
     },
@@ -287,6 +317,11 @@
           "base": ["#d32f2f", "#f44336"],
           "active": ["#b71c1c", "#d32f2f"],
           "border": "#d32f2f"
+        },
+        "circleOfFifths": {
+          "base": ["#ff7043", "#ff8a65"],
+          "active": ["#ff5722", "#ff7043"],
+          "border": "#ff7043"
         }
       }
     },
@@ -340,6 +375,13 @@
           "border": "#100807",
           "textColor": "#e0e0e0",
           "innerShadow": "rgba(255, 255, 255, 0.04)"
+        },
+        "circleOfFifths": {
+          "base": ["#1a1f1a", "#2d342d"],
+          "active": ["#0f140f", "#222722"],
+          "border": "#0e120e",
+          "textColor": "#e0e0e0",
+          "innerShadow": "rgba(255, 255, 255, 0.03)"
         }
       }
     },
@@ -381,6 +423,11 @@
           "base": ["#e91e63", "#f48fb1"],
           "active": ["#c2185b", "#e91e63"],
           "border": "#e91e63"
+        },
+        "circleOfFifths": {
+          "base": ["#ab47bc", "#ce93d8"],
+          "active": ["#9c27b0", "#ba68c8"],
+          "border": "#ab47bc"
         }
       }
     }

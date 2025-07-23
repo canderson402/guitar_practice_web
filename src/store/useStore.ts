@@ -136,6 +136,7 @@ export const useStore = create<StoreState>((set) => ({
     { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
     { id: 'timer', title: 'Timer', isActive: true, layout: 'horizontal' },
     { id: 'noteSelector', title: 'Scale', isActive: true, layout: 'horizontal' },
+    { id: 'circleOfFifths', title: 'Circle of Fifths', isActive: true, layout: 'horizontal' },
     { id: 'chordProgression', title: 'Chord', isActive: true, layout: 'horizontal' },
     { id: 'guitarNeck', title: 'Fretboard', isActive: true, layout: 'vertical' },
   ],
