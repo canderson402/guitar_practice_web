@@ -37,9 +37,25 @@ export const getNotesAtFret = (fretboard: any[][], fret: number) => {
   return fretboard.map(string => string[fret]);
 };
 
-// Check if a note is in a given scale
+// Helper function to get chromatic position of a note
+const getChromaticPosition = (noteName: string): number => {
+  const chromaticMap: { [key: string]: number } = {
+    'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 
+    'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+  };
+  return chromaticMap[noteName] ?? 0;
+};
+
+// Check if a note is in a given scale (enharmonic aware)
 export const isNoteInScale = (note: string, scaleNotes: string[]) => {
-  return scaleNotes.includes(note);
+  // First try direct match
+  if (scaleNotes.includes(note)) {
+    return true;
+  }
+  
+  // Then try enharmonic match
+  const noteChromaticPos = getChromaticPosition(note);
+  return scaleNotes.some(scaleNote => getChromaticPosition(scaleNote) === noteChromaticPos);
 };
 
 // Get fret markers (standard guitar fret markers)

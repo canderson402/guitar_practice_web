@@ -43,7 +43,6 @@ interface CardInfo {
   title: string;
   isActive: boolean;
   layout: 'vertical' | 'horizontal';
-  isMinimized: boolean;
 }
 
 interface StoreState {
@@ -91,13 +90,10 @@ interface StoreState {
   // Card management
   toggleCard: (cardId: string) => void;
   reorderCards: (startIndex: number, endIndex: number) => void;
-  toggleCardMinimized: (cardId: string) => void;
   
   // Theme management
   setTheme: (theme: string) => void;
   
-  // Template management
-  applyTemplate: (templateId: string) => void;
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -136,14 +132,14 @@ export const useStore = create<StoreState>((set) => ({
     showProgression: false,
   },
   cards: [
-    { id: 'practiceProgress', title: 'Session Status', isActive: true, layout: 'horizontal', isMinimized: false },
-    { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal', isMinimized: false },
-    { id: 'timer', title: 'Timer', isActive: true, layout: 'horizontal', isMinimized: false },
-    { id: 'noteSelector', title: 'Scale', isActive: true, layout: 'horizontal', isMinimized: false },
-    { id: 'chordProgression', title: 'Chord', isActive: true, layout: 'horizontal', isMinimized: false },
-    { id: 'guitarNeck', title: 'Fretboard', isActive: true, layout: 'vertical', isMinimized: false },
+    { id: 'practiceProgress', title: 'Session Status', isActive: true, layout: 'horizontal' },
+    { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
+    { id: 'timer', title: 'Timer', isActive: true, layout: 'horizontal' },
+    { id: 'noteSelector', title: 'Scale', isActive: true, layout: 'horizontal' },
+    { id: 'chordProgression', title: 'Chord', isActive: true, layout: 'horizontal' },
+    { id: 'guitarNeck', title: 'Fretboard', isActive: true, layout: 'vertical' },
   ],
-  theme: 'forest',
+  theme: 'eighties',
   
   // Timer actions
   setTimerRunning: (isRunning) => set((state) => ({ 
@@ -250,30 +246,7 @@ export const useStore = create<StoreState>((set) => ({
     newCards.splice(endIndex, 0, removed);
     return { cards: newCards };
   }),
-  toggleCardMinimized: (cardId) => set((state) => ({
-    cards: state.cards.map(card => 
-      card.id === cardId 
-        ? { ...card, isMinimized: !card.isMinimized }
-        : card
-    )
-  })),
   
   // Theme actions
   setTheme: (theme) => set({ theme }),
-  
-  // Template actions
-  applyTemplate: (templateId) => set((state) => {
-    // Import templates here to avoid circular dependency
-    const { cardTemplates } = require('../data/musicData');
-    const template = cardTemplates.find((t: any) => t.id === templateId);
-    
-    if (!template) return state;
-    
-    const updatedCards = state.cards.map(card => ({
-      ...card,
-      isActive: template.cards[card.id as keyof typeof template.cards] ?? card.isActive
-    }));
-    
-    return { cards: updatedCards };
-  }),
 }));

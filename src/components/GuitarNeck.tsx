@@ -5,12 +5,19 @@ import { generateFretboard, fretMarkers, doubleFretMarkers, isNoteInScale } from
 import './GuitarNeckNew.css';
 
 export const GuitarNeck: React.FC = () => {
-  const { note } = useStore();
+  const { note, setSelectedScale } = useStore();
   const [show24Frets, setShow24Frets] = React.useState(false);
   const [showRoot, setShowRoot] = React.useState(true);
   const [showScale, setShowScale] = React.useState(true);
   const [showCurrent, setShowCurrent] = React.useState(true);
   const [whiteText, setWhiteText] = React.useState(true);
+  
+  // Validate selected scale and reset if invalid
+  React.useEffect(() => {
+    if (note.selectedScale && !scales[note.selectedScale as keyof typeof scales]) {
+      setSelectedScale('Major (Ionian)');
+    }
+  }, [note.selectedScale, setSelectedScale]);
   
   // Generate the fretboard data
   const fretboard = generateFretboard(undefined, show24Frets ? 24 : 15);
@@ -27,15 +34,29 @@ export const GuitarNeck: React.FC = () => {
     ? currentNotes[Math.min(note.currentNoteIndex, currentNotes.length - 1)]
     : null;
 
+  // Helper function to get chromatic position of a note
+  const getChromaticPosition = (noteName: string): number => {
+    const chromaticMap: { [key: string]: number } = {
+      'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 
+      'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+    };
+    return chromaticMap[noteName] ?? 0;
+  };
+
+  // Helper function to check if two notes are enharmonically equivalent
+  const areNotesEquivalent = (note1: string, note2: string): boolean => {
+    return getChromaticPosition(note1) === getChromaticPosition(note2);
+  };
+
   // Get interval information for current note
   const getCurrentInterval = () => {
     if (!note.selectedNote || !currentHighlightNote) {
       return null;
     }
     
-    const rootIndex = notes.indexOf(note.selectedNote);
-    const currentIndex = notes.indexOf(currentHighlightNote);
-    const interval = (currentIndex - rootIndex + 12) % 12;
+    const rootChromaticPos = getChromaticPosition(note.selectedNote);
+    const currentChromaticPos = getChromaticPosition(currentHighlightNote);
+    const interval = (currentChromaticPos - rootChromaticPos + 12) % 12;
     
     // Basic interval names for chromatic intervals
     const chromaticIntervals = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
@@ -81,8 +102,8 @@ export const GuitarNeck: React.FC = () => {
             const fretNote = string[fret];
             if (!fretNote) return null; // Safety check
             const isInScale = currentNotes.length > 0 && isNoteInScale(fretNote.note, currentNotes);
-            const isCurrentNote = fretNote.note === currentHighlightNote;
-            const isRootNote = fretNote.note === note.selectedNote;
+            const isCurrentNote = currentHighlightNote && areNotesEquivalent(fretNote.note, currentHighlightNote);
+            const isRootNote = note.selectedNote && areNotesEquivalent(fretNote.note, note.selectedNote);
             
             // Determine which note types should be shown
             const shouldShowNote = (isRootNote && showRoot) || 

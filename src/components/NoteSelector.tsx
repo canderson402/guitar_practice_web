@@ -26,6 +26,13 @@ export const NoteSelector: React.FC = () => {
   const wasOnFirstBeatRef = useRef(false);
   const [, forceUpdate] = useState({});
   
+  // Validate selected scale and reset if invalid
+  useEffect(() => {
+    if (note.selectedScale && !scales[note.selectedScale as keyof typeof scales]) {
+      setSelectedScale('Major (Ionian)');
+    }
+  }, [note.selectedScale, setSelectedScale]);
+  
   const currentNotes = note.selectedScale && note.selectedNote
     ? getScaleNotes(note.selectedNote, note.selectedScale as keyof typeof scales)
     : note.selectedNote
@@ -40,23 +47,28 @@ export const NoteSelector: React.FC = () => {
   
   const nextNote = getNextNote();
   
+  // Helper function to get chromatic position of a note
+  const getChromaticPosition = (noteName: string): number => {
+    const chromaticMap: { [key: string]: number } = {
+      'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 
+      'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+    };
+    return chromaticMap[noteName] ?? 0;
+  };
+
   // Calculate interval from root note
   const getInterval = (note: string, rootNote: string) => {
     const intervals = ['1', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7', '7'];
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     
-    const rootIndex = noteNames.indexOf(rootNote);
-    const noteIndex = noteNames.indexOf(note);
+    const rootChromaticPos = getChromaticPosition(rootNote);
+    const noteChromaticPos = getChromaticPosition(note);
     
-    if (rootIndex === -1 || noteIndex === -1) return '';
-    
-    const intervalIndex = (noteIndex - rootIndex + 12) % 12;
+    const intervalIndex = (noteChromaticPos - rootChromaticPos + 12) % 12;
     return intervals[intervalIndex];
   };
   
   // Get interval quality and name
   const getIntervalQuality = (note: string, rootNote: string) => {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const intervalQualities = [
       { number: '1', quality: 'Perfect', name: 'Unison' },
       { number: '♭2', quality: 'Minor', name: 'Second' },
@@ -72,12 +84,10 @@ export const NoteSelector: React.FC = () => {
       { number: '7', quality: 'Major', name: 'Seventh' }
     ];
     
-    const rootIndex = noteNames.indexOf(rootNote);
-    const noteIndex = noteNames.indexOf(note);
+    const rootChromaticPos = getChromaticPosition(rootNote);
+    const noteChromaticPos = getChromaticPosition(note);
     
-    if (rootIndex === -1 || noteIndex === -1) return null;
-    
-    const intervalIndex = (noteIndex - rootIndex + 12) % 12;
+    const intervalIndex = (noteChromaticPos - rootChromaticPos + 12) % 12;
     return intervalQualities[intervalIndex];
   };
   

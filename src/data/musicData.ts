@@ -1,4 +1,4 @@
-export const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+export const notes = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
 
 export const scales = {
   // Pentatonic Scales
@@ -39,102 +39,105 @@ export const scales = {
   'Locrian': {
     intervals: [0, 1, 3, 5, 6, 8, 10],
     description: '1 - ♭2 - ♭3 - 4 - ♭5 - ♭6 - ♭7'
-  },
-
-  // Minor Scale Variations
-  'Harmonic Minor': {
-    intervals: [0, 2, 3, 5, 7, 8, 11],
-    description: '1 - 2 - ♭3 - 4 - 5 - ♭6 - 7'
-  },
-  'Melodic Minor': {
-    intervals: [0, 2, 3, 5, 7, 9, 11],
-    description: '1 - 2 - ♭3 - 4 - 5 - 6 - 7'
-  },
-
-  // Blues Scales
-  'Blues': {
-    intervals: [0, 3, 5, 6, 7, 10],
-    description: '1 - ♭3 - 4 - ♭5 - 5 - ♭7'
-  },
-  'Major Blues': {
-    intervals: [0, 2, 3, 4, 7, 9],
-    description: '1 - 2 - ♭3 - 3 - 5 - 6'
-  },
-
-  // Chromatic and Whole Tone
-  'Chromatic': {
-    intervals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-    description: '1 - ♭2 - 2 - ♭3 - 3 - 4 - ♭5 - 5 - ♭6 - 6 - ♭7 - 7'
-  },
-  'Whole Tone': {
-    intervals: [0, 2, 4, 6, 8, 10],
-    description: '1 - 2 - 3 - ♯4 - ♯5 - ♯6'
-  },
-
-  // Diminished Scales
-  'Diminished (Half-Whole)': {
-    intervals: [0, 1, 3, 4, 6, 7, 9, 10],
-    description: '1 - ♭2 - ♭3 - 3 - ♯4 - 5 - 6 - ♭7'
-  },
-  'Diminished (Whole-Half)': {
-    intervals: [0, 2, 3, 5, 6, 8, 9, 11],
-    description: '1 - 2 - ♭3 - 4 - ♭5 - ♭6 - 6 - 7'
-  },
-
-  // Bebop Scales
-  'Bebop Dominant': {
-    intervals: [0, 2, 4, 5, 7, 9, 10, 11],
-    description: '1 - 2 - 3 - 4 - 5 - 6 - ♭7 - 7'
-  },
-  'Bebop Major': {
-    intervals: [0, 2, 4, 5, 7, 8, 9, 11],
-    description: '1 - 2 - 3 - 4 - 5 - ♯5 - 6 - 7'
-  },
-
-  // Exotic/World Scales
-  'Phrygian Dominant': {
-    intervals: [0, 1, 4, 5, 7, 8, 10],
-    description: '1 - ♭2 - 3 - 4 - 5 - ♭6 - ♭7'
-  },
-  'Hungarian Minor': {
-    intervals: [0, 2, 3, 6, 7, 8, 11],
-    description: '1 - 2 - ♭3 - ♯4 - 5 - ♭6 - 7'
-  },
-  'Gypsy': {
-    intervals: [0, 1, 4, 5, 7, 8, 10],
-    description: '1 - ♭2 - 3 - 4 - 5 - ♭6 - ♭7'
-  },
-  'Spanish': {
-    intervals: [0, 1, 4, 5, 7, 8, 10],
-    description: '1 - ♭2 - 3 - 4 - 5 - ♭6 - ♭7'
-  },
-  'Japanese': {
-    intervals: [0, 1, 5, 7, 8],
-    description: '1 - ♭2 - 4 - 5 - ♭6'
-  },
-  'Arabic': {
-    intervals: [0, 1, 4, 5, 7, 8, 11],
-    description: '1 - ♭2 - 3 - 4 - 5 - ♭6 - 7'
-  },
-
-  // Additional Useful Scales
-  'Altered (Super Locrian)': {
-    intervals: [0, 1, 3, 4, 6, 8, 10],
-    description: '1 - ♭2 - ♭3 - ♭4 - ♭5 - ♭6 - ♭7'
-  },
-  'Lydian Dominant': {
-    intervals: [0, 2, 4, 6, 7, 9, 10],
-    description: '1 - 2 - 3 - ♯4 - 5 - 6 - ♭7'
   }
 };
-export const getScaleNotes = (rootNote: string, scaleType: keyof typeof scales): string[] => {
-  const rootIndex = notes.indexOf(rootNote);
-  if (rootIndex === -1) return [];
+// Helper function to determine if a key uses sharps or flats
+const getAccidentalType = (rootNote: string): 'sharp' | 'flat' | 'natural' => {
+  const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
+  const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
   
+  if (sharpKeys.includes(rootNote)) return 'sharp';
+  if (flatKeys.includes(rootNote)) return 'flat';
+  return 'natural';
+};
+
+// Helper function to get the next letter in the musical alphabet
+const getNextLetter = (letter: string): string => {
+  const letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+  const index = letters.indexOf(letter);
+  return letters[(index + 1) % 7];
+};
+
+// Helper function to get the letter name from a note (removes accidentals)
+const getNoteLetter = (note: string): string => {
+  return note[0];
+};
+
+
+export const getScaleNotes = (rootNote: string, scaleType: keyof typeof scales): string[] => {
   const scale = scales[scaleType];
-  return scale.intervals.map(interval => 
-    notes[(rootIndex + interval) % 12]
-  );
+  if (!scale || !scale.intervals) return [];
+  
+  const accidentalType = getAccidentalType(rootNote);
+  
+  // Find the chromatic position of the root note
+  const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const chromaticScaleFlats = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+  
+  let rootIndex = chromaticScale.indexOf(rootNote);
+  if (rootIndex === -1) {
+    rootIndex = chromaticScaleFlats.indexOf(rootNote);
+  }
+  
+  // Special handling for pentatonic scales - use simple chromatic selection
+  if (scaleType.includes('Pentatonic')) {
+    const useFlats = accidentalType === 'flat';
+    const chromaticRef = useFlats ? chromaticScaleFlats : chromaticScale;
+    
+    return scale.intervals.map(interval => {
+      const noteIndex = (rootIndex + interval) % 12;
+      return chromaticRef[noteIndex];
+    });
+  }
+  
+  // For diatonic scales (7-note scales), use alphabetical spelling
+  const result: string[] = [rootNote];
+  let currentLetter = getNoteLetter(rootNote);
+  
+  // Build the scale note by note
+  for (let i = 1; i < scale.intervals.length; i++) {
+    const targetChromaticPosition = (rootIndex + scale.intervals[i]) % 12;
+    currentLetter = getNextLetter(currentLetter);
+    
+    // Find the correct spelling for this chromatic position using the current letter
+    const useFlats = accidentalType === 'flat';
+    const chromaticRef = useFlats ? chromaticScaleFlats : chromaticScale;
+    
+    // Look for the note at the target position that uses the current letter
+    let foundNote = chromaticRef[targetChromaticPosition];
+    
+    // If the found note doesn't use the correct letter, we need to respell it
+    if (getNoteLetter(foundNote) !== currentLetter) {
+      // Create the correct spelling
+      const letterMap: { [key: string]: number } = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+      const basicPosition = letterMap[currentLetter];
+      let semitoneOffset = (targetChromaticPosition - basicPosition + 12) % 12;
+      
+      // Convert offset > 6 to negative equivalent (shorter path around circle)
+      if (semitoneOffset > 6) {
+        semitoneOffset = semitoneOffset - 12;
+      }
+      
+      if (semitoneOffset === 1) {
+        foundNote = currentLetter + '#';
+      } else if (semitoneOffset === -1) {
+        foundNote = currentLetter + 'b';
+      } else if (semitoneOffset === 0) {
+        foundNote = currentLetter;
+      } else if (semitoneOffset === 2) {
+        foundNote = currentLetter + '##'; // Double sharp (rare)
+      } else if (semitoneOffset === -2) {
+        foundNote = currentLetter + 'bb'; // Double flat (rare)
+      } else {
+        // For large offsets, use the chromatic scale note as-is
+        foundNote = chromaticRef[targetChromaticPosition];
+      }
+    }
+    
+    result.push(foundNote);
+  }
+  
+  return result;
 };
 
 export const chordTypes = {
@@ -341,26 +344,8 @@ export const scaleSuggestions: { [key: string]: 'major' | 'minor' | 'both' } = {
   'Mixolydian': 'major',
   'Aeolian (Natural Minor)': 'minor',
   'Locrian': 'minor',
-  'Harmonic Minor': 'minor',
-  'Melodic Minor': 'minor',
   'Major Pentatonic': 'major',
-  'Minor Pentatonic': 'both',
-  'Blues': 'major',
-  'Major Blues': 'major',
-  'Chromatic': 'both',
-  'Whole Tone': 'major',
-  'Diminished (Half-Whole)': 'minor',
-  'Diminished (Whole-Half)': 'major',
-  'Bebop Dominant': 'major',
-  'Bebop Major': 'major',
-  'Phrygian Dominant': 'minor',
-  'Hungarian Minor': 'minor',
-  'Gypsy': 'minor',
-  'Spanish': 'minor',
-  'Japanese': 'both',
-  'Arabic': 'minor',
-  'Altered (Super Locrian)': 'minor',
-  'Lydian Dominant': 'major',
+  'Minor Pentatonic': 'minor',
 };
 
 // Define which scales support traditional chord progressions
@@ -371,13 +356,27 @@ export const diatonicScales = [
   'Lydian',
   'Mixolydian',
   'Aeolian (Natural Minor)',
-  'Locrian',
-  'Harmonic Minor',
-  'Melodic Minor'
+  'Locrian'
 ];
 
 export const getScaleChords = (rootNote: string, scaleType: keyof typeof scales) => {
-  const scaleNotes = getScaleNotes(rootNote, scaleType);
+  // Special handling for pentatonic scales - use the full 7-note scale for chord generation
+  let chordsScaleType = scaleType;
+  let chordsScaleNotes: string[];
+  
+  if (scaleType === 'Major Pentatonic') {
+    // Use Major (Ionian) scale for chord generation
+    chordsScaleType = 'Major (Ionian)';
+    chordsScaleNotes = getScaleNotes(rootNote, 'Major (Ionian)');
+  } else if (scaleType === 'Minor Pentatonic') {
+    // Use Aeolian (Natural Minor) scale for chord generation
+    chordsScaleType = 'Aeolian (Natural Minor)';
+    chordsScaleNotes = getScaleNotes(rootNote, 'Aeolian (Natural Minor)');
+  } else {
+    // For all other scales, use their own notes
+    chordsScaleNotes = getScaleNotes(rootNote, scaleType);
+  }
+  
   const chords: { roman: string; note: string; type: string; symbol: string }[] = [];
   
   // Define chord patterns for diatonic scales
@@ -389,19 +388,17 @@ export const getScaleChords = (rootNote: string, scaleType: keyof typeof scales)
     'Mixolydian': ['major', 'minor', 'diminished', 'major', 'minor', 'minor', 'major'],
     'Aeolian (Natural Minor)': ['minor', 'diminished', 'major', 'minor', 'minor', 'major', 'major'],
     'Locrian': ['diminished', 'major', 'minor', 'minor', 'major', 'major', 'minor'],
-    'Harmonic Minor': ['minor', 'diminished', 'augmented', 'minor', 'major', 'major', 'diminished'],
-    'Melodic Minor': ['minor', 'minor', 'augmented', 'major', 'major', 'diminished', 'diminished'],
   };
   
   // For diatonic scales, use specific patterns
-  let chordPattern = chordPatterns[scaleType];
+  let chordPattern = chordPatterns[chordsScaleType];
   
   // For non-diatonic scales, create simple major chords for each note
   if (!chordPattern) {
-    chordPattern = scaleNotes.map(() => 'major');
+    chordPattern = chordsScaleNotes.map(() => 'major');
   }
   
-  scaleNotes.forEach((note, index) => {
+  chordsScaleNotes.forEach((note, index) => {
     const chordType = chordPattern[index] || 'major';
     const isMinor = chordType === 'minor';
     const isDiminished = chordType === 'diminished';
