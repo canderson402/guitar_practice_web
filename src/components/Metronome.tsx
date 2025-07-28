@@ -3,12 +3,44 @@ import { useStore } from '../store/useStore';
 import './Metronome.css';
 
 export const Metronome: React.FC = () => {
-  const { metronome, setMetronomePlaying, setBpm, setCurrentBeat, setBeatsPerMeasure, setSubdivision, setEmphasizeFirstBeat } = useStore();
+  const { metronome, setMetronomePlaying, setBpm, setCurrentBeat, setBeatsPerMeasure, setSubdivision, setEmphasizeFirstBeat, setMetronomeSoundType } = useStore();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const asrxUpBufferRef = useRef<AudioBuffer | null>(null);
+  const asrxDownBufferRef = useRef<AudioBuffer | null>(null);
   
   useEffect(() => {
     audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Load ASRX samples
+    const loadSample = async (url: string): Promise<AudioBuffer> => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${url}: ${response.status}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        return audioContextRef.current!.decodeAudioData(arrayBuffer);
+      } catch (error) {
+        console.error(`Error loading sample ${url}:`, error);
+        throw error;
+      }
+    };
+    
+    loadSample(`${process.env.PUBLIC_URL}/ASRX_UP.wav`)
+      .then(buffer => {
+        asrxUpBufferRef.current = buffer;
+        console.log('ASRX_UP.wav loaded successfully');
+      })
+      .catch(err => console.error('Failed to load ASRX_UP.wav:', err));
+    
+    loadSample(`${process.env.PUBLIC_URL}/ASRX_Down.wav`)
+      .then(buffer => {
+        asrxDownBufferRef.current = buffer;
+        console.log('ASRX_Down.wav loaded successfully');
+      })
+      .catch(err => console.error('Failed to load ASRX_Down.wav:', err));
+    
     return () => {
       if (audioContextRef.current) {
         audioContextRef.current.close();
@@ -19,32 +51,65 @@ export const Metronome: React.FC = () => {
   const playClick = (isAccent: boolean, isFirstBeat: boolean) => {
     if (!audioContextRef.current) return;
     
-    const osc = audioContextRef.current.createOscillator();
-    const gainNode = audioContextRef.current.createGain();
-    
-    osc.connect(gainNode);
-    gainNode.connect(audioContextRef.current.destination);
-    
-    // More metronome-like frequencies - higher pitched and crisp
-    if (metronome.emphasizeFirstBeat && isFirstBeat) {
-      // First beat of measure - higher pitch for emphasis
-      osc.frequency.value = 1760; // High A
-    } else if (isAccent) {
-      // Downbeats - medium high pitch
-      osc.frequency.value = 1320; // E above high C
+    if (metronome.soundType === 'asrx') {
+      // Use ASRX samples
+      let bufferToPlay: AudioBuffer | null = null;
+      
+      if (metronome.emphasizeFirstBeat && isFirstBeat) {
+        // Use DOWN sound for first beat (emphasized)
+        bufferToPlay = asrxDownBufferRef.current;
+      } else {
+        // Use UP sound for other beats
+        bufferToPlay = asrxUpBufferRef.current;
+      }
+      
+      if (bufferToPlay) {
+        const source = audioContextRef.current.createBufferSource();
+        const gainNode = audioContextRef.current.createGain();
+        
+        source.buffer = bufferToPlay;
+        source.connect(gainNode);
+        gainNode.connect(audioContextRef.current.destination);
+        
+        gainNode.gain.value = isFirstBeat && metronome.emphasizeFirstBeat ? 0.6 : 0.4;
+        source.start();
+      } else {
+        console.warn('ASRX buffer not loaded yet', {
+          upBuffer: asrxUpBufferRef.current,
+          downBuffer: asrxDownBufferRef.current,
+          isFirstBeat,
+          emphasizeFirstBeat: metronome.emphasizeFirstBeat
+        });
+      }
     } else {
-      // Off-beats - slightly lower but still crisp
-      osc.frequency.value = 1056; // C above high C
+      // Use synth sounds
+      const osc = audioContextRef.current.createOscillator();
+      const gainNode = audioContextRef.current.createGain();
+      
+      osc.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
+      
+      // More metronome-like frequencies - higher pitched and crisp
+      if (metronome.emphasizeFirstBeat && isFirstBeat) {
+        // First beat of measure - higher pitch for emphasis
+        osc.frequency.value = 1760; // High A
+      } else if (isAccent) {
+        // Downbeats - medium high pitch
+        osc.frequency.value = 1320; // E above high C
+      } else {
+        // Off-beats - slightly lower but still crisp
+        osc.frequency.value = 1056; // C above high C
+      }
+      
+      // Adjust volume and make it more crisp
+      gainNode.gain.value = isFirstBeat && metronome.emphasizeFirstBeat ? 0.4 : 0.3;
+      
+      const now = audioContextRef.current.currentTime;
+      osc.start(now);
+      // Sharper attack and quicker decay for more metronome-like sound
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+      osc.stop(now + 0.02);
     }
-    
-    // Adjust volume and make it more crisp
-    gainNode.gain.value = isFirstBeat && metronome.emphasizeFirstBeat ? 0.4 : 0.3;
-    
-    const now = audioContextRef.current.currentTime;
-    osc.start(now);
-    // Sharper attack and quicker decay for more metronome-like sound
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
-    osc.stop(now + 0.02);
   };
   
   useEffect(() => {
@@ -132,7 +197,7 @@ export const Metronome: React.FC = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [metronome.isPlaying, metronome.bpm, metronome.beatsPerMeasure, metronome.subdivision, metronome.emphasizeFirstBeat, setCurrentBeat]);
+  }, [metronome.isPlaying, metronome.bpm, metronome.beatsPerMeasure, metronome.subdivision, metronome.emphasizeFirstBeat, metronome.soundType, setCurrentBeat]);
   
   const handleBpmChange = (delta: number) => {
     const newBpm = Math.max(40, Math.min(300, metronome.bpm + delta));
@@ -141,6 +206,18 @@ export const Metronome: React.FC = () => {
   
   return (
     <div className="metronome">
+      <div className="sound-type-control">
+        <label>Sound Type: </label>
+        <select 
+          value={metronome.soundType} 
+          onChange={(e) => setMetronomeSoundType(e.target.value as 'synth' | 'asrx')}
+          className="sound-type-select"
+        >
+          <option value="synth">Synth</option>
+          <option value="asrx">Block</option>
+        </select>
+      </div>
+      
       <div className="beat-indicators">
         {Array.from({ length: metronome.beatsPerMeasure }, (_, i) => (
           <div

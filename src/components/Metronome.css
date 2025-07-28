@@ -197,3 +197,25 @@
 .play-button.playing:hover {
   box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
 }
+
+.sound-type-control {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.sound-type-control label {
+  font-size: 12px;
+  color: #666;
+}
+
+.sound-type-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  background: white;
+  cursor: pointer;
+}

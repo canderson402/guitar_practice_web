@@ -4,6 +4,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -86,6 +87,12 @@ export const SimpleDragDrop: React.FC = () => {
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 5, // Small distance to prevent accidental drags
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250, // 250ms delay to prevent accidental drags on mobile
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {

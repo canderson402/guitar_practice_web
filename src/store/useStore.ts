@@ -14,6 +14,7 @@ interface MetronomeState {
   beatsPerMeasure: number;
   subdivision: 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet';
   emphasizeFirstBeat: boolean;
+  soundType: 'synth' | 'asrx';
 }
 
 interface NoteState {
@@ -66,6 +67,7 @@ interface StoreState {
   setBeatsPerMeasure: (beats: number) => void;
   setSubdivision: (subdivision: 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet') => void;
   setEmphasizeFirstBeat: (emphasize: boolean) => void;
+  setMetronomeSoundType: (soundType: 'synth' | 'asrx') => void;
   
   // Note actions
   setSelectedNote: (note: string | null) => void;
@@ -110,6 +112,7 @@ export const useStore = create<StoreState>((set) => ({
     beatsPerMeasure: 4,
     subdivision: 'quarter',
     emphasizeFirstBeat: true,
+    soundType: 'synth',
   },
   note: {
     selectedNote: 'C',
@@ -174,6 +177,9 @@ export const useStore = create<StoreState>((set) => ({
   })),
   setEmphasizeFirstBeat: (emphasizeFirstBeat) => set((state) => ({ 
     metronome: { ...state.metronome, emphasizeFirstBeat } 
+  })),
+  setMetronomeSoundType: (soundType) => set((state) => ({
+    metronome: { ...state.metronome, soundType }
   })),
   
   // Note actions

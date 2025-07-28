@@ -58,6 +58,11 @@
   cursor: grab;
   background: transparent;
   border-radius: 8px 8px 0 0;
+  /* Enable touch events on mobile */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
 }
 
 .simple-drag-handle:active {
@@ -100,6 +105,11 @@
   
   .vertical-section, .horizontal-section, .column {
     gap: 10px;
+  }
+  
+  /* Increase drag handle height for easier touch on mobile */
+  .simple-drag-handle {
+    height: 55px;
   }
 }
 
