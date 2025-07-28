@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
-import { notes, scales, getScaleNotes } from '../data/musicData';
+import { notes, scales, getScaleNotes, getChromaticScale } from '../data/musicData';
 import './NoteSelector.css';
 
 export const NoteSelector: React.FC = () => {
@@ -35,7 +35,7 @@ export const NoteSelector: React.FC = () => {
   const currentNotes = note.selectedScale && note.selectedNote
     ? getScaleNotes(note.selectedNote, note.selectedScale as keyof typeof scales)
     : note.selectedNote
-    ? notes // When single note is selected, cycle through all notes
+    ? getChromaticScale(note.selectedNote) // Use reordered chromatic scale starting from root
     : [];
   
   // Calculate next note for preview using pre-determined index
@@ -232,8 +232,8 @@ export const NoteSelector: React.FC = () => {
     setSelectedNote(newNote);
     // When switching to single note mode, start from the selected note's index
     if (newNote && !note.selectedScale) {
-      const noteIndex = notes.indexOf(newNote);
-      setCurrentNoteIndex(noteIndex >= 0 ? noteIndex : 0);
+      // Always start at index 0 since chromatic scale now starts from root
+      setCurrentNoteIndex(0);
     } else {
       setCurrentNoteIndex(0);
     }
@@ -409,7 +409,7 @@ export const NoteSelector: React.FC = () => {
                     {note.selectedScale ? `${note.selectedNote} ${note.selectedScale}` : 'Chromatic'}
                   </div>
                   <div className="scale-notes">
-                    {(note.selectedScale ? currentNotes : notes).map((n, i) => {
+                    {(note.selectedScale ? currentNotes : (note.selectedNote ? getChromaticScale(note.selectedNote) : notes)).map((n, i) => {
                       const isActive = note.selectedScale 
                         ? i === note.currentNoteIndex 
                         : n === currentNotes[Math.min(note.currentNoteIndex, currentNotes.length - 1)];
@@ -424,7 +424,8 @@ export const NoteSelector: React.FC = () => {
                             if (note.selectedScale) {
                               handleNoteClick(i);
                             } else {
-                              const noteIndex = notes.indexOf(n);
+                              const chromaticNotes = note.selectedNote ? getChromaticScale(note.selectedNote) : notes;
+                              const noteIndex = chromaticNotes.indexOf(n);
                               if (noteIndex !== -1) {
                                 handleNoteClick(noteIndex);
                               }

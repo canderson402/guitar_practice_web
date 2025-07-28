@@ -1,5 +1,32 @@
 export const notes = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
 
+export const getChromaticScale = (rootNote: string): string[] => {
+  const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const chromaticScaleFlats = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+  
+  let rootIndex = chromaticScale.indexOf(rootNote);
+  const useFlats = rootIndex === -1;
+  
+  if (useFlats) {
+    rootIndex = chromaticScaleFlats.indexOf(rootNote);
+    if (rootIndex === -1) return notes; // fallback if root note not found
+    
+    // Return chromatic scale starting from root using flats
+    const reordered = [];
+    for (let i = 0; i < 12; i++) {
+      reordered.push(chromaticScaleFlats[(rootIndex + i) % 12]);
+    }
+    return reordered;
+  } else {
+    // Return chromatic scale starting from root using sharps
+    const reordered = [];
+    for (let i = 0; i < 12; i++) {
+      reordered.push(chromaticScale[(rootIndex + i) % 12]);
+    }
+    return reordered;
+  }
+};
+
 export const scales = {
   // Pentatonic Scales
   'Major Pentatonic': {
