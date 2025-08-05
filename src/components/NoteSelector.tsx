@@ -57,7 +57,7 @@ export const NoteSelector: React.FC = () => {
 
   // Calculate interval from root note
   const getInterval = (note: string, rootNote: string) => {
-    const intervals = ['1', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7', '7'];
+    const intervals = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
     
     const rootChromaticPos = getChromaticPosition(rootNote);
     const noteChromaticPos = getChromaticPosition(note);
@@ -75,7 +75,7 @@ export const NoteSelector: React.FC = () => {
       { number: '♭3', quality: 'Minor', name: 'Third' },
       { number: '3', quality: 'Major', name: 'Third' },
       { number: '4', quality: 'Perfect', name: 'Fourth' },
-      { number: '♭5', quality: 'Diminished', name: 'Fifth' },
+      { number: '♯4', quality: 'Augmented', name: 'Fourth' },
       { number: '5', quality: 'Perfect', name: 'Fifth' },
       { number: '♭6', quality: 'Minor', name: 'Sixth' },
       { number: '6', quality: 'Major', name: 'Sixth' },

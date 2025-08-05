@@ -111,8 +111,8 @@ export const useStore = create<StoreState>((set) => ({
     currentBeat: 0,
     beatsPerMeasure: 4,
     subdivision: 'quarter',
-    emphasizeFirstBeat: true,
-    soundType: 'synth',
+    emphasizeFirstBeat: false,
+    soundType: 'asrx',
   },
   note: {
     selectedNote: 'C',

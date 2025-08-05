@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { notes, getScaleNotes, scales } from '../data/musicData';
+import { notes, getScaleNotes, scales, getChromaticScale } from '../data/musicData';
 import { generateFretboard, fretMarkers, doubleFretMarkers, isNoteInScale } from '../data/guitarData';
 import './GuitarNeckNew.css';
 
@@ -11,6 +11,7 @@ export const GuitarNeck: React.FC = () => {
   const [showScale, setShowScale] = React.useState(true);
   const [showCurrent, setShowCurrent] = React.useState(true);
   const [whiteText, setWhiteText] = React.useState(true);
+  const [showIntervals, setShowIntervals] = React.useState(false);
   
   // Validate selected scale and reset if invalid
   React.useEffect(() => {
@@ -26,7 +27,7 @@ export const GuitarNeck: React.FC = () => {
   const currentNotes = note.selectedScale && note.selectedNote
     ? getScaleNotes(note.selectedNote, note.selectedScale as keyof typeof import('../data/musicData').scales)
     : note.selectedNote
-    ? notes // All notes when single note selected
+    ? getChromaticScale(note.selectedNote) // Use reordered chromatic scale starting from root
     : notes; // Show all notes by default
   
   // Get current note being highlighted
@@ -48,33 +49,70 @@ export const GuitarNeck: React.FC = () => {
     return getChromaticPosition(note1) === getChromaticPosition(note2);
   };
 
-  // Get interval information for current note
-  const getCurrentInterval = () => {
-    if (!note.selectedNote || !currentHighlightNote) {
+  // Get interval information for any note relative to root
+  const getInterval = (targetNote: string) => {
+    if (!note.selectedNote) {
       return null;
     }
     
+    // Always use chromatic distance calculation for consistent interval naming
     const rootChromaticPos = getChromaticPosition(note.selectedNote);
-    const currentChromaticPos = getChromaticPosition(currentHighlightNote);
-    const interval = (currentChromaticPos - rootChromaticPos + 12) % 12;
+    const targetChromaticPos = getChromaticPosition(targetNote);
+    const interval = (targetChromaticPos - rootChromaticPos + 12) % 12;
     
-    // Basic interval names for chromatic intervals
     const chromaticIntervals = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
     
-    // If we have a scale selected, try to get the scale-specific interval
+    // If we have a selected scale, check if this note is in the scale and use scale-specific intervals
     if (note.selectedScale) {
-      const scale = scales[note.selectedScale as keyof typeof scales];
-      if (scale) {
-        const scaleIntervalIndex = scale.intervals.indexOf(interval);
-        if (scaleIntervalIndex !== -1) {
+      const targetIndex = currentNotes.findIndex(n => areNotesEquivalent(n, targetNote));
+      if (targetIndex !== -1) {
+        const scale = scales[note.selectedScale as keyof typeof scales];
+        if (scale && scale.description) {
           const intervalNames = scale.description.split(' - ');
-          return intervalNames[scaleIntervalIndex] || chromaticIntervals[interval];
+          return intervalNames[targetIndex] || chromaticIntervals[interval];
         }
       }
     }
     
-    // Fallback to chromatic interval
+    // For chromatic or notes not in scale, use chromatic intervals
     return chromaticIntervals[interval];
+  };
+
+  // Get interval for the current highlighted note based on scale position
+  const getCurrentScaleInterval = () => {
+    if (!note.selectedNote || !currentNotes.length) {
+      return null;
+    }
+    
+    const currentIndex = Math.min(note.currentNoteIndex, currentNotes.length - 1);
+    const currentHighlightedNote = currentNotes[currentIndex];
+    
+    // If we have a scale selected, use scale positions for interval names
+    if (note.selectedScale) {
+      const scale = scales[note.selectedScale as keyof typeof scales];
+      if (scale && scale.description) {
+        const intervalNames = scale.description.split(' - ');
+        return intervalNames[currentIndex] || `${currentIndex + 1}`;
+      }
+    }
+    
+    // For chromatic (no selected scale), use chromatic distance calculation for consistency
+    if (!note.selectedScale && currentHighlightedNote) {
+      const rootChromaticPos = getChromaticPosition(note.selectedNote);
+      const currentChromaticPos = getChromaticPosition(currentHighlightedNote);
+      const interval = (currentChromaticPos - rootChromaticPos + 12) % 12;
+      
+      const chromaticIntervals = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
+      return chromaticIntervals[interval];
+    }
+    
+    // Fallback for other scales
+    return `${currentIndex + 1}`;
+  };
+
+  // Get interval information for current note
+  const getCurrentInterval = () => {
+    return getCurrentScaleInterval();
   };
 
   const currentInterval = getCurrentInterval();
@@ -118,7 +156,9 @@ export const GuitarNeck: React.FC = () => {
                   title={`${fretNote.note} - String ${6 - stringIndex}, Fret ${fret}`}
                 >
                   {shouldShowNote && (
-                    <span className="note-label">{fretNote.note}</span>
+                    <span className="note-label">
+                      {showIntervals ? getInterval(fretNote.note) || fretNote.note : fretNote.note}
+                    </span>
                   )}
                 </div>
               </div>
@@ -178,6 +218,15 @@ export const GuitarNeck: React.FC = () => {
               onChange={() => setShowCurrent(!showCurrent)}
             />
             <span>Interval{currentInterval ? `: ${currentInterval}` : ''}</span>
+          </div>
+
+          <div className="legend-item intervals-item" onClick={() => setShowIntervals(!showIntervals)}>
+            <input 
+              type="checkbox" 
+              checked={showIntervals} 
+              onChange={() => setShowIntervals(!showIntervals)}
+            />
+            <span>Show Intervals</span>
           </div>
         </div>
         
