@@ -39,6 +39,17 @@ interface ChordProgressionState {
   showProgression: boolean;
 }
 
+interface CircleOfFifthsState {
+  autoAdvance: boolean;
+  direction: 'clockwise' | 'counterclockwise';
+  changeMode: 'none' | 'bars' | 'time' | 'beats';
+  changeInterval: number;
+  randomize: boolean;
+  showNext: boolean;
+  nextNote: string | null;
+  countIn: number;
+}
+
 interface CardInfo {
   id: string;
   title: string;
@@ -51,6 +62,7 @@ interface StoreState {
   metronome: MetronomeState;
   note: NoteState;
   chordProgression: ChordProgressionState;
+  circleOfFifths: CircleOfFifthsState;
   cards: CardInfo[];
   theme: string;
   
@@ -88,6 +100,16 @@ interface StoreState {
   setChordKeyType: (keyType: 'major' | 'minor') => void;
   setChordSelectedStyle: (style: string) => void;
   setChordShowProgression: (show: boolean) => void;
+  
+  // Circle of Fifths actions
+  setCircleAutoAdvance: (enabled: boolean) => void;
+  setCircleDirection: (direction: 'clockwise' | 'counterclockwise') => void;
+  setCircleChangeMode: (mode: 'none' | 'bars' | 'time' | 'beats') => void;
+  setCircleChangeInterval: (interval: number) => void;
+  setCircleRandomize: (randomize: boolean) => void;
+  setCircleShowNext: (showNext: boolean) => void;
+  setCircleNextNote: (nextNote: string | null) => void;
+  setCircleCountIn: (countIn: number) => void;
   
   // Card management
   toggleCard: (cardId: string) => void;
@@ -134,11 +156,22 @@ export const useStore = create<StoreState>((set) => ({
     selectedStyle: 'Rock',
     showProgression: false,
   },
+  circleOfFifths: {
+    autoAdvance: false,
+    direction: 'clockwise',
+    changeMode: 'beats',
+    changeInterval: 12,
+    randomize: false,
+    showNext: true,
+    nextNote: null,
+    countIn: 4,
+  },
   cards: [
     { id: 'practiceProgress', title: 'Session Status', isActive: true, layout: 'horizontal' },
     { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
     { id: 'timer', title: 'Timer', isActive: true, layout: 'horizontal' },
     { id: 'noteSelector', title: 'Scale', isActive: true, layout: 'horizontal' },
+    { id: 'noteTrainer', title: 'Note Trainer', isActive: true, layout: 'horizontal' },
     { id: 'circleOfFifths', title: 'Circle of Fifths', isActive: true, layout: 'horizontal' },
     { id: 'chordProgression', title: 'Chord', isActive: true, layout: 'horizontal' },
     { id: 'guitarNeck', title: 'Fretboard', isActive: true, layout: 'vertical' },
@@ -237,6 +270,32 @@ export const useStore = create<StoreState>((set) => ({
   })),
   setChordShowProgression: (showProgression) => set((state) => ({
     chordProgression: { ...state.chordProgression, showProgression }
+  })),
+  
+  // Circle of Fifths actions
+  setCircleAutoAdvance: (autoAdvance) => set((state) => ({
+    circleOfFifths: { ...state.circleOfFifths, autoAdvance }
+  })),
+  setCircleDirection: (direction) => set((state) => ({
+    circleOfFifths: { ...state.circleOfFifths, direction }
+  })),
+  setCircleChangeMode: (changeMode) => set((state) => ({
+    circleOfFifths: { ...state.circleOfFifths, changeMode }
+  })),
+  setCircleChangeInterval: (changeInterval) => set((state) => ({
+    circleOfFifths: { ...state.circleOfFifths, changeInterval }
+  })),
+  setCircleRandomize: (randomize) => set((state) => ({
+    circleOfFifths: { ...state.circleOfFifths, randomize }
+  })),
+  setCircleShowNext: (showNext) => set((state) => ({
+    circleOfFifths: { ...state.circleOfFifths, showNext }
+  })),
+  setCircleNextNote: (nextNote) => set((state) => ({
+    circleOfFifths: { ...state.circleOfFifths, nextNote }
+  })),
+  setCircleCountIn: (countIn) => set((state) => ({
+    circleOfFifths: { ...state.circleOfFifths, countIn }
   })),
   
   // Card management

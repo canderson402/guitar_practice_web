@@ -9,6 +9,7 @@ import { GuitarNeck } from './components/GuitarNeck';
 import { PracticeProgress } from './components/PracticeProgress';
 import { ChordProgression } from './components/ChordProgression';
 import { CircleOfFifths } from './components/CircleOfFifths';
+import { NoteTrainer } from './components/NoteTrainer';
 import { useStore } from './store/useStore';
 import { themes, injectThemeStyles } from './utils/themeGenerator';
 import {
@@ -130,6 +131,8 @@ function App() {
         return <ChordProgression />;
       case 'circleOfFifths':
         return <CircleOfFifths />;
+      case 'noteTrainer':
+        return <NoteTrainer />;
       default:
         return null;
     }
@@ -233,7 +236,7 @@ function App() {
                 </div>
               );
             } else if (element.type === 'horizontal-group') {
-              // Smart distribution: balance cards between columns
+              // Smart distribution: balance cards between columns while preserving order
               const distributeCards = (cards: any[]) => {
                 const leftCards: any[] = [];
                 const rightCards: any[] = [];
@@ -244,23 +247,17 @@ function App() {
                   'metronome': 2,          // Medium height  
                   'timer': 2,              // Medium height
                   'noteSelector': 3,       // Tall (scale selector + notes)
+                  'noteTrainer': 3,        // Tall (auto-advance controls + large note display)
                   'chordProgression': 2,   // Medium height (chord list)
                   'circleOfFifths': 4,     // Very tall (large circle diagram)
                   'guitarNeck': 5          // Tallest (but vertical, won't be here)
                 };
                 
-                // Sort cards by weight (heaviest first) for better distribution
-                const sortedCards = [...cards].sort((a, b) => {
-                  const weightA = cardWeights[a.id] || 2;
-                  const weightB = cardWeights[b.id] || 2;
-                  return weightB - weightA;
-                });
-                
                 let leftWeight = 0;
                 let rightWeight = 0;
                 
-                // Distribute cards to maintain balance
-                sortedCards.forEach(card => {
+                // Distribute cards in original order, choosing column based on current weight
+                cards.forEach(card => {
                   const cardWeight = cardWeights[card.id] || 2;
                   
                   if (leftWeight <= rightWeight) {
@@ -271,11 +268,6 @@ function App() {
                     rightWeight += cardWeight;
                   }
                 });
-                
-                // Restore original order within each column
-                const originalOrder = cards;
-                leftCards.sort((a, b) => originalOrder.indexOf(a) - originalOrder.indexOf(b));
-                rightCards.sort((a, b) => originalOrder.indexOf(a) - originalOrder.indexOf(b));
                 
                 return { leftCards, rightCards };
               };

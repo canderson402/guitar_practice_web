@@ -3,14 +3,19 @@ import { useStore } from '../store/useStore';
 import './CircleOfFifths.css';
 
 export const CircleOfFifths: React.FC = () => {
-  const { note, setSelectedNote } = useStore();
+  const { 
+    note, 
+    setSelectedNote
+  } = useStore();
   const [mode, setMode] = useState<'major' | 'minor'>('major');
   const [displayMode, setDisplayMode] = useState<'chords' | 'relatives'>('chords');
+  
 
   // Circle of Fifths in order (starting from C at 12 o'clock)
-  const circleOfFifths = [
+  const circleOfFifthsNotes = [
     'C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'
   ];
+  
 
   // Minor keys (relative minors) - keep simple without enharmonic equivalents
   const relativeMinors = [
@@ -78,31 +83,7 @@ export const CircleOfFifths: React.FC = () => {
     return note.selectedNote && getChromaticPosition(circleNote) === getChromaticPosition(note.selectedNote);
   };
 
-  // Check if a major chord should be highlighted (outer ring)
-  const isMajorChordInKey = (circleNote: string) => {
-    return diatonicChords.majorChords.includes(circleNote);
-  };
 
-  // Check if a minor chord should be highlighted (inner ring)
-  const isMinorChordInKey = (minorChord: string) => {
-    return diatonicChords.minorChords.includes(minorChord);
-  };
-
-  // Combined check for any chord highlighting
-  const isInKey = (circleNote: string, isMinorRing: boolean = false) => {
-    if (isMinorRing) {
-      // For minor ring, find the corresponding minor chord name
-      const minorIndex = circleOfFifths.indexOf(circleNote);
-      if (minorIndex !== -1) {
-        const minorChord = relativeMinors[minorIndex];
-        return isMinorChordInKey(minorChord);
-      }
-      return false;
-    } else {
-      // For major ring
-      return isMajorChordInKey(circleNote);
-    }
-  };
 
   // Get the chord quality (I, ii, iii, etc.) for a chord root in the current key
   const getChordQuality = (circleNote: string) => {
@@ -147,31 +128,6 @@ export const CircleOfFifths: React.FC = () => {
     return 'major';
   };
 
-  // Calculate interval from root note
-  const getInterval = (targetNote: string) => {
-    if (!note.selectedNote) return '';
-    
-    const rootPos = getChromaticPosition(note.selectedNote);
-    const targetPos = getChromaticPosition(targetNote);
-    const semitones = (targetPos - rootPos + 12) % 12;
-    
-    const intervalNames = [
-      'R',    // Root (0 semitones)
-      'b2',   // Minor 2nd (1 semitone)
-      '2',    // Major 2nd (2 semitones)
-      'b3',   // Minor 3rd (3 semitones)
-      '3',    // Major 3rd (4 semitones)
-      '4',    // Perfect 4th (5 semitones)
-      'b5',   // Tritone (6 semitones)
-      '5',    // Perfect 5th (7 semitones)
-      'b6',   // Minor 6th (8 semitones)
-      '6',    // Major 6th (9 semitones)
-      'b7',   // Minor 7th (10 semitones)
-      '7'     // Major 7th (11 semitones)
-    ];
-    
-    return intervalNames[semitones];
-  };
 
   // Handle note click
   const handleNoteClick = (clickedNote: string) => {
@@ -254,10 +210,11 @@ export const CircleOfFifths: React.FC = () => {
         </div>
       </div>
       
+      
       <div className="circle-container">
         <svg width="400" height="400" viewBox="0 0 400 400">
           {/* Outer ring - Note names */}
-          {circleOfFifths.map((noteKey, index) => {
+          {circleOfFifthsNotes.map((noteKey, index) => {
             const isRoot = isRootNote(noteKey);
             const chordQuality = getChordQuality(noteKey);
             const chordType = getChordType(noteKey);
@@ -304,7 +261,7 @@ export const CircleOfFifths: React.FC = () => {
           })}
 
           {/* Middle ring - Roman numerals or relative keys */}
-          {circleOfFifths.map((noteKey, index) => {
+          {circleOfFifthsNotes.map((noteKey, index) => {
             const chordQuality = getChordQuality(noteKey);
             const chordType = getChordType(noteKey);
             const segmentPath = createSegmentPath(index, 140, 80);
@@ -355,7 +312,7 @@ export const CircleOfFifths: React.FC = () => {
                 displayText = relativeMajors[index];
                 // Highlight if this is the relative major of the selected minor key
                 if (note.selectedNote) {
-                  const selectedIndex = circleOfFifths.indexOf(note.selectedNote);
+                  const selectedIndex = circleOfFifthsNotes.indexOf(note.selectedNote);
                   if (selectedIndex !== -1 && relativeMajors[selectedIndex] === displayText) {
                     segmentClass += ' relative-highlight-major';
                   }

@@ -25,7 +25,8 @@
   overflow: hidden;
 }
 
-.card-header:hover {
+/* Only apply hover effect to default (unthemed) headers */
+.card-header:not(.metronome):not(.timer):not(.noteSelector):not(.noteTrainer):not(.practiceProgress):not(.guitarNeck):not(.chordProgression):not(.circleOfFifths):hover {
   background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
 }
 
@@ -51,6 +52,7 @@
 .card-header.metronome .minimize-indicator,
 .card-header.timer .minimize-indicator,
 .card-header.noteSelector .minimize-indicator,
+.card-header.noteTrainer .minimize-indicator,
 .card-header.practiceProgress .minimize-indicator,
 .card-header.guitarNeck .minimize-indicator,
 .card-header.chordProgression .minimize-indicator,
@@ -61,6 +63,7 @@
 .card-header.metronome:hover .minimize-indicator,
 .card-header.timer:hover .minimize-indicator,
 .card-header.noteSelector:hover .minimize-indicator,
+.card-header.noteTrainer:hover .minimize-indicator,
 .card-header.practiceProgress:hover .minimize-indicator,
 .card-header.guitarNeck:hover .minimize-indicator,
 .card-header.chordProgression:hover .minimize-indicator,
@@ -87,6 +90,7 @@
 .card-header.metronome .card-title,
 .card-header.timer .card-title,
 .card-header.noteSelector .card-title,
+.card-header.noteTrainer .card-title,
 .card-header.practiceProgress .card-title,
 .card-header.guitarNeck .card-title,
 .card-header.chordProgression .card-title,
@@ -99,6 +103,7 @@
 .card-header.metronome,
 .card-header.timer,
 .card-header.noteSelector,
+.card-header.noteTrainer,
 .card-header.practiceProgress,
 .card-header.guitarNeck,
 .card-header.chordProgression,

@@ -15,6 +15,7 @@ export const Card: React.FC<CardProps> = ({ title, children, isActive = true }) 
     if (title.includes('Metronome')) return 'metronome';
     if (title.includes('Timer')) return 'timer';
     if (title.includes('Scale') || title.includes('Note Selector')) return 'noteSelector';
+    if (title.includes('Note Trainer')) return 'noteTrainer';
     if (title.includes('Session Status') || title.includes('Practice Progress')) return 'practiceProgress';
     if (title.includes('Fretboard') || title.includes('Guitar Fretboard')) return 'guitarNeck';
     if (title.includes('Chord Progression') || title.includes('Chord')) return 'chordProgression';

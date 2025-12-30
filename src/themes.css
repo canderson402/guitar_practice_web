@@ -173,6 +173,16 @@
   white-space: nowrap !important;
 }
 
+.theme-forest .card-header.noteTrainer {
+  background: linear-gradient(135deg, #3a5a2d 0%, #5d8f4a 100%);
+  border-bottom-color: #2b4b1e;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
 .theme-forest .card-header.practiceProgress {
   background: linear-gradient(135deg, #5a7a3a 0%, #7d9e5d 100%);
   border-bottom-color: #4b6b2b;
@@ -290,6 +300,16 @@
   white-space: nowrap !important;
 }
 
+.theme-mountain .card-header.noteTrainer {
+  background: linear-gradient(135deg, #7a5ca3 0%, #aa7cd2 100%);
+  border-bottom-color: #6b4d94;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
 .theme-mountain .card-header.practiceProgress {
   background: linear-gradient(135deg, #4a7c89 0%, #6fa2b5 100%);
   border-bottom-color: #3b6d7a;
@@ -400,6 +420,16 @@
 .theme-desert .card-header.noteSelector {
   background: linear-gradient(135deg, #b22222 0%, #dc143c 100%);
   border-bottom-color: #a31313;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-desert .card-header.noteTrainer {
+  background: linear-gradient(135deg, #c23232 0%, #ec244c 100%);
+  border-bottom-color: #b32323;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
@@ -586,6 +616,16 @@
   white-space: nowrap !important;
 }
 
+.theme-ocean .card-header.noteTrainer {
+  background: linear-gradient(135deg, #10bcd1 0%, #10cce4 100%);
+  border-bottom-color: #10939f;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
 .theme-ocean .card-header.practiceProgress {
   background: linear-gradient(135deg, #0097a7 0%, #00acc1 100%);
   border-bottom-color: #006064;
@@ -696,6 +736,16 @@
 .theme-eighties .card-header.noteSelector {
   background: linear-gradient(135deg, #673ab7 0%, #9575cd 100%);
   border-bottom-color: #512da8;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-eighties .card-header.noteTrainer {
+  background: linear-gradient(135deg, #774ac7 0%, #a585dd 100%);
+  border-bottom-color: #613db8;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
@@ -820,6 +870,16 @@
   white-space: nowrap !important;
 }
 
+.theme-nineties .card-header.noteTrainer {
+  background: linear-gradient(135deg, #637dfe 0%, #9caeff 100%);
+  border-bottom-color: #4d6afe;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
 .theme-nineties .card-header.practiceProgress {
   background: linear-gradient(135deg, #d500f9 0%, #ea80fc 100%);
   border-bottom-color: #aa00ff;
@@ -930,6 +990,16 @@
 .theme-mars .card-header.noteSelector {
   background: linear-gradient(135deg, #ff6e40 0%, #ff8a65 100%);
   border-bottom-color: #ff5722;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-mars .card-header.noteTrainer {
+  background: linear-gradient(135deg, #ff7e50 0%, #ff9a75 100%);
+  border-bottom-color: #ff6732;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
@@ -1070,6 +1140,18 @@
   white-space: nowrap !important;
 }
 
+.theme-metal .card-header.noteTrainer {
+  background: linear-gradient(135deg, #1e2224 0%, #3c4449 100%);
+  border-bottom-color: #181b1d;
+  color: #cccccc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
 .theme-metal .card-header.practiceProgress {
   background: linear-gradient(135deg, #111111 0%, #333333 100%);
   border-bottom-color: #090909;
@@ -1194,6 +1276,16 @@
   white-space: nowrap !important;
 }
 
+.theme-default .card-header.noteTrainer {
+  background: linear-gradient(135deg, #18a1c2 0%, #16c6e4 100%);
+  border-bottom-color: #1e84a0;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
 .theme-default .card-header.practiceProgress {
   background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
   border-bottom-color: #EA580C;
@@ -1304,6 +1396,16 @@
 .theme-disco .card-header.noteSelector {
   background: linear-gradient(135deg, #8e24aa 0%, #ba68c8 100%);
   border-bottom-color: #7b1fa2;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  white-space: nowrap !important;
+}
+
+.theme-disco .card-header.noteTrainer {
+  background: linear-gradient(135deg, #9e34ba 0%, #ca78d8 100%);
+  border-bottom-color: #8b2fb2;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
