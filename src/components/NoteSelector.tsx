@@ -4,20 +4,14 @@ import { notes, scales, getScaleNotes, getChromaticScale } from '../data/musicDa
 import './NoteSelector.css';
 
 export const NoteSelector: React.FC = () => {
-  const { 
-    note, 
+  const {
+    note,
     timer,
     metronome,
-    chordProgression,
-    setSelectedNote, 
-    setSelectedScale, 
+    setSelectedNote,
+    setSelectedScale,
     setCurrentNoteIndex,
-    setNextNoteIndex,
-    setChangeMode,
-    setChangeInterval,
-    setRandomize,
-    setShowNextNote,
-    setAutoAdvanceEnabled
+    setNextNoteIndex
   } = useStore();
   
   const barCountRef = useRef(0);
@@ -260,12 +254,12 @@ export const NoteSelector: React.FC = () => {
     <div className="note-selector">
       <div className="top-controls">
         <div className="selection-controls">
-          <div className="control-group">
-            <label>Root Note:</label>
-            <select 
-              value={note.selectedNote || ''} 
+          <div className="ds-form-group">
+            <label className="ds-label">Root Note</label>
+            <select
+              value={note.selectedNote || ''}
               onChange={(e) => handleNoteChange(e.target.value || null)}
-              className="select-input"
+              className="ds-select"
             >
               <option value="">Select a note</option>
               {notes.map(n => (
@@ -273,13 +267,13 @@ export const NoteSelector: React.FC = () => {
               ))}
             </select>
           </div>
-          
-          <div className="control-group">
-            <label>Scale:</label>
-            <select 
-              value={note.selectedScale || ''} 
+
+          <div className="ds-form-group">
+            <label className="ds-label">Scale</label>
+            <select
+              value={note.selectedScale || ''}
               onChange={(e) => handleScaleChange(e.target.value || null)}
-              className="select-input"
+              className="ds-select"
             >
               <option value="">Chromatic</option>
               {Object.keys(scales).map(scale => (
@@ -289,68 +283,6 @@ export const NoteSelector: React.FC = () => {
           </div>
           
         </div>
-        
-        
-        {currentNotes.length > 1 && (
-          <div className="auto-advance">
-            <div className="toggle-controls">
-              <div className="toggle-group">
-                <label>
-                  <input 
-                    type="checkbox" 
-                    checked={note.randomize}
-                    onChange={(e) => setRandomize(e.target.checked)}
-                  />
-                  Randomize
-                </label>
-              </div>
-              
-              <div className="toggle-group">
-                <label>
-                  <input 
-                    type="checkbox" 
-                    checked={note.showNextNote}
-                    onChange={(e) => setShowNextNote(e.target.checked)}
-                  />
-                  Show Next
-                </label>
-              </div>
-            </div>
-            
-            <div className="control-group">
-              <label>Auto-advance:</label>
-              <select 
-                value={note.changeMode} 
-                onChange={(e) => setChangeMode(e.target.value as 'none' | 'bars' | 'time')}
-                className="select-input"
-              >
-                <option value="none">None</option>
-                <option value="bars">bars</option>
-                <option value="time">seconds</option>
-              </select>
-            </div>
-            
-            <div className="control-group">
-              <label>{note.changeMode === 'bars' ? 'Bars:' : note.changeMode === 'time' ? 'Seconds:' : 'Interval:'}</label>
-              <input 
-                type="number" 
-                min="1" 
-                max="16"
-                value={note.changeInterval}
-                onChange={(e) => setChangeInterval(parseInt(e.target.value) || 1)}
-                className="interval-input"
-                disabled={note.changeMode === 'none'}
-              />
-            </div>
-            
-            {note.changeMode !== 'none' && ((note.changeMode === 'bars' && metronome.isPlaying) || 
-              (note.changeMode === 'time' && timer.isRunning)) && (
-              <div className="auto-advance-status">
-                Auto-advancing {note.changeMode === 'bars' ? 'with metronome' : 'with timer'}
-              </div>
-            )}
-          </div>
-        )}
       </div>
       
       {currentNotes.length > 0 && (
@@ -439,7 +371,7 @@ export const NoteSelector: React.FC = () => {
                     })}
                   </div>
                   <div className="scale-controls-below">
-                    <button onClick={handleNext} className="next-button">
+                    <button onClick={handleNext} className="ds-btn ds-btn-secondary">
                       Next Note
                     </button>
                   </div>

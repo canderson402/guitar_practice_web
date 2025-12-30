@@ -279,52 +279,6 @@
         }
       }
     },
-    "mars": {
-      "name": "Mars",
-      "icon": "🚀",
-      "background": {
-        "type": "gradient",
-        "direction": "135deg",
-        "colors": ["#ffccbc", "#ff8a65", "#ff5722", "#d84315", "#bf360c"]
-      },
-      "components": {
-        "metronome": {
-          "base": ["#d84315", "#ff5722"],
-          "active": ["#bf360c", "#e64a19"],
-          "border": "#d84315"
-        },
-        "timer": {
-          "base": ["#ff5722", "#ff7043"],
-          "active": ["#e64a19", "#ff5722"],
-          "border": "#ff5722"
-        },
-        "noteSelector": {
-          "base": ["#ff6e40", "#ff8a65"],
-          "active": ["#ff5722", "#ff6e40"],
-          "border": "#ff6e40"
-        },
-        "practiceProgress": {
-          "base": ["#8d6e63", "#a1887f"],
-          "active": ["#6d4c41", "#795548"],
-          "border": "#8d6e63"
-        },
-        "guitarNeck": {
-          "base": ["#5d4037", "#795548"],
-          "active": ["#4e342e", "#5d4037"],
-          "border": "#5d4037"
-        },
-        "chordProgression": {
-          "base": ["#d32f2f", "#f44336"],
-          "active": ["#b71c1c", "#d32f2f"],
-          "border": "#d32f2f"
-        },
-        "circleOfFifths": {
-          "base": ["#ff7043", "#ff8a65"],
-          "active": ["#ff5722", "#ff7043"],
-          "border": "#ff7043"
-        }
-      }
-    },
     "metal": {
       "name": "Metal",
       "icon": "🤘",
@@ -382,52 +336,6 @@
           "border": "#0e120e",
           "textColor": "#e0e0e0",
           "innerShadow": "rgba(255, 255, 255, 0.03)"
-        }
-      }
-    },
-    "disco": {
-      "name": "Disco",
-      "icon": "🕺",
-      "background": {
-        "type": "gradient",
-        "direction": "135deg",
-        "colors": ["#6a1b9a", "#8e24aa", "#ab47bc", "#ba68c8", "#ce93d8"]
-      },
-      "components": {
-        "metronome": {
-          "base": ["#6a1b9a", "#8e24aa"],
-          "active": ["#4a148c", "#7b1fa2"],
-          "border": "#6a1b9a"
-        },
-        "timer": {
-          "base": ["#ab47bc", "#ce93d8"],
-          "active": ["#9c27b0", "#ba68c8"],
-          "border": "#ab47bc"
-        },
-        "noteSelector": {
-          "base": ["#8e24aa", "#ba68c8"],
-          "active": ["#7b1fa2", "#ab47bc"],
-          "border": "#8e24aa"
-        },
-        "practiceProgress": {
-          "base": ["#9c27b0", "#ce93d8"],
-          "active": ["#8e24aa", "#ba68c8"],
-          "border": "#9c27b0"
-        },
-        "guitarNeck": {
-          "base": ["#4a148c", "#6a1b9a"],
-          "active": ["#38006b", "#4a148c"],
-          "border": "#4a148c"
-        },
-        "chordProgression": {
-          "base": ["#e91e63", "#f48fb1"],
-          "active": ["#c2185b", "#e91e63"],
-          "border": "#e91e63"
-        },
-        "circleOfFifths": {
-          "base": ["#ab47bc", "#ce93d8"],
-          "active": ["#9c27b0", "#ba68c8"],
-          "border": "#ab47bc"
         }
       }
     }

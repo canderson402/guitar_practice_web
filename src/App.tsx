@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.css';
 import './themes.css';
+import './styles/design-system.css';
 import { Card } from './components/Card';
 import { Metronome } from './components/Metronome';
 import { Timer } from './components/Timer';
@@ -203,7 +204,7 @@ function App() {
             <select value={theme} onChange={(e) => setTheme(e.target.value as any)}>
               {Object.entries(themes).map(([themeId, themeData]) => (
                 <option key={themeId} value={themeId}>
-                  {themeData.icon} {themeData.name}
+                  {themeData.name}
                 </option>
               ))}
             </select>

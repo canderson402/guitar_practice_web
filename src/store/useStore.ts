@@ -74,6 +74,11 @@ export const configurationPresets: ConfigurationPreset[] = [
     name: 'Theory',
     enabledCards: ['noteSelector', 'circleOfFifths', 'chordProgression', 'guitarNeck'],
   },
+  {
+    id: 'all',
+    name: 'All',
+    enabledCards: ['metronome', 'timer', 'noteSelector', 'noteTrainer', 'circleOfFifths', 'chordProgression', 'guitarNeck'],
+  },
 ];
 
 interface StoreState {

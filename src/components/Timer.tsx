@@ -69,46 +69,46 @@ export const Timer: React.FC = () => {
         {formatTime(displaySeconds)}
       </div>
       
-      <div className="timer-mode">
-        <button 
+      <div className="ds-segmented">
+        <button
           onClick={() => handleModeChange('countUp')}
-          className={`mode-button ${timer.mode === 'countUp' ? 'active' : ''}`}
+          className={`ds-btn ${timer.mode === 'countUp' ? 'active' : ''}`}
         >
           Count Up
         </button>
-        <button 
+        <button
           onClick={() => handleModeChange('countDown')}
-          className={`mode-button ${timer.mode === 'countDown' ? 'active' : ''}`}
+          className={`ds-btn ${timer.mode === 'countDown' ? 'active' : ''}`}
         >
           Count Down
         </button>
       </div>
-      
+
       {timer.mode === 'countDown' && (
         <div className="target-time">
-          <label>Target (minutes):</label>
-          <input 
-            type="number" 
-            min="1" 
+          <label className="ds-label-inline">Target (min):</label>
+          <input
+            type="number"
+            min="1"
             max="999"
             value={Math.floor(timer.targetSeconds / 60)}
             onChange={handleTargetMinutesChange}
             disabled={timer.isRunning}
-            className="target-input"
+            className="ds-input ds-input-number"
           />
         </div>
       )}
-      
+
       <div className="timer-controls">
-        <button 
+        <button
           onClick={() => setTimerRunning(!timer.isRunning)}
-          className={`control-button ${timer.isRunning ? 'stop' : 'start'}`}
+          className={`ds-btn ds-btn-pill ${timer.isRunning ? 'ds-btn-danger' : 'ds-btn-primary'}`}
         >
           {timer.isRunning ? 'Stop' : 'Start'}
         </button>
-        <button 
+        <button
           onClick={handleReset}
-          className="control-button reset"
+          className="ds-btn ds-btn-outline ds-btn-pill"
         >
           Reset
         </button>

@@ -1,47 +1,49 @@
+/* CircleOfFifths Component Styles */
+/* Uses design-system.css for base styles */
+
 .circle-of-fifths {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  gap: 20px;
+  padding: var(--ds-space-5);
+  gap: var(--ds-space-5);
 }
 
 .circle-controls {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--ds-space-3);
+  margin-bottom: var(--ds-space-5);
 }
-
 
 .mode-toggle,
 .display-toggle {
   display: flex;
-  gap: 8px;
+  gap: var(--ds-space-2);
 }
 
 .mode-button {
-  padding: 6px 12px;
-  border: 1px solid #ddd;
-  background: #f8f9fa;
-  color: #495057;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 500;
+  padding: var(--ds-space-2) var(--ds-space-3);
+  border: 1px solid var(--ds-border-color);
+  background: var(--ds-bg-muted);
+  color: var(--ds-color-neutral-700);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-font-sm);
+  font-weight: var(--ds-font-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--ds-transition-base);
 }
 
 .mode-button:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
+  background: var(--ds-color-neutral-100);
+  border-color: var(--ds-color-neutral-300);
 }
 
 .mode-button.active {
-  background: #495057;
-  color: white;
-  border-color: #495057;
+  background: var(--ds-color-neutral-700);
+  color: var(--ds-color-white);
+  border-color: var(--ds-color-neutral-700);
 }
 
 .circle-container {
@@ -55,13 +57,13 @@
 
 /* Outer ring segments */
 .outer-segment {
-  fill: #e9ecef;
-  transition: all 0.3s ease;
+  fill: var(--ds-color-neutral-100);
+  transition: all var(--ds-transition-slow);
   cursor: pointer;
 }
 
 .outer-segment:hover {
-  fill: #dee2e6;
+  fill: var(--ds-color-neutral-200);
 }
 
 .outer-segment.major {
@@ -77,18 +79,18 @@
 }
 
 .outer-segment.root {
-  fill: var(--accent-color, #ff6b35);
+  fill: var(--accent-color, var(--ds-color-primary));
 }
 
 /* Middle ring segments */
 .middle-segment {
-  fill: #f8f9fa;
-  transition: all 0.3s ease;
+  fill: var(--ds-bg-muted);
+  transition: all var(--ds-transition-slow);
   cursor: pointer;
 }
 
 .middle-segment:hover {
-  fill: #e9ecef;
+  fill: var(--ds-color-neutral-100);
 }
 
 .middle-segment.major {
@@ -113,43 +115,43 @@
 
 /* Center circle */
 .center-circle {
-  transition: all 0.3s ease;
+  transition: all var(--ds-transition-slow);
 }
 
 .note-text {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-weight: 600;
+  font-weight: var(--ds-font-semibold);
   pointer-events: none;
   user-select: none;
 }
 
 .note-text.outer {
   font-size: 16px;
-  fill: #333;
+  fill: var(--ds-color-neutral-800);
 }
 
 .chord-text {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-weight: 600;
+  font-weight: var(--ds-font-semibold);
   pointer-events: none;
   user-select: none;
 }
 
 .chord-text.middle {
   font-size: 14px;
-  fill: #333;
+  fill: var(--ds-color-neutral-800);
 }
 
 .center-note {
   font-size: 32px;
-  font-weight: 700;
-  fill: #333;
+  font-weight: var(--ds-font-bold);
+  fill: var(--ds-color-neutral-800);
 }
 
 .center-mode {
   font-size: 14px;
-  font-weight: 500;
-  fill: #666;
+  font-weight: var(--ds-font-medium);
+  fill: var(--ds-color-neutral-600);
   text-transform: uppercase;
 }
 
@@ -157,50 +159,49 @@
   opacity: 0.7;
 }
 
-
 .interval-text {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-weight: 500;
+  font-weight: var(--ds-font-medium);
   pointer-events: none;
   user-select: none;
 }
 
 .interval-text.major {
   font-size: 10px;
-  fill: #fff;
+  fill: var(--ds-color-white);
   opacity: 0.8;
 }
 
 .interval-text.minor {
   font-size: 9px;
-  fill: #555;
+  fill: var(--ds-color-neutral-600);
   opacity: 0.9;
 }
 
 .chord-quality-text {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-weight: 600;
+  font-weight: var(--ds-font-semibold);
   pointer-events: none;
   user-select: none;
 }
 
 .chord-quality-text.major {
   font-size: 10px;
-  fill: #fff;
+  fill: var(--ds-color-white);
   opacity: 0.9;
 }
 
 .chord-quality-text.minor {
   font-size: 9px;
-  fill: #333;
+  fill: var(--ds-color-neutral-800);
   opacity: 0.9;
 }
 
 .center-title {
-  fill: #333;
+  fill: var(--ds-color-neutral-800);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: var(--ds-font-semibold);
   pointer-events: none;
   user-select: none;
 }
@@ -212,44 +213,46 @@
 }
 
 .current-key {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-size: var(--ds-font-md);
+  font-weight: var(--ds-font-semibold);
+  margin-bottom: var(--ds-space-2);
 }
 
 .key-name {
-  color: var(--accent-color, #ff6b35);
-  font-weight: 700;
+  color: var(--accent-color, var(--ds-color-primary));
+  font-weight: var(--ds-font-bold);
 }
 
 .related-keys {
-  font-size: 14px;
+  font-size: var(--ds-font-base);
   opacity: 0.8;
 }
 
 .minor-key {
-  color: var(--accent-color, #ff6b35);
-  font-weight: 600;
+  color: var(--accent-color, var(--ds-color-primary));
+  font-weight: var(--ds-font-semibold);
 }
 
 /* Legend styles */
 .chord-legend {
-  margin-top: 20px;
+  margin-top: var(--ds-space-5);
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 16px;
-  padding: 8px 16px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
+  gap: var(--ds-space-4);
+  padding: var(--ds-space-2) var(--ds-space-4);
+  background: var(--ds-bg-muted);
+  border-radius: var(--ds-radius-md);
+  border: 1px solid var(--ds-color-neutral-200);
   user-select: none;
   pointer-events: none;
 }
 
 .legend-color {
+  display: inline-block;
   width: 16px;
   height: 16px;
+  border-radius: var(--ds-radius-sm);
 }
 
 .legend-color.major {
@@ -265,9 +268,9 @@
 }
 
 .legend-label {
-  font-size: 12px;
-  color: #495057;
-  margin-right: 8px;
+  font-size: var(--ds-font-sm);
+  color: var(--ds-color-neutral-700);
+  margin-right: var(--ds-space-2);
 }
 
 /* Responsive design */
@@ -276,22 +279,22 @@
 
 @media (max-width: 480px) {
   .circle-of-fifths {
-    padding: 10px;
+    padding: var(--ds-space-2);
   }
-  
+
   .circle-container svg {
     width: 300px;
     height: 300px;
   }
-  
+
   .note-text.major {
     font-size: 14px;
   }
-  
+
   .note-text.minor {
     font-size: 11px;
   }
-  
+
   .center-title {
     font-size: 12px;
   }

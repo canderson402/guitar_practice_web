@@ -1,10 +1,13 @@
+/* GuitarNeck Component Styles */
+/* Uses design-system.css for base styles */
+
 .guitar-neck {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 8px;
-  background: #f9f9f9;
-  border-radius: 6px;
+  gap: var(--ds-space-2);
+  padding: var(--ds-space-2);
+  background: var(--ds-bg-muted);
+  border-radius: var(--ds-radius-md);
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -17,46 +20,47 @@
 .neck-controls {
   display: flex;
   justify-content: center;
-  margin-bottom: 15px;
+  margin-bottom: var(--ds-space-4);
 }
 
 .fret-toggle {
-  padding: 8px 16px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: var(--ds-space-2) var(--ds-space-4);
+  background: var(--ds-color-white);
+  border: 1px solid var(--ds-border-color);
+  border-radius: var(--ds-radius-lg);
 }
 
 .fret-toggle label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #666;
+  gap: var(--ds-space-2);
+  font-size: var(--ds-font-base);
+  color: var(--ds-color-neutral-600);
   cursor: pointer;
   user-select: none;
 }
 
 .fret-toggle input[type="checkbox"] {
   margin: 0;
+  accent-color: var(--ds-color-primary);
 }
 
 .scale-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--ds-space-2);
   align-items: center;
 }
 
 .scale-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  font-size: var(--ds-font-md);
+  font-weight: var(--ds-font-semibold);
+  color: var(--ds-color-neutral-800);
 }
 
 .legend {
   display: flex;
-  gap: 12px;
+  gap: var(--ds-space-3);
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -64,31 +68,31 @@
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #666;
+  gap: var(--ds-space-2);
+  font-size: var(--ds-font-sm);
+  color: var(--ds-color-neutral-600);
 }
 
 .legend-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 2px solid #ccc;
+  border: 2px solid var(--ds-color-neutral-300);
 }
 
 .legend-dot.root {
-  background: #2196F3;
-  border-color: #2196F3;
+  background: var(--ds-color-secondary);
+  border-color: var(--ds-color-secondary);
 }
 
 .legend-dot.scale {
-  background: #4CAF50;
-  border-color: #4CAF50;
+  background: var(--ds-color-primary);
+  border-color: var(--ds-color-primary);
 }
 
 .legend-dot.current {
-  background: #FF9800;
-  border-color: #FF9800;
+  background: var(--ds-color-warning);
+  border-color: var(--ds-color-warning);
   animation: pulse-legend 1s ease-in-out infinite alternate;
 }
 
@@ -98,16 +102,16 @@
 }
 
 .no-selection {
-  color: #999;
+  color: var(--ds-color-neutral-400);
   font-style: italic;
   text-align: center;
-  padding: 12px;
+  padding: var(--ds-space-3);
 }
 
 .fretboard {
   display: flex;
-  gap: 6px;
-  padding: 8px 0;
+  gap: var(--ds-space-2);
+  padding: var(--ds-space-2) 0;
   width: 100%;
   justify-content: flex-start;
   overflow-x: auto;
@@ -126,9 +130,9 @@
 }
 
 .string-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
+  font-size: var(--ds-font-sm);
+  font-weight: var(--ds-font-semibold);
+  color: var(--ds-color-neutral-600);
   text-align: center;
 }
 
@@ -146,14 +150,14 @@
   display: flex;
   flex-direction: column;
   width: 50px;
-  background: #f0f0f0;
-  border-right: 2px solid #999;
+  background: var(--ds-color-neutral-50);
+  border-right: 2px solid var(--ds-color-neutral-400);
 }
 
 .fret.nut {
-  background: #333;
+  background: var(--ds-color-neutral-800);
   width: 8px;
-  border-right: 4px solid #222;
+  border-right: 4px solid var(--ds-color-neutral-900);
 }
 
 .fret-number {
@@ -161,9 +165,9 @@
   top: -20px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
-  color: #666;
-  font-weight: 500;
+  font-size: var(--ds-font-xs);
+  color: var(--ds-color-neutral-600);
+  font-weight: var(--ds-font-medium);
 }
 
 .fret-marker {
@@ -173,14 +177,14 @@
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--ds-space-5);
   z-index: 1;
 }
 
 .marker-dot {
   width: 8px;
   height: 8px;
-  background: #ccc;
+  background: var(--ds-color-neutral-300);
   border-radius: 50%;
 }
 
@@ -209,7 +213,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: #666;
+  background: var(--ds-color-neutral-600);
   z-index: 2;
 }
 
@@ -236,22 +240,22 @@
   justify-content: center;
   z-index: 3;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--ds-transition-base);
 }
 
 .note-position.in-scale {
-  background: #4CAF50;
-  border: 2px solid #4CAF50;
+  background: var(--ds-color-primary);
+  border: 2px solid var(--ds-color-primary);
 }
 
 .note-position.root {
-  background: #2196F3 !important;
-  border: 2px solid #2196F3 !important;
+  background: var(--ds-color-secondary) !important;
+  border: 2px solid var(--ds-color-secondary) !important;
 }
 
 .note-position.current {
-  background: #FF9800 !important;
-  border: 2px solid #FF9800 !important;
+  background: var(--ds-color-warning) !important;
+  border: 2px solid var(--ds-color-warning) !important;
   animation: pulse-note 1s ease-in-out infinite alternate;
   transform: translate(-50%, -50%) scale(1.2);
 }
@@ -262,9 +266,9 @@
 }
 
 .note-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
+  font-size: var(--ds-font-xs);
+  font-weight: var(--ds-font-semibold);
+  color: var(--ds-color-white);
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
 }
 
@@ -281,15 +285,15 @@
   .fret {
     width: 45px;
   }
-  
+
   .strings {
     height: 180px;
   }
-  
+
   .string-container {
     height: 24px;
   }
-  
+
   .note-position {
     width: 24px;
     height: 24px;
@@ -300,46 +304,46 @@
   .fret {
     width: 35px;
   }
-  
+
   .fretboard {
-    padding: 6px 0;
-    gap: 4px;
+    padding: var(--ds-space-2) 0;
+    gap: var(--ds-space-1);
     justify-content: flex-start;
   }
-  
+
   .strings {
     height: 160px;
     padding: 15px 0;
   }
-  
+
   .string-container {
     height: 22px;
   }
-  
+
   .note-position {
     width: 20px;
     height: 20px;
   }
-  
+
   .note-label {
     font-size: 9px;
   }
-  
+
   .legend {
-    gap: 8px;
+    gap: var(--ds-space-2);
   }
-  
+
   .legend-item {
-    font-size: 10px;
+    font-size: var(--ds-font-xs);
   }
-  
+
   .legend-dot {
     width: 8px;
     height: 8px;
   }
-  
+
   .scale-name {
-    font-size: 14px;
+    font-size: var(--ds-font-base);
   }
 }
 
@@ -347,31 +351,31 @@
   .fret {
     width: 30px;
   }
-  
+
   .strings {
     height: 140px;
     padding: 12px 0;
   }
-  
+
   .string-container {
     height: 20px;
   }
-  
+
   .note-position {
     width: 18px;
     height: 18px;
   }
-  
+
   .note-label {
     font-size: 8px;
   }
-  
+
   .string-labels {
     padding: 12px 0;
     width: 15px;
   }
-  
+
   .string-label {
-    font-size: 10px;
+    font-size: var(--ds-font-xs);
   }
 }

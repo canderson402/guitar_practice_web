@@ -207,11 +207,12 @@ export const Metronome: React.FC = () => {
   return (
     <div className="metronome">
       <div className="sound-type-control">
-        <label>Sound Type: </label>
-        <select 
-          value={metronome.soundType} 
+        <label className="ds-label-inline">Sound:</label>
+        <select
+          value={metronome.soundType}
           onChange={(e) => setMetronomeSoundType(e.target.value as 'synth' | 'asrx')}
-          className="sound-type-select"
+          className="ds-select ds-input-sm"
+          style={{ width: 'auto' }}
         >
           <option value="synth">Synth</option>
           <option value="asrx">Block</option>
@@ -228,22 +229,23 @@ export const Metronome: React.FC = () => {
       </div>
       
       <div className="bpm-control">
-        <button onClick={() => handleBpmChange(-5)} className="bpm-button">−5</button>
-        <button onClick={() => handleBpmChange(-1)} className="bpm-button">−1</button>
+        <button onClick={() => handleBpmChange(-5)} className="ds-btn ds-btn-outline ds-btn-icon">−5</button>
+        <button onClick={() => handleBpmChange(-1)} className="ds-btn ds-btn-outline ds-btn-icon">−1</button>
         <div className="bpm-display">
           <span className="bpm-value">{metronome.bpm}</span>
           <span className="bpm-label">BPM</span>
         </div>
-        <button onClick={() => handleBpmChange(1)} className="bpm-button">+1</button>
-        <button onClick={() => handleBpmChange(5)} className="bpm-button">+5</button>
+        <button onClick={() => handleBpmChange(1)} className="ds-btn ds-btn-outline ds-btn-icon">+1</button>
+        <button onClick={() => handleBpmChange(5)} className="ds-btn ds-btn-outline ds-btn-icon">+5</button>
       </div>
       
       <div className="time-signature">
-        <label>Time Signature:</label>
-        <select 
-          value={metronome.beatsPerMeasure} 
+        <label className="ds-label-inline">Time:</label>
+        <select
+          value={metronome.beatsPerMeasure}
           onChange={(e) => setBeatsPerMeasure(Number(e.target.value))}
-          className="time-signature-select"
+          className="ds-select ds-input-sm"
+          style={{ width: 'auto' }}
         >
           <option value={2}>2/4</option>
           <option value={3}>3/4</option>
@@ -253,9 +255,9 @@ export const Metronome: React.FC = () => {
           <option value={7}>7/8</option>
         </select>
       </div>
-      
+
       <div className="emphasis-control">
-        <label className="emphasis-checkbox">
+        <label className="ds-checkbox">
           <input
             type="checkbox"
             checked={metronome.emphasizeFirstBeat}
@@ -264,39 +266,39 @@ export const Metronome: React.FC = () => {
           Emphasize First Beat
         </label>
       </div>
-      
+
       <div className="subdivision-control">
-        <div className="subdivision-icons">
+        <div className="ds-btn-group">
           <button
-            className={`subdivision-icon ${metronome.subdivision === 'quarter' ? 'active' : ''}`}
+            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'quarter' ? 'active' : ''}`}
             onClick={() => setSubdivision('quarter')}
             title="Quarter notes"
           >
             ♩
           </button>
           <button
-            className={`subdivision-icon ${metronome.subdivision === 'eighth' ? 'active' : ''}`}
+            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'eighth' ? 'active' : ''}`}
             onClick={() => setSubdivision('eighth')}
             title="Eighth notes"
           >
             ♫
           </button>
           <button
-            className={`subdivision-icon ${metronome.subdivision === 'sixteenth' ? 'active' : ''}`}
+            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'sixteenth' ? 'active' : ''}`}
             onClick={() => setSubdivision('sixteenth')}
             title="Sixteenth notes"
           >
             ♬
           </button>
           <button
-            className={`subdivision-icon ${metronome.subdivision === 'eighthTriplet' ? 'active' : ''}`}
+            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'eighthTriplet' ? 'active' : ''}`}
             onClick={() => setSubdivision('eighthTriplet')}
             title="Eighth note triplets"
           >
             ♫₃
           </button>
           <button
-            className={`subdivision-icon ${metronome.subdivision === 'sixteenthTriplet' ? 'active' : ''}`}
+            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'sixteenthTriplet' ? 'active' : ''}`}
             onClick={() => setSubdivision('sixteenthTriplet')}
             title="Sixteenth note triplets"
           >
