@@ -6,11 +6,10 @@ import { Metronome } from './components/Metronome';
 import { Timer } from './components/Timer';
 import { NoteSelector } from './components/NoteSelector';
 import { GuitarNeck } from './components/GuitarNeck';
-import { PracticeProgress } from './components/PracticeProgress';
 import { ChordProgression } from './components/ChordProgression';
 import { CircleOfFifths } from './components/CircleOfFifths';
 import { NoteTrainer } from './components/NoteTrainer';
-import { useStore } from './store/useStore';
+import { useStore, configurationPresets } from './store/useStore';
 import { themes, injectThemeStyles } from './utils/themeGenerator';
 import {
   DndContext,
@@ -79,7 +78,7 @@ const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
 };
 
 function App() {
-  const { cards, reorderCards, theme, setTheme } = useStore();
+  const { cards, reorderCards, theme, setTheme, applyConfiguration, currentConfiguration } = useStore();
   
   // Inject dynamic theme styles on mount
   React.useEffect(() => {
@@ -125,8 +124,6 @@ function App() {
         return <NoteSelector />;
       case 'guitarNeck':
         return <GuitarNeck />;
-      case 'practiceProgress':
-        return <PracticeProgress />;
       case 'chordProgression':
         return <ChordProgression />;
       case 'circleOfFifths':
@@ -189,6 +186,19 @@ function App() {
         <h1>Guitar Practice</h1>
         <div className="header-controls">
           <div className="header-selector">
+            <label>Configuration:</label>
+            <select
+              value={currentConfiguration}
+              onChange={(e) => applyConfiguration(e.target.value)}
+            >
+              {configurationPresets.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="header-selector">
             <label>Theme:</label>
             <select value={theme} onChange={(e) => setTheme(e.target.value as any)}>
               {Object.entries(themes).map(([themeId, themeData]) => (
@@ -243,8 +253,7 @@ function App() {
                 
                 // Define card weights based on typical content size
                 const cardWeights: { [key: string]: number } = {
-                  'practiceProgress': 2,    // Medium height
-                  'metronome': 2,          // Medium height  
+                  'metronome': 2,          // Medium height
                   'timer': 2,              // Medium height
                   'noteSelector': 3,       // Tall (scale selector + notes)
                   'noteTrainer': 3,        // Tall (auto-advance controls + large note display)

@@ -70,6 +70,45 @@
   color: #333;
 }
 
+.interval-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.interval-presets {
+  display: flex;
+  gap: 4px;
+}
+
+.preset-btn {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #999;
+}
+
+.preset-btn.active {
+  background: var(--accent-color, #ff6b35);
+  border-color: var(--accent-color, #ff6b35);
+  color: white;
+}
+
+.preset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Activation Toggle */
 .activation-toggle {
   display: flex;

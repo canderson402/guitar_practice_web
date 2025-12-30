@@ -332,15 +332,35 @@ export const NoteTrainer: React.FC = () => {
           
           <div className="control-compact">
             <label>Every:</label>
-            <input 
-              type="number" 
-              min="1" 
-              max={circleOfFifths.changeMode === 'beats' ? '48' : '16'}
-              value={circleOfFifths.changeInterval}
-              onChange={(e) => setCircleChangeInterval(parseInt(e.target.value) || 1)}
-              className="number-compact"
-              disabled={!circleOfFifths.autoAdvance}
-            />
+            <div className="interval-input-group">
+              <input
+                type="number"
+                min="1"
+                max={circleOfFifths.changeMode === 'beats' ? '48' : '16'}
+                value={circleOfFifths.changeInterval}
+                onChange={(e) => setCircleChangeInterval(parseInt(e.target.value) || 1)}
+                className="number-compact"
+                disabled={!circleOfFifths.autoAdvance}
+              />
+              <div className="interval-presets">
+                <button
+                  className={`preset-btn ${circleOfFifths.changeInterval === 11 ? 'active' : ''}`}
+                  onClick={() => setCircleChangeInterval(11)}
+                  disabled={!circleOfFifths.autoAdvance}
+                  title="One string (11 beats)"
+                >
+                  11
+                </button>
+                <button
+                  className={`preset-btn ${circleOfFifths.changeInterval === 6 ? 'active' : ''}`}
+                  onClick={() => setCircleChangeInterval(6)}
+                  disabled={!circleOfFifths.autoAdvance}
+                  title="One position (6 beats)"
+                >
+                  6
+                </button>
+              </div>
+            </div>
           </div>
           
           <div className="control-compact">

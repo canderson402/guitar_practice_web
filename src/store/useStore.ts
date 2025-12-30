@@ -57,6 +57,25 @@ interface CardInfo {
   layout: 'vertical' | 'horizontal';
 }
 
+interface ConfigurationPreset {
+  id: string;
+  name: string;
+  enabledCards: string[];
+}
+
+export const configurationPresets: ConfigurationPreset[] = [
+  {
+    id: 'default',
+    name: 'Default',
+    enabledCards: ['metronome', 'noteSelector', 'noteTrainer'],
+  },
+  {
+    id: 'theory',
+    name: 'Theory',
+    enabledCards: ['noteSelector', 'circleOfFifths', 'chordProgression', 'guitarNeck'],
+  },
+];
+
 interface StoreState {
   timer: TimerState;
   metronome: MetronomeState;
@@ -65,6 +84,7 @@ interface StoreState {
   circleOfFifths: CircleOfFifthsState;
   cards: CardInfo[];
   theme: string;
+  currentConfiguration: string;
   
   // Timer actions
   setTimerRunning: (isRunning: boolean) => void;
@@ -117,7 +137,9 @@ interface StoreState {
   
   // Theme management
   setTheme: (theme: string) => void;
-  
+
+  // Configuration presets
+  applyConfiguration: (presetId: string) => void;
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -160,23 +182,23 @@ export const useStore = create<StoreState>((set) => ({
     autoAdvance: false,
     direction: 'clockwise',
     changeMode: 'beats',
-    changeInterval: 12,
+    changeInterval: 11,
     randomize: false,
     showNext: true,
     nextNote: null,
     countIn: 4,
   },
   cards: [
-    { id: 'practiceProgress', title: 'Session Status', isActive: true, layout: 'horizontal' },
     { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
-    { id: 'timer', title: 'Timer', isActive: true, layout: 'horizontal' },
+    { id: 'timer', title: 'Timer', isActive: false, layout: 'horizontal' },
     { id: 'noteSelector', title: 'Scale', isActive: true, layout: 'horizontal' },
     { id: 'noteTrainer', title: 'Note Trainer', isActive: true, layout: 'horizontal' },
-    { id: 'circleOfFifths', title: 'Circle of Fifths', isActive: true, layout: 'horizontal' },
-    { id: 'chordProgression', title: 'Chord', isActive: true, layout: 'horizontal' },
-    { id: 'guitarNeck', title: 'Fretboard', isActive: true, layout: 'vertical' },
+    { id: 'circleOfFifths', title: 'Circle of Fifths', isActive: false, layout: 'horizontal' },
+    { id: 'chordProgression', title: 'Chord', isActive: false, layout: 'horizontal' },
+    { id: 'guitarNeck', title: 'Fretboard', isActive: false, layout: 'vertical' },
   ],
   theme: 'eighties',
+  currentConfiguration: 'default',
   
   // Timer actions
   setTimerRunning: (isRunning) => set((state) => ({ 
@@ -315,4 +337,18 @@ export const useStore = create<StoreState>((set) => ({
   
   // Theme actions
   setTheme: (theme) => set({ theme }),
+
+  // Configuration presets
+  applyConfiguration: (presetId) => set((state) => {
+    const preset = configurationPresets.find(p => p.id === presetId);
+    if (!preset) return state;
+
+    return {
+      currentConfiguration: presetId,
+      cards: state.cards.map(card => ({
+        ...card,
+        isActive: preset.enabledCards.includes(card.id),
+      })),
+    };
+  }),
 }));
