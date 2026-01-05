@@ -30,6 +30,23 @@
   text-align: left;
 }
 
+.contact-info {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #aaa;
+  flex: 1;
+  text-align: center;
+}
+
+.contact-info a {
+  color: #7cb3ff;
+  text-decoration: none;
+}
+
+.contact-info a:hover {
+  text-decoration: underline;
+}
+
 .header-controls {
   display: flex;
   gap: 16px;
@@ -372,9 +389,13 @@
   .app-header {
     padding: 10px;
   }
-  
+
   .app-header h1 {
     font-size: 1.3rem;
+  }
+
+  .contact-info {
+    display: none;
   }
   
   .app-main {

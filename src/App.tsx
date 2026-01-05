@@ -185,6 +185,7 @@ function App() {
     <div className={`app theme-${theme}`}>
       <header className="app-header">
         <h1>Guitar Practice</h1>
+        <p className="contact-info">Questions, bug reports, or feature requests? Contact me at <a href="mailto:canderson1192@gmail.com">canderson1192@gmail.com</a></p>
         <div className="header-controls">
           <div className="header-selector">
             <label>Configuration:</label>
