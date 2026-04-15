@@ -138,15 +138,17 @@ export const HarmonyFretboard: React.FC<Props> = ({
 
                     // Drag-and-drop mechanics on the harmony side:
                     //  - A selected voicing is the drag source.
-                    //  - Any voicing cell (selected OR alternate) belonging to
-                    //    the pair currently being dragged is a drop target.
-                    //  - Other pairs' dots are inert during a drag.
+                    //  - While a drag is active, every cell on the harmony
+                    //    side accepts the drop — the drop handler snaps to
+                    //    the nearest voicing, so imprecise releases still land.
+                    //  - The pulsing visual is reserved for actual voicings
+                    //    of the dragged pair, signalling where it will snap to.
                     const isDragSource =
                       side === 'harmony' && noteActive && !!harmonyInfo;
-                    const isDropTarget =
-                      side === 'harmony'
+                    const dragInProgress = side === 'harmony' && draggingBaseKey !== null;
+                    const isVisualDropTarget =
+                      dragInProgress
                       && harmonyInfo !== null
-                      && draggingBaseKey !== null
                       && harmonyInfo.basePosKey === draggingBaseKey;
 
                     // Label content: order number when toggle is on and this
@@ -168,7 +170,7 @@ export const HarmonyFretboard: React.FC<Props> = ({
                       <div key={stringIndex} className="harmony-string-container">
                         <div className={`harmony-guitar-string string-${stringIndex}`} />
                         <div
-                          className={`harmony-note-position ${noteActive ? 'active' : ''} ${isAlternate ? 'alternate' : ''} ${noteInScale ? 'in-scale' : ''} ${rootNoteHere ? 'root' : ''} ${nonDiatonic ? 'non-diatonic' : ''} ${isDropTarget ? 'drop-target' : ''} ${side}`}
+                          className={`harmony-note-position ${noteActive ? 'active' : ''} ${isAlternate ? 'alternate' : ''} ${noteInScale ? 'in-scale' : ''} ${rootNoteHere ? 'root' : ''} ${nonDiatonic ? 'non-diatonic' : ''} ${isVisualDropTarget ? 'drop-target' : ''} ${side}`}
                           onClick={
                             side === 'base'
                               ? () => onBaseClick(stringIndex, fret, fretNote.note)
@@ -187,7 +189,10 @@ export const HarmonyFretboard: React.FC<Props> = ({
                           }
                           onDragEnd={isDragSource ? () => onHarmonyDragEnd() : undefined}
                           onDragOver={
-                            isDropTarget
+                            // Accept drops on *every* harmony cell during a
+                            // drag — the parent's drop handler snaps to the
+                            // nearest voicing so imprecise releases still land.
+                            dragInProgress
                               ? (e) => {
                                   e.preventDefault();
                                   e.dataTransfer.dropEffect = 'move';
@@ -195,7 +200,7 @@ export const HarmonyFretboard: React.FC<Props> = ({
                               : undefined
                           }
                           onDrop={
-                            isDropTarget
+                            dragInProgress
                               ? (e) => {
                                   e.preventDefault();
                                   onHarmonyDrop(stringIndex, fret);

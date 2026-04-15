@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
+import { Button, ToggleButtonGroup } from '../ui';
 import './CircleOfFifths.css';
 
 export const CircleOfFifths: React.FC = () => {
@@ -177,37 +178,23 @@ export const CircleOfFifths: React.FC = () => {
     <div className="circle-of-fifths">
       {/* Controls */}
       <div className="circle-controls">
-        {/* Mode Toggle */}
-        <div className="mode-toggle">
-          <button 
-            className={`mode-button ${mode === 'major' ? 'active' : ''}`}
-            onClick={() => setMode('major')}
-          >
+        <ToggleButtonGroup label="Key quality" layout="segmented">
+          <Button variant="ghost" active={mode === 'major'} onClick={() => setMode('major')}>
             Major
-          </button>
-          <button 
-            className={`mode-button ${mode === 'minor' ? 'active' : ''}`}
-            onClick={() => setMode('minor')}
-          >
+          </Button>
+          <Button variant="ghost" active={mode === 'minor'} onClick={() => setMode('minor')}>
             Minor
-          </button>
-        </div>
-        
-        {/* Display Mode Toggle */}
-        <div className="display-toggle">
-          <button 
-            className={`mode-button ${displayMode === 'chords' ? 'active' : ''}`}
-            onClick={() => setDisplayMode('chords')}
-          >
+          </Button>
+        </ToggleButtonGroup>
+
+        <ToggleButtonGroup label="Display mode" layout="segmented">
+          <Button variant="ghost" active={displayMode === 'chords'} onClick={() => setDisplayMode('chords')}>
             Chord Mode
-          </button>
-          <button 
-            className={`mode-button ${displayMode === 'relatives' ? 'active' : ''}`}
-            onClick={() => setDisplayMode('relatives')}
-          >
+          </Button>
+          <Button variant="ghost" active={displayMode === 'relatives'} onClick={() => setDisplayMode('relatives')}>
             Relative Mode
-          </button>
-        </div>
+          </Button>
+        </ToggleButtonGroup>
       </div>
       
       

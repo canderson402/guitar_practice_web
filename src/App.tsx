@@ -11,6 +11,8 @@ import { ChordProgression } from './components/ChordProgression';
 import { CircleOfFifths } from './components/CircleOfFifths';
 import { NoteTrainer } from './components/NoteTrainer';
 import { HarmonyMaker } from './components/HarmonyMaker';
+import { DesignSystemPreview } from './ui/DesignSystemPreview';
+import { Select } from './ui';
 import { useStore, configurationPresets } from './store/useStore';
 import { themes, injectThemeStyles } from './utils/themeGenerator';
 import {
@@ -81,17 +83,29 @@ const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
 
 function App() {
   const { cards, reorderCards, theme, setTheme, applyConfiguration, currentConfiguration } = useStore();
-  
+
+  // Hash-gated design-system preview. Navigate to `…/#design` to view every
+  // primitive in one place; return to the app by clearing the hash. Updates
+  // live as the user changes the hash so we don't force a reload.
+  const [hash, setHash] = React.useState<string>(() => window.location.hash);
+  React.useEffect(() => {
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
   // Inject dynamic theme styles on mount
   React.useEffect(() => {
     injectThemeStyles();
   }, []);
-  
+
   // Apply theme class to document body
   React.useEffect(() => {
     document.body.className = `theme-${theme}`;
   }, [theme]);
-  
+
+  // All hooks must be declared before any early return — React's rules of
+  // hooks require consistent call order across renders.
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -102,6 +116,12 @@ function App() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Short-circuit: the preview page doesn't need the cards or theme chrome.
+  // Everything below is skipped when the hash is set.
+  if (hash === '#design') {
+    return <DesignSystemPreview />;
+  }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -192,26 +212,21 @@ function App() {
         <div className="header-controls">
           <div className="header-selector">
             <label>Configuration:</label>
-            <select
+            <Select
+              size="sm"
               value={currentConfiguration}
               onChange={(e) => applyConfiguration(e.target.value)}
-            >
-              {configurationPresets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name}
-                </option>
-              ))}
-            </select>
+              options={configurationPresets.map(p => ({ value: p.id, label: p.name }))}
+            />
           </div>
           <div className="header-selector">
             <label>Theme:</label>
-            <select value={theme} onChange={(e) => setTheme(e.target.value as any)}>
-              {Object.entries(themes).map(([themeId, themeData]) => (
-                <option key={themeId} value={themeId}>
-                  {themeData.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              size="sm"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as any)}
+              options={Object.entries(themes).map(([id, data]) => ({ value: id, label: data.name }))}
+            />
           </div>
         </div>
       </header>

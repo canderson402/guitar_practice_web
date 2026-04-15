@@ -11,6 +11,7 @@ import {
   intervalNames,
 } from '../data/musicData';
 import type { VoicingPosition } from '../data/harmonyVoicings';
+import { Select, Button, Badge } from '../ui';
 
 // ---------------------------------------------------------------------------
 // One row in the Interval Analysis panel. Draggable via the handle, shows the
@@ -93,10 +94,10 @@ export const HarmonyAnalysisPair: React.FC<Props> = ({
           <span className={`harmony-pair-harmony ${!diatonic ? 'non-diatonic' : ''}`}>
             {selectedVoicing.note}
           </span>
-          <span className="harmony-pair-interval-badge">
+          <Badge variant="neutral" className="harmony-pair-interval-badge">
             {getIntervalName(baseNote, selectedVoicing.note)}
-          </span>
-          {!diatonic && <span className="harmony-non-diatonic-tag">non-diatonic</span>}
+          </Badge>
+          {!diatonic && <Badge variant="warning">non-diatonic</Badge>}
         </div>
         <div className="harmony-pair-position">
           Str {6 - baseStringIndex} F{baseFret} &rarr; Str {6 - selectedVoicing.stringIndex} F{selectedVoicing.fret}
@@ -104,31 +105,32 @@ export const HarmonyAnalysisPair: React.FC<Props> = ({
         <div className="harmony-pair-controls">
           <label className="harmony-pair-interval-label">
             Interval:
-            <select
-              className="harmony-pair-interval-select"
+            <Select
+              size="sm"
               value={currentKey}
               onChange={handleSelectChange}
-            >
-              <optgroup label="Diatonic (scale-relative)">
-                {diatonicIntervalOptions.map(opt => (
-                  <option key={intervalSpecKey(opt.spec)} value={intervalSpecKey(opt.spec)}>
-                    {opt.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Chromatic (fixed semitones)">
-                {chromaticIntervalOptions.map(opt => (
-                  <option key={intervalSpecKey(opt.spec)} value={intervalSpecKey(opt.spec)}>
-                    {opt.label}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+              groups={[
+                {
+                  label: 'Diatonic (scale-relative)',
+                  options: diatonicIntervalOptions.map(o => ({
+                    value: intervalSpecKey(o.spec),
+                    label: o.label,
+                  })),
+                },
+                {
+                  label: 'Chromatic (fixed semitones)',
+                  options: chromaticIntervalOptions.map(o => ({
+                    value: intervalSpecKey(o.spec),
+                    label: o.label,
+                  })),
+                },
+              ]}
+            />
           </label>
           {voicingCount > 1 && (
-            <button className="harmony-cycle-btn" onClick={onCycle}>
+            <Button variant="outline" size="sm" onClick={onCycle}>
               Voicing {voicingIndex + 1}/{voicingCount} &mdash; cycle
-            </button>
+            </Button>
           )}
         </div>
       </div>

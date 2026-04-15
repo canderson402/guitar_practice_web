@@ -91,6 +91,28 @@
   --ds-transition-fast: 0.15s ease;
   --ds-transition-base: 0.2s ease;
   --ds-transition-slow: 0.3s ease;
+
+  /* Z-index scale — named layers so we stop writing magic numbers. */
+  --ds-z-base: 1;
+  --ds-z-overlay: 100;
+  --ds-z-dropdown: 200;
+  --ds-z-modal: 300;
+  --ds-z-tooltip: 400;
+
+  /* Focus ring — shared a11y style for every interactive primitive. */
+  --ds-focus-ring: 0 0 0 3px var(--ds-color-primary-light);
+}
+
+/* Every interactive primitive gets the same focus treatment via :focus-visible
+   so keyboard users have consistent feedback without affecting mouse clicks. */
+.ds-focus-ring:focus-visible,
+.ds-btn:focus-visible,
+.ds-input:focus-visible,
+.ds-select:focus-visible,
+.ds-preset-btn:focus-visible,
+.ds-note-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--ds-focus-ring);
 }
 
 /* ============================================
@@ -165,6 +187,20 @@
   box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
 }
 
+/* Warning Button — outlined by default (filled on hover). Warning is used
+   for "confirm a slightly destructive action" affordances where a hard red
+   would feel too punishing. */
+.ds-btn-warning {
+  background-color: var(--ds-color-white);
+  color: var(--ds-color-warning);
+  border-color: var(--ds-color-warning);
+}
+
+.ds-btn-warning:hover:not(:disabled) {
+  background-color: var(--ds-color-warning);
+  color: var(--ds-color-white);
+}
+
 /* Outline Button */
 .ds-btn-outline {
   background-color: var(--ds-color-white);
@@ -172,7 +208,7 @@
   border-color: var(--ds-border-color);
 }
 
-.ds-btn-outline:hover:not(:disabled) {
+.ds-btn-outline:hover:not(:disabled):not(.active) {
   background-color: var(--ds-color-neutral-50);
   border-color: var(--ds-border-color-hover);
 }
@@ -183,6 +219,12 @@
   border-color: var(--ds-color-primary);
 }
 
+.ds-btn-outline.active:hover:not(:disabled) {
+  background-color: var(--ds-color-primary-hover);
+  border-color: var(--ds-color-primary-hover);
+  color: var(--ds-color-white);
+}
+
 /* Ghost Button */
 .ds-btn-ghost {
   background-color: transparent;
@@ -190,12 +232,18 @@
   border-color: transparent;
 }
 
-.ds-btn-ghost:hover:not(:disabled) {
+.ds-btn-ghost:hover:not(:disabled):not(.active) {
   background-color: var(--ds-color-neutral-100);
+  color: var(--ds-color-neutral-800);
 }
 
 .ds-btn-ghost.active {
   background-color: var(--ds-color-neutral-700);
+  color: var(--ds-color-white);
+}
+
+.ds-btn-ghost.active:hover:not(:disabled) {
+  background-color: var(--ds-color-neutral-800);
   color: var(--ds-color-white);
 }
 
@@ -309,6 +357,37 @@
 }
 
 /* ============================================
+   SLIDER (Range Input)
+   ============================================ */
+
+.ds-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  font-size: var(--ds-font-sm);
+  color: var(--ds-color-neutral-600);
+}
+
+.ds-slider-label {
+  font-weight: var(--ds-font-semibold);
+  min-width: 52px;
+}
+
+.ds-slider input[type="range"] {
+  width: 100px;
+  accent-color: var(--ds-color-primary);
+  cursor: pointer;
+}
+
+.ds-slider-value {
+  min-width: 42px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-color-neutral-700);
+  font-weight: var(--ds-font-medium);
+}
+
+/* ============================================
    LABELS
    ============================================ */
 
@@ -386,6 +465,59 @@
 .ds-checkbox:has(input:disabled) {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Every Checkbox renders as a toggleable pill. An optional --ds-checkbox-swatch
+   CSS var overrides both border + fill; absent, falls back to a generic dark
+   gray on/off that matches the ghost-button active palette. The native
+   checkbox is visually hidden (still focusable + readable by AT); the whole
+   pill is the hit target. */
+.ds-checkbox-swatched {
+  padding: var(--ds-space-1) var(--ds-space-3);
+  border: 2px solid var(--ds-checkbox-swatch, var(--ds-color-neutral-400));
+  border-radius: var(--ds-radius-lg);
+  background-color: transparent;
+  color: var(--ds-checkbox-swatch, var(--ds-color-neutral-700));
+  font-size: var(--ds-font-sm);
+  font-weight: var(--ds-font-semibold);
+  transition: all var(--ds-transition-base);
+}
+
+/* Unchecked hover: keep it outlined — just a subtle neutral fill + darker
+   border so it's obviously hoverable without pre-filling with the swatch.
+   If we fill here, the click-to-check transition becomes invisible because
+   unchecked-hover would already look like checked. */
+.ds-checkbox-swatched:hover:not(:has(input:disabled)):not(.ds-checkbox-checked) {
+  background-color: var(--ds-color-neutral-50);
+}
+
+.ds-checkbox-swatched.ds-checkbox-checked {
+  background-color: var(--ds-checkbox-swatch, var(--ds-color-neutral-700));
+  border-color: var(--ds-checkbox-swatch, var(--ds-color-neutral-700));
+  color: var(--ds-color-white);
+}
+
+.ds-checkbox-swatched.ds-checkbox-checked:hover:not(:has(input:disabled)) {
+  opacity: 0.85;
+}
+
+/* Visually hide the native checkbox — accessible to AT, invisible on screen. */
+.ds-checkbox-swatched input[type="checkbox"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Keyboard focus — since the real input is visually hidden, surface the focus
+   ring on the whole pill via :focus-within. */
+.ds-checkbox-swatched:focus-within {
+  box-shadow: var(--ds-focus-ring);
 }
 
 /* Toggle Switch */
@@ -485,6 +617,16 @@
   box-shadow: var(--ds-shadow-sm);
 }
 
+/* Active segmented button on hover: keep it white, just dim slightly. The
+   extra specificity (.ds-segmented + .ds-btn.active:hover:not) beats the
+   ghost variant's own .active:hover rule that would otherwise invert
+   background + text colors entirely. */
+.ds-segmented .ds-btn.active:hover:not(:disabled) {
+  background-color: var(--ds-color-neutral-50);
+  color: var(--ds-color-neutral-800);
+  box-shadow: var(--ds-shadow-sm);
+}
+
 .ds-segmented .ds-btn:hover:not(.active) {
   background-color: rgba(255, 255, 255, 0.5);
 }
@@ -503,6 +645,15 @@
 .ds-panel-subtle {
   background-color: var(--ds-bg-subtle);
   border: none;
+}
+
+.ds-panel-title {
+  font-size: var(--ds-font-sm);
+  font-weight: var(--ds-font-semibold);
+  color: var(--ds-color-neutral-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--ds-space-2);
 }
 
 /* ============================================
@@ -620,7 +771,7 @@
   transition: all var(--ds-transition-fast);
 }
 
-.ds-preset-btn:hover:not(:disabled) {
+.ds-preset-btn:hover:not(:disabled):not(.active) {
   background-color: var(--ds-color-neutral-50);
   border-color: var(--ds-border-color-hover);
 }
@@ -628,6 +779,14 @@
 .ds-preset-btn.active {
   background-color: var(--accent-color, var(--ds-color-primary));
   border-color: var(--accent-color, var(--ds-color-primary));
+  color: var(--ds-color-white);
+}
+
+/* Hover while active: just dim the active fill slightly. Avoids the unreadable
+   white-on-light-gray flash when the hover rule overrode only the background. */
+.ds-preset-btn.active:hover:not(:disabled) {
+  background-color: var(--ds-color-primary-hover);
+  border-color: var(--ds-color-primary-hover);
   color: var(--ds-color-white);
 }
 

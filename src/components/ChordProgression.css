@@ -229,35 +229,6 @@
   gap: var(--ds-space-2);
 }
 
-.chord-help-btn {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1.5px solid var(--ds-color-neutral-400);
-  background: var(--ds-color-white);
-  color: var(--ds-color-neutral-500);
-  font-size: var(--ds-font-sm);
-  font-weight: var(--ds-font-bold);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  transition: all var(--ds-transition-base);
-}
-
-.chord-help-btn:hover {
-  border-color: var(--ds-color-primary);
-  color: var(--ds-color-primary);
-}
-
-.chord-help-btn.active {
-  background: var(--ds-color-primary);
-  border-color: var(--ds-color-primary);
-  color: var(--ds-color-white);
-}
-
 .chord-legend {
   list-style: none;
   margin: 0 0 var(--ds-space-2);

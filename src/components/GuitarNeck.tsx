@@ -10,6 +10,7 @@ import {
   getChordIntervalName,
 } from '../data/musicData';
 import { generateFretboard, fretMarkers, doubleFretMarkers, isNoteInScale } from '../data/guitarData';
+import { Checkbox } from '../ui';
 import './GuitarNeckNew.css';
 
 export const GuitarNeck: React.FC = () => {
@@ -214,66 +215,45 @@ export const GuitarNeck: React.FC = () => {
     <div className="guitar-neck">
       <div className={`neck-info ${whiteText ? 'white-text-mode' : 'black-text-mode'}`}>
         <div className="neck-controls">
-          <div className="legend-item text-toggle" onClick={() => setWhiteText(!whiteText)}>
-            <input 
-              type="checkbox" 
-              checked={whiteText} 
-              onChange={() => setWhiteText(!whiteText)}
-            />
-            <span>White Text</span>
-          </div>
-          
-          <div className="fret-toggle">
-            <label>
-              <input
-                type="checkbox"
-                checked={show24Frets}
-                onChange={(e) => setShow24Frets(e.target.checked)}
-              />
-              Show 24 frets
-            </label>
-          </div>
-          
-          <div className="legend-item root-item" onClick={() => setShowRoot(!showRoot)}>
-            <input 
-              type="checkbox" 
-              checked={showRoot} 
-              onChange={() => setShowRoot(!showRoot)}
-            />
-            <span>Root</span>
-          </div>
-          
-          <div className="legend-item scale-item" onClick={() => setShowScale(!showScale)}>
-            <input 
-              type="checkbox" 
-              checked={showScale} 
-              onChange={() => setShowScale(!showScale)}
-            />
-            <span>Scale</span>
-          </div>
-          
-          <div
-            className={`legend-item current-item ${selectedChord ? 'disabled' : ''}`}
-            onClick={() => { if (!selectedChord) setShowCurrent(!showCurrent); }}
+          {/* Swatch colors match the dots drawn on the fretboard for each
+              overlay. They shift when the user toggles between black-text and
+              white-text modes (the fretboard's root/scale/interval colors
+              change too, so the legend should track). */}
+          <Checkbox
+            checked={whiteText}
+            onCheckedChange={setWhiteText}
+            label="White Text"
+          />
+          <Checkbox
+            checked={show24Frets}
+            onCheckedChange={setShow24Frets}
+            label="Show 24 frets"
+          />
+          <Checkbox
+            checked={showRoot}
+            onCheckedChange={setShowRoot}
+            label="Root"
+            swatchColor={whiteText ? '#1E90FF' : '#87CEEB'}
+          />
+          <Checkbox
+            checked={showScale}
+            onCheckedChange={setShowScale}
+            label="Scale"
+            swatchColor={whiteText ? '#228B22' : '#90EE90'}
+          />
+          <Checkbox
+            checked={showCurrent && !selectedChord}
+            onCheckedChange={setShowCurrent}
+            disabled={!!selectedChord}
+            label={`Interval${currentInterval && !selectedChord ? `: ${currentInterval}` : ''}`}
+            swatchColor={whiteText ? '#FF8C00' : '#FFD700'}
             title={selectedChord ? 'Disabled while a chord is highlighted' : undefined}
-          >
-            <input
-              type="checkbox"
-              checked={showCurrent && !selectedChord}
-              disabled={!!selectedChord}
-              onChange={() => setShowCurrent(!showCurrent)}
-            />
-            <span>Interval{currentInterval && !selectedChord ? `: ${currentInterval}` : ''}</span>
-          </div>
-
-          <div className="legend-item intervals-item" onClick={() => setShowIntervals(!showIntervals)}>
-            <input 
-              type="checkbox" 
-              checked={showIntervals} 
-              onChange={() => setShowIntervals(!showIntervals)}
-            />
-            <span>Show Intervals</span>
-          </div>
+          />
+          <Checkbox
+            checked={showIntervals}
+            onCheckedChange={setShowIntervals}
+            label="Show Intervals"
+          />
         </div>
         
         {selectedChord ? (

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { scales, getScaleChords } from '../data/musicData';
+import { IconButton } from '../ui';
 import './ChordProgression.css';
 
 // Legend entries for the chord-type help popover. Each entry pairs a plain-English
@@ -56,16 +57,18 @@ export const ChordProgression: React.FC = () => {
         <div className="scale-chords-display">
           <div className="scale-label">
             Chords in {note.selectedNote} {note.selectedScale}
-            <button
-              type="button"
-              className={`chord-help-btn ${showLegend ? 'active' : ''}`}
-              onClick={() => setShowLegend(v => !v)}
+            <IconButton
               aria-label="Chord type reference"
               aria-expanded={showLegend}
               title="What do these chord symbols mean?"
+              variant="outline"
+              size="sm"
+              round
+              active={showLegend}
+              onClick={() => setShowLegend(v => !v)}
             >
               ?
-            </button>
+            </IconButton>
           </div>
           {showLegend && (
             <ul className="chord-legend" role="region" aria-label="Chord type reference">

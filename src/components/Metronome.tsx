@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
+import { Button, Select, Checkbox, ToggleButtonGroup } from '../ui';
 import './Metronome.css';
 
 export const Metronome: React.FC = () => {
@@ -204,21 +205,29 @@ export const Metronome: React.FC = () => {
     setBpm(newBpm);
   };
   
+  const subdivisions: Array<{ value: typeof metronome.subdivision; label: string; title: string }> = [
+    { value: 'quarter', label: '♩', title: 'Quarter notes' },
+    { value: 'eighth', label: '♫', title: 'Eighth notes' },
+    { value: 'sixteenth', label: '♬', title: 'Sixteenth notes' },
+    { value: 'eighthTriplet', label: '♫₃', title: 'Eighth note triplets' },
+    { value: 'sixteenthTriplet', label: '♬₃', title: 'Sixteenth note triplets' },
+  ];
+
   return (
     <div className="metronome">
       <div className="sound-type-control">
         <label className="ds-label-inline">Sound:</label>
-        <select
+        <Select
+          size="sm"
           value={metronome.soundType}
           onChange={(e) => setMetronomeSoundType(e.target.value as 'synth' | 'asrx')}
-          className="ds-select ds-input-sm"
-          style={{ width: 'auto' }}
-        >
-          <option value="synth">Synth</option>
-          <option value="asrx">Block</option>
-        </select>
+          options={[
+            { value: 'synth', label: 'Synth' },
+            { value: 'asrx', label: 'Block' },
+          ]}
+        />
       </div>
-      
+
       <div className="beat-indicators">
         {Array.from({ length: metronome.beatsPerMeasure }, (_, i) => (
           <div
@@ -227,92 +236,66 @@ export const Metronome: React.FC = () => {
           />
         ))}
       </div>
-      
+
       <div className="bpm-control">
-        <button onClick={() => handleBpmChange(-5)} className="ds-btn ds-btn-outline ds-btn-icon">−5</button>
-        <button onClick={() => handleBpmChange(-1)} className="ds-btn ds-btn-outline ds-btn-icon">−1</button>
+        <Button variant="outline" size="sm" onClick={() => handleBpmChange(-5)} aria-label="-5 BPM">−5</Button>
+        <Button variant="outline" size="sm" onClick={() => handleBpmChange(-1)} aria-label="-1 BPM">−1</Button>
         <div className="bpm-display">
           <span className="bpm-value">{metronome.bpm}</span>
           <span className="bpm-label">BPM</span>
         </div>
-        <button onClick={() => handleBpmChange(1)} className="ds-btn ds-btn-outline ds-btn-icon">+1</button>
-        <button onClick={() => handleBpmChange(5)} className="ds-btn ds-btn-outline ds-btn-icon">+5</button>
+        <Button variant="outline" size="sm" onClick={() => handleBpmChange(1)} aria-label="+1 BPM">+1</Button>
+        <Button variant="outline" size="sm" onClick={() => handleBpmChange(5)} aria-label="+5 BPM">+5</Button>
       </div>
-      
+
       <div className="time-signature">
         <label className="ds-label-inline">Time:</label>
-        <select
+        <Select
+          size="sm"
           value={metronome.beatsPerMeasure}
           onChange={(e) => setBeatsPerMeasure(Number(e.target.value))}
-          className="ds-select ds-input-sm"
-          style={{ width: 'auto' }}
-        >
-          <option value={2}>2/4</option>
-          <option value={3}>3/4</option>
-          <option value={4}>4/4</option>
-          <option value={5}>5/4</option>
-          <option value={6}>6/8</option>
-          <option value={7}>7/8</option>
-        </select>
+          options={[
+            { value: '2', label: '2/4' },
+            { value: '3', label: '3/4' },
+            { value: '4', label: '4/4' },
+            { value: '5', label: '5/4' },
+            { value: '6', label: '6/8' },
+            { value: '7', label: '7/8' },
+          ]}
+        />
       </div>
 
       <div className="emphasis-control">
-        <label className="ds-checkbox">
-          <input
-            type="checkbox"
-            checked={metronome.emphasizeFirstBeat}
-            onChange={(e) => setEmphasizeFirstBeat(e.target.checked)}
-          />
-          Emphasize First Beat
-        </label>
+        <Checkbox
+          checked={metronome.emphasizeFirstBeat}
+          onCheckedChange={setEmphasizeFirstBeat}
+          label="Emphasize First Beat"
+        />
       </div>
 
       <div className="subdivision-control">
-        <div className="ds-btn-group">
-          <button
-            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'quarter' ? 'active' : ''}`}
-            onClick={() => setSubdivision('quarter')}
-            title="Quarter notes"
-          >
-            ♩
-          </button>
-          <button
-            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'eighth' ? 'active' : ''}`}
-            onClick={() => setSubdivision('eighth')}
-            title="Eighth notes"
-          >
-            ♫
-          </button>
-          <button
-            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'sixteenth' ? 'active' : ''}`}
-            onClick={() => setSubdivision('sixteenth')}
-            title="Sixteenth notes"
-          >
-            ♬
-          </button>
-          <button
-            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'eighthTriplet' ? 'active' : ''}`}
-            onClick={() => setSubdivision('eighthTriplet')}
-            title="Eighth note triplets"
-          >
-            ♫₃
-          </button>
-          <button
-            className={`ds-btn ds-btn-outline ${metronome.subdivision === 'sixteenthTriplet' ? 'active' : ''}`}
-            onClick={() => setSubdivision('sixteenthTriplet')}
-            title="Sixteenth note triplets"
-          >
-            ♬₃
-          </button>
-        </div>
+        <ToggleButtonGroup label="Subdivision" layout="adjacent">
+          {subdivisions.map(s => (
+            <Button
+              key={s.value}
+              variant="outline"
+              size="sm"
+              active={metronome.subdivision === s.value}
+              onClick={() => setSubdivision(s.value)}
+              title={s.title}
+            >
+              {s.label}
+            </Button>
+          ))}
+        </ToggleButtonGroup>
       </div>
-      
-      <button 
+
+      <Button
+        variant={metronome.isPlaying ? 'danger' : 'primary'}
         onClick={() => setMetronomePlaying(!metronome.isPlaying)}
-        className={`play-button ${metronome.isPlaying ? 'playing' : ''}`}
       >
         {metronome.isPlaying ? 'Stop' : 'Start'}
-      </button>
+      </Button>
     </div>
   );
 };

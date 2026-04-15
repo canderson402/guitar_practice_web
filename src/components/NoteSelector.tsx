@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { notes, scales, getScaleNotes, getChromaticScale } from '../data/musicData';
+import { Select, Button } from '../ui';
 import './NoteSelector.css';
 
 export const NoteSelector: React.FC = () => {
@@ -254,34 +255,27 @@ export const NoteSelector: React.FC = () => {
     <div className="note-selector">
       <div className="top-controls">
         <div className="selection-controls">
-          <div className="ds-form-group">
-            <label className="ds-label">Root Note</label>
-            <select
-              value={note.selectedNote || ''}
-              onChange={(e) => handleNoteChange(e.target.value || null)}
-              className="ds-select"
-            >
-              <option value="">Select a note</option>
-              {notes.map(n => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Root Note"
+            value={note.selectedNote || ''}
+            onChange={(e) => handleNoteChange(e.target.value || null)}
+          >
+            <option value="">Select a note</option>
+            {notes.map(n => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </Select>
 
-          <div className="ds-form-group">
-            <label className="ds-label">Scale</label>
-            <select
-              value={note.selectedScale || ''}
-              onChange={(e) => handleScaleChange(e.target.value || null)}
-              className="ds-select"
-            >
-              <option value="">Chromatic</option>
-              {Object.keys(scales).map(scale => (
-                <option key={scale} value={scale}>{scale}</option>
-              ))}
-            </select>
-          </div>
-          
+          <Select
+            label="Scale"
+            value={note.selectedScale || ''}
+            onChange={(e) => handleScaleChange(e.target.value || null)}
+          >
+            <option value="">Chromatic</option>
+            {Object.keys(scales).map(scale => (
+              <option key={scale} value={scale}>{scale}</option>
+            ))}
+          </Select>
         </div>
       </div>
       
@@ -371,9 +365,9 @@ export const NoteSelector: React.FC = () => {
                     })}
                   </div>
                   <div className="scale-controls-below">
-                    <button onClick={handleNext} className="ds-btn ds-btn-secondary">
+                    <Button variant="secondary" onClick={handleNext}>
                       Next Note
-                    </button>
+                    </Button>
                   </div>
                 </>
               )}

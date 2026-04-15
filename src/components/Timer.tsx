@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
+import { Button, ToggleButtonGroup } from '../ui';
 import './Timer.css';
 
 export const Timer: React.FC = () => {
@@ -69,20 +70,22 @@ export const Timer: React.FC = () => {
         {formatTime(displaySeconds)}
       </div>
       
-      <div className="ds-segmented">
-        <button
+      <ToggleButtonGroup label="Timer mode" layout="segmented">
+        <Button
+          variant="ghost"
+          active={timer.mode === 'countUp'}
           onClick={() => handleModeChange('countUp')}
-          className={`ds-btn ${timer.mode === 'countUp' ? 'active' : ''}`}
         >
           Count Up
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          active={timer.mode === 'countDown'}
           onClick={() => handleModeChange('countDown')}
-          className={`ds-btn ${timer.mode === 'countDown' ? 'active' : ''}`}
         >
           Count Down
-        </button>
-      </div>
+        </Button>
+      </ToggleButtonGroup>
 
       {timer.mode === 'countDown' && (
         <div className="target-time">
@@ -100,18 +103,15 @@ export const Timer: React.FC = () => {
       )}
 
       <div className="timer-controls">
-        <button
+        <Button
+          variant={timer.isRunning ? 'danger' : 'primary'}
           onClick={() => setTimerRunning(!timer.isRunning)}
-          className={`ds-btn ds-btn-pill ${timer.isRunning ? 'ds-btn-danger' : 'ds-btn-primary'}`}
         >
           {timer.isRunning ? 'Stop' : 'Start'}
-        </button>
-        <button
-          onClick={handleReset}
-          className="ds-btn ds-btn-outline ds-btn-pill"
-        >
+        </Button>
+        <Button variant="outline" onClick={handleReset}>
           Reset
-        </button>
+        </Button>
       </div>
     </div>
   );

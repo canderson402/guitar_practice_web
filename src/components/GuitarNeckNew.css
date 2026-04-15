@@ -92,85 +92,9 @@
   padding: 10px;
 }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: white;
-  font-weight: 500;
-  padding: 4px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  user-select: none;
-  border: 1px solid #ddd;
-  background: #f8f9fa;
-  color: #495057;
-}
-
-.legend-item:hover {
-  background: #e9ecef;
-}
-
-.legend-item input[type="checkbox"] {
-  margin: 0;
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-}
-
-.legend-item.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: auto;
-}
-
-.legend-item.disabled:hover {
-  background: transparent;
-}
-
-.legend-item.disabled input[type="checkbox"] {
-  cursor: not-allowed;
-}
-
-/* Checked state styling for legend items - Black text mode */
-.black-text-mode .legend-item:has(input:checked).root-item {
-  background: #87CEEB;
-  color: black;
-  border-color: #4682B4;
-}
-
-.black-text-mode .legend-item:has(input:checked).scale-item {
-  background: #90EE90;
-  color: black;
-  border-color: #32CD32;
-}
-
-.black-text-mode .legend-item:has(input:checked).current-item {
-  background: #FFD700;
-  color: black;
-  border-color: #FFA500;
-}
-
-/* Checked state styling for legend items - White text mode */
-.white-text-mode .legend-item:has(input:checked).root-item {
-  background: #1E90FF;
-  color: white;
-  border-color: #0000CD;
-}
-
-.white-text-mode .legend-item:has(input:checked).scale-item {
-  background: #228B22;
-  color: white;
-  border-color: #006400;
-}
-
-.white-text-mode .legend-item:has(input:checked).current-item {
-  background: #FF8C00;
-  color: white;
-  border-color: #FF4500;
-}
+/* Legend colored-checkbox toggles now render via the DS Checkbox primitive
+   with a swatchColor prop. The scale/root/interval colors live in the JSX
+   (driven by white-text mode), not in class-scoped rules. */
 
 .legend-dot {
   width: 14px;

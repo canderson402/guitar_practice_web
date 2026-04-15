@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
+import { Select, Chip, Checkbox } from '../ui';
 import './NoteTrainer.css';
 
 export const NoteTrainer: React.FC = () => {
@@ -318,18 +319,19 @@ export const NoteTrainer: React.FC = () => {
         <div className="main-controls">
           <div className="control-compact">
             <label>Mode:</label>
-            <select 
-              value={circleOfFifths.changeMode} 
+            <Select
+              size="sm"
+              value={circleOfFifths.changeMode}
               onChange={(e) => setCircleChangeMode(e.target.value as 'none' | 'bars' | 'time' | 'beats')}
-              className="select-compact"
               disabled={!circleOfFifths.autoAdvance}
-            >
-              <option value="bars">Bars</option>
-              <option value="time">Seconds</option>
-              <option value="beats">Beats</option>
-            </select>
+              options={[
+                { value: 'bars', label: 'Bars' },
+                { value: 'time', label: 'Seconds' },
+                { value: 'beats', label: 'Beats' },
+              ]}
+            />
           </div>
-          
+
           <div className="control-compact">
             <label>Every:</label>
             <div className="interval-input-group">
@@ -343,76 +345,71 @@ export const NoteTrainer: React.FC = () => {
                 disabled={!circleOfFifths.autoAdvance}
               />
               <div className="interval-presets">
-                <button
-                  className={`preset-btn ${circleOfFifths.changeInterval === 11 ? 'active' : ''}`}
+                <Chip
+                  active={circleOfFifths.changeInterval === 11}
                   onClick={() => setCircleChangeInterval(11)}
                   disabled={!circleOfFifths.autoAdvance}
                   title="One string (11 beats)"
                 >
                   11
-                </button>
-                <button
-                  className={`preset-btn ${circleOfFifths.changeInterval === 6 ? 'active' : ''}`}
+                </Chip>
+                <Chip
+                  active={circleOfFifths.changeInterval === 6}
                   onClick={() => setCircleChangeInterval(6)}
                   disabled={!circleOfFifths.autoAdvance}
                   title="One position (6 beats)"
                 >
                   6
-                </button>
+                </Chip>
               </div>
             </div>
           </div>
-          
+
           <div className="control-compact">
             <label>Count-in:</label>
-            <select 
-              value={circleOfFifths.countIn} 
+            <Select
+              size="sm"
+              value={circleOfFifths.countIn}
               onChange={(e) => setCircleCountIn(parseInt(e.target.value))}
-              className="select-compact"
               disabled={!circleOfFifths.autoAdvance}
-            >
-              <option value="0">None</option>
-              <option value="1">1 beat</option>
-              <option value="2">2 beats</option>
-              <option value="4">4 beats</option>
-              <option value="8">8 beats</option>
-            </select>
+              options={[
+                { value: '0', label: 'None' },
+                { value: '1', label: '1 beat' },
+                { value: '2', label: '2 beats' },
+                { value: '4', label: '4 beats' },
+                { value: '8', label: '8 beats' },
+              ]}
+            />
           </div>
-          
+
           <div className="control-compact">
             <label>Direction:</label>
-            <select 
-              value={circleOfFifths.direction} 
+            <Select
+              size="sm"
+              value={circleOfFifths.direction}
               onChange={(e) => setCircleDirection(e.target.value as 'clockwise' | 'counterclockwise')}
-              className="select-compact"
               disabled={!circleOfFifths.autoAdvance || circleOfFifths.randomize}
-            >
-              <option value="clockwise">Fifths →</option>
-              <option value="counterclockwise">← Fourths</option>
-            </select>
+              options={[
+                { value: 'clockwise', label: 'Fifths →' },
+                { value: 'counterclockwise', label: '← Fourths' },
+              ]}
+            />
           </div>
         </div>
-        
+
         {/* Options Row */}
         <div className="option-controls">
-          <label className="checkbox-compact">
-            <input 
-              type="checkbox" 
-              checked={circleOfFifths.randomize}
-              onChange={(e) => setCircleRandomize(e.target.checked)}
-              disabled={!circleOfFifths.autoAdvance}
-            />
-            <span>Random</span>
-          </label>
-          
-          <label className="checkbox-compact">
-            <input 
-              type="checkbox" 
-              checked={circleOfFifths.showNext}
-              onChange={(e) => setCircleShowNext(e.target.checked)}
-            />
-            <span>Show Next</span>
-          </label>
+          <Checkbox
+            checked={circleOfFifths.randomize}
+            onCheckedChange={setCircleRandomize}
+            disabled={!circleOfFifths.autoAdvance}
+            label="Random"
+          />
+          <Checkbox
+            checked={circleOfFifths.showNext}
+            onCheckedChange={setCircleShowNext}
+            label="Show Next"
+          />
         </div>
       </div>
     </div>

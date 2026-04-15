@@ -28,6 +28,7 @@ import { generateFretboard } from '../data/guitarData';
 import { findAllVoicings, VoicingPosition } from '../data/harmonyVoicings';
 import { HarmonyFretboard, BaseDotInfo, HarmonyDotInfo } from './HarmonyFretboard';
 import { HarmonyAnalysisPair } from './HarmonyAnalysisPair';
+import { Button, Chip, Checkbox } from '../ui';
 import './HarmonyMaker.css';
 
 // A note plus its resolved voicings — the per-render enrichment of HarmonyNote.
@@ -52,9 +53,9 @@ export const HarmonyMaker: React.FC = () => {
     clearHarmonyMaker,
   } = useStore();
 
-  // Display toggles — local, no need to persist.
+  // Display toggles — local, no need to persist. Alternate voicings reveal
+  // during drag only, so no separate toggle is needed for them.
   const [showOrder, setShowOrder] = React.useState(false);
-  const [showAllVoicings, setShowAllVoicings] = React.useState(false);
   const [showDiatonic, setShowDiatonic] = React.useState(false);
   const [show24Frets, setShow24Frets] = React.useState(false);
 
@@ -128,13 +129,12 @@ export const HarmonyMaker: React.FC = () => {
     resolvedNotes.forEach((r, pairIdx) => {
       if (r.voicings.length === 0) return;
       const basePosKey = `${r.note.stringIndex}-${r.note.fret}`;
-      // Expand all voicings if the user is dragging this specific pair (so
-      // every voicing becomes a drop target), or if the global All Voicings
-      // toggle is on.
-      const expandAll = showAllVoicings || draggingBaseKey === basePosKey;
+      // Alternate voicings reveal only while this pair is being dragged —
+      // when you're moving a note, you need to see the landing options.
+      const isDragged = draggingBaseKey === basePosKey;
       const selectedIdx = r.note.voicingIdx % r.voicings.length;
-      if (expandAll) {
-        // Paint every voicing; selected wins when two pairs' voicings collide.
+      if (isDragged) {
+        // Paint every voicing for the pair being dragged.
         r.voicings.forEach((v, vIdx) => {
           const key = `${v.stringIndex}-${v.fret}`;
           const isSelected = vIdx === selectedIdx;
@@ -160,7 +160,7 @@ export const HarmonyMaker: React.FC = () => {
       }
     });
     return m;
-  }, [resolvedNotes, showAllVoicings, draggingBaseKey]);
+  }, [resolvedNotes, draggingBaseKey]);
 
   // ----- Click handlers -----
 
@@ -169,25 +169,13 @@ export const HarmonyMaker: React.FC = () => {
   };
 
   const handleHarmonyClick = (stringIndex: number, fret: number) => {
-    // Find which pair owns this harmony position.
+    // Only selected voicings are rendered outside of drag, so a click here
+    // means "cycle this pair's voicing". Alternate voicings are reached via
+    // drag-and-drop instead.
     for (let i = 0; i < resolvedNotes.length; i++) {
       const r = resolvedNotes[i];
       if (r.voicings.length === 0) continue;
       const currentIdx = r.note.voicingIdx % r.voicings.length;
-
-      if (showAllVoicings) {
-        const hitIdx = r.voicings.findIndex(
-          v => v.stringIndex === stringIndex && v.fret === fret
-        );
-        if (hitIdx === -1) continue;
-        if (hitIdx === currentIdx) {
-          cycleNoteVoicing(r.note.stringIndex, r.note.fret, r.voicings.length);
-        } else {
-          setNoteVoicingIdx(r.note.stringIndex, r.note.fret, hitIdx);
-        }
-        return;
-      }
-
       const sel = r.voicings[currentIdx];
       if (sel && sel.stringIndex === stringIndex && sel.fret === fret) {
         cycleNoteVoicing(r.note.stringIndex, r.note.fret, r.voicings.length);
@@ -211,15 +199,23 @@ export const HarmonyMaker: React.FC = () => {
     const r = resolvedNotes.find(
       r => `${r.note.stringIndex}-${r.note.fret}` === draggingBaseKey
     );
-    if (!r) return;
-    const vIdx = r.voicings.findIndex(
-      v => v.stringIndex === stringIndex && v.fret === fret
-    );
-    // -1 guards against drops on some adjacent cell that isn't actually a
-    // voicing option (shouldn't happen since only voicings are drop targets,
-    // but cheap to check).
-    if (vIdx === -1) return;
-    setNoteVoicingIdx(r.note.stringIndex, r.note.fret, vIdx);
+    if (!r || r.voicings.length === 0) {
+      setDraggingBaseKey(null);
+      return;
+    }
+    // Snap to whichever voicing is closest to where the user released —
+    // weighting string movement heavier than fret movement, matching how
+    // voicings are sorted by proximity elsewhere.
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    r.voicings.forEach((v, i) => {
+      const d = Math.abs(v.stringIndex - stringIndex) * 3 + Math.abs(v.fret - fret);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
+      }
+    });
+    setNoteVoicingIdx(r.note.stringIndex, r.note.fret, bestIdx);
     setDraggingBaseKey(null);
   };
 
@@ -282,71 +278,52 @@ export const HarmonyMaker: React.FC = () => {
           {diatonicIntervalOptions.map(opt => {
             const key = intervalSpecKey(opt.spec);
             return (
-              <button
+              <Chip
                 key={key}
-                type="button"
-                className={`harmony-preset-btn ${defaultKey === key ? 'active' : ''}`}
+                active={defaultKey === key}
                 onClick={() => setDefaultInterval(opt.spec)}
                 title={`Set default to ${opt.label}`}
               >
                 {opt.label}
-              </button>
+              </Chip>
             );
           })}
         </div>
 
-        <button
-          type="button"
-          className="harmony-apply-btn"
+        <Button
+          variant="warning"
+          size="sm"
           onClick={handleApplyToAll}
           disabled={harmonyMaker.notes.length === 0}
           title="Overwrite every note's interval with the current default"
         >
           Apply to all
-        </button>
+        </Button>
 
         <div className="harmony-display-toggles">
-          <button
-            type="button"
-            className={`harmony-toggle-btn ${showOrder ? 'active' : ''}`}
-            onClick={() => setShowOrder(v => !v)}
-            aria-pressed={showOrder}
+          <Checkbox
+            checked={showOrder}
+            onCheckedChange={setShowOrder}
+            label="Order #"
             title="Show play order numbers in place of note names"
-          >
-            Order #
-          </button>
-          <button
-            type="button"
-            className={`harmony-toggle-btn ${showAllVoicings ? 'active' : ''}`}
-            onClick={() => setShowAllVoicings(v => !v)}
-            aria-pressed={showAllVoicings}
-            title="Show every available voicing, not just the selected one"
-          >
-            All Voicings
-          </button>
-          <button
-            type="button"
-            className={`harmony-toggle-btn ${showDiatonic ? 'active' : ''}`}
-            onClick={() => setShowDiatonic(v => !v)}
-            aria-pressed={showDiatonic}
+          />
+          <Checkbox
+            checked={showDiatonic}
+            onCheckedChange={setShowDiatonic}
+            label="Show Diatonic"
             title="Overlay faint in-scale notes on the base fretboard"
-          >
-            Show Diatonic
-          </button>
-          <button
-            type="button"
-            className={`harmony-toggle-btn ${show24Frets ? 'active' : ''}`}
-            onClick={() => setShow24Frets(v => !v)}
-            aria-pressed={show24Frets}
+          />
+          <Checkbox
+            checked={show24Frets}
+            onCheckedChange={setShow24Frets}
+            label="24 Frets"
             title="Extend the fretboard to 24 frets and include those positions in voicing search"
-          >
-            24 Frets
-          </button>
+          />
         </div>
 
-        <button className="harmony-clear-btn" onClick={clearHarmonyMaker}>
+        <Button variant="outline" size="sm" onClick={clearHarmonyMaker}>
           Clear
-        </button>
+        </Button>
       </div>
 
       {/* Dual Fretboards */}
