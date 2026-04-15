@@ -10,6 +10,7 @@ import { GuitarNeck } from './components/GuitarNeck';
 import { ChordProgression } from './components/ChordProgression';
 import { CircleOfFifths } from './components/CircleOfFifths';
 import { NoteTrainer } from './components/NoteTrainer';
+import { HarmonyMaker } from './components/HarmonyMaker';
 import { useStore, configurationPresets } from './store/useStore';
 import { themes, injectThemeStyles } from './utils/themeGenerator';
 import {
@@ -131,6 +132,8 @@ function App() {
         return <CircleOfFifths />;
       case 'noteTrainer':
         return <NoteTrainer />;
+      case 'harmonyMaker':
+        return <HarmonyMaker />;
       default:
         return null;
     }
@@ -261,6 +264,7 @@ function App() {
                   'noteTrainer': 3,        // Tall (auto-advance controls + large note display)
                   'chordProgression': 2,   // Medium height (chord list)
                   'circleOfFifths': 4,     // Very tall (large circle diagram)
+                  'harmonyMaker': 4,       // Wide (dual fretboards)
                   'guitarNeck': 5          // Tallest (but vertical, won't be here)
                 };
                 

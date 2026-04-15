@@ -66,6 +66,12 @@ export const scales = {
   'Locrian': {
     intervals: [0, 1, 3, 5, 6, 8, 10],
     description: '1 - ♭2 - ♭3 - 4 - ♭5 - ♭6 - ♭7'
+  },
+
+  // Harmonic Minor
+  'Harmonic Minor': {
+    intervals: [0, 2, 3, 5, 7, 8, 11],
+    description: '1 - 2 - ♭3 - 4 - 5 - ♭6 - 7'
   }
 };
 // Helper function to determine if a key uses sharps or flats
@@ -363,6 +369,192 @@ export const cardTemplates: CardTemplate[] = [
   }
 ];
 
+// Harmony interval presets for diatonic harmony generation
+export const harmonyPresets: { [key: string]: { scaleDegreeOffset: number; label: string } } = {
+  'Diatonic 3rd': { scaleDegreeOffset: 2, label: '3rd' },
+  'Diatonic 4th': { scaleDegreeOffset: 3, label: '4th' },
+  'Diatonic 5th': { scaleDegreeOffset: 4, label: '5th' },
+  'Diatonic 6th': { scaleDegreeOffset: 5, label: '6th' },
+  'Diatonic 7th': { scaleDegreeOffset: 6, label: '7th' },
+  'Octave': { scaleDegreeOffset: 7, label: 'Oct' },
+};
+
+// ---------------------------------------------------------------------------
+// Interval specification for the Harmony Maker
+// ---------------------------------------------------------------------------
+// A harmony interval is either:
+//  - Diatonic: "N scale degrees above the base" — meaning depends on the key
+//  - Chromatic: "N semitones above the base" — fixed regardless of key
+// This discriminated union lets a single picker surface both.
+
+export type IntervalSpec =
+  | { kind: 'diatonic'; degrees: number }     // 2 → 3rd, 4 → 5th, 7 → octave
+  | { kind: 'chromatic'; semitones: number }; // 0–12 semitones
+
+// Diatonic options exposed as the top-bar quick-select chips.
+export const diatonicIntervalOptions: { spec: IntervalSpec; label: string }[] = [
+  { spec: { kind: 'diatonic', degrees: 2 }, label: '3rd' },
+  { spec: { kind: 'diatonic', degrees: 3 }, label: '4th' },
+  { spec: { kind: 'diatonic', degrees: 4 }, label: '5th' },
+  { spec: { kind: 'diatonic', degrees: 5 }, label: '6th' },
+  { spec: { kind: 'diatonic', degrees: 6 }, label: '7th' },
+  { spec: { kind: 'diatonic', degrees: 7 }, label: 'Oct' },
+];
+
+// Chromatic options — surfaced only in the per-note dropdown. Globally applying
+// e.g. a tritone to every note is rare, so these are intentionally out of the
+// top-bar chips.
+export const chromaticIntervalOptions: { spec: IntervalSpec; label: string }[] = [
+  { spec: { kind: 'chromatic', semitones: 0 },  label: 'Unison' },
+  { spec: { kind: 'chromatic', semitones: 1 },  label: 'm2' },
+  { spec: { kind: 'chromatic', semitones: 2 },  label: 'M2' },
+  { spec: { kind: 'chromatic', semitones: 3 },  label: 'm3' },
+  { spec: { kind: 'chromatic', semitones: 4 },  label: 'M3' },
+  { spec: { kind: 'chromatic', semitones: 5 },  label: 'P4' },
+  { spec: { kind: 'chromatic', semitones: 6 },  label: 'Tritone' },
+  { spec: { kind: 'chromatic', semitones: 7 },  label: 'P5' },
+  { spec: { kind: 'chromatic', semitones: 8 },  label: 'm6' },
+  { spec: { kind: 'chromatic', semitones: 9 },  label: 'M6' },
+  { spec: { kind: 'chromatic', semitones: 10 }, label: 'm7' },
+  { spec: { kind: 'chromatic', semitones: 11 }, label: 'M7' },
+  { spec: { kind: 'chromatic', semitones: 12 }, label: 'Octave' },
+];
+
+// Stable string key for a spec — used as <select> option values and to
+// compare two specs for equality (e.g. "is this note at the default?").
+export const intervalSpecKey = (spec: IntervalSpec): string =>
+  spec.kind === 'diatonic' ? `d:${spec.degrees}` : `c:${spec.semitones}`;
+
+export const intervalSpecsEqual = (a: IntervalSpec, b: IntervalSpec): boolean =>
+  intervalSpecKey(a) === intervalSpecKey(b);
+
+// Parse an option value back into a spec (inverse of intervalSpecKey).
+export const parseIntervalSpecKey = (key: string): IntervalSpec | null => {
+  const [kind, n] = key.split(':');
+  const num = Number(n);
+  if (!Number.isFinite(num)) return null;
+  if (kind === 'd') return { kind: 'diatonic', degrees: num };
+  if (kind === 'c') return { kind: 'chromatic', semitones: num };
+  return null;
+};
+
+// Resolve any IntervalSpec against the current scale context to produce a
+// target note. Returns `diatonic: false` when the result is outside the scale
+// (either because the spec is chromatic, or because the diatonic fallback had
+// to go off-scale to find a note for a non-scale base).
+export const resolveInterval = (
+  baseNote: string,
+  rootNote: string,
+  scaleType: keyof typeof scales,
+  spec: IntervalSpec
+): { note: string; diatonic: boolean } | null => {
+  if (spec.kind === 'diatonic') {
+    return getHarmonyNoteWithFallback(baseNote, rootNote, scaleType, spec.degrees);
+  }
+
+  // Chromatic: fixed semitone distance, spelled using the root's chromatic scale.
+  const basePos = getChromaticPosition(baseNote);
+  const targetPos = (basePos + spec.semitones) % 12;
+  const chromatic = getChromaticScale(rootNote);
+  const targetNote = chromatic.find(n => getChromaticPosition(n) === targetPos);
+  if (!targetNote) return null;
+
+  // Mark diatonic only if the resolved note happens to land in the scale.
+  const scaleNotes = getScaleNotes(rootNote, scaleType);
+  const inScale = scaleNotes.some(n => getChromaticPosition(n) === targetPos);
+  return { note: targetNote, diatonic: inScale };
+};
+
+// Chromatic position map (exported for use by other modules)
+export const getChromaticPosition = (noteName: string): number => {
+  const chromaticMap: { [key: string]: number } = {
+    'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
+    'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+  };
+  return chromaticMap[noteName] ?? 0;
+};
+
+// Full interval names by semitone distance
+export const intervalNames: { [key: number]: string } = {
+  0: 'Perfect Unison',
+  1: 'Minor 2nd',
+  2: 'Major 2nd',
+  3: 'Minor 3rd',
+  4: 'Major 3rd',
+  5: 'Perfect 4th',
+  6: 'Tritone',
+  7: 'Perfect 5th',
+  8: 'Minor 6th',
+  9: 'Major 6th',
+  10: 'Minor 7th',
+  11: 'Major 7th',
+};
+
+// Get diatonic harmony note for a given base note within a scale
+export const getHarmonyNote = (
+  baseNote: string,
+  rootNote: string,
+  scaleType: keyof typeof scales,
+  scaleDegreeOffset: number
+): string | null => {
+  const scaleNotes = getScaleNotes(rootNote, scaleType);
+  if (scaleNotes.length === 0) return null;
+
+  // Find the base note's index in the scale (enharmonic aware)
+  const basePos = getChromaticPosition(baseNote);
+  const scaleIndex = scaleNotes.findIndex(n => getChromaticPosition(n) === basePos);
+  if (scaleIndex === -1) return null;
+
+  const harmonyIndex = (scaleIndex + scaleDegreeOffset) % scaleNotes.length;
+  return scaleNotes[harmonyIndex];
+};
+
+// Get harmony note with chromatic fallback for non-diatonic base notes.
+// Returns the harmony note and whether the base note was in the scale.
+export const getHarmonyNoteWithFallback = (
+  baseNote: string,
+  rootNote: string,
+  scaleType: keyof typeof scales,
+  scaleDegreeOffset: number
+): { note: string; diatonic: boolean } | null => {
+  // Try diatonic first
+  const diatonic = getHarmonyNote(baseNote, rootNote, scaleType, scaleDegreeOffset);
+  if (diatonic) return { note: diatonic, diatonic: true };
+
+  // Non-diatonic fallback: find the nearest scale tone below the base note,
+  // compute its diatonic interval in semitones, then apply the same chromatic
+  // distance to the actual base note.
+  const scaleNotes = getScaleNotes(rootNote, scaleType);
+  if (scaleNotes.length === 0) return null;
+
+  const basePos = getChromaticPosition(baseNote);
+
+  // Find the nearest scale tone (smallest ascending distance from a scale note to baseNote)
+  let nearestIdx = 0;
+  let nearestDist = Infinity;
+  for (let i = 0; i < scaleNotes.length; i++) {
+    const dist = (basePos - getChromaticPosition(scaleNotes[i]) + 12) % 12;
+    if (dist < nearestDist) {
+      nearestDist = dist;
+      nearestIdx = i;
+    }
+  }
+
+  // Compute semitone distance for that scale tone's diatonic interval
+  const nearestPos = getChromaticPosition(scaleNotes[nearestIdx]);
+  const harmonyIdx = (nearestIdx + scaleDegreeOffset) % scaleNotes.length;
+  const nearestHarmonyPos = getChromaticPosition(scaleNotes[harmonyIdx]);
+  const semitoneInterval = (nearestHarmonyPos - nearestPos + 12) % 12;
+
+  // Apply the same semitone interval chromatically to the base note
+  const targetPos = (basePos + semitoneInterval) % 12;
+  const chromatic = getChromaticScale(rootNote);
+  const targetNote = chromatic.find(n => getChromaticPosition(n) === targetPos);
+  if (!targetNote) return null;
+
+  return { note: targetNote, diatonic: false };
+};
+
 export const scaleSuggestions: { [key: string]: 'major' | 'minor' | 'both' } = {
   'Major (Ionian)': 'major',
   'Dorian': 'minor',
@@ -373,6 +565,7 @@ export const scaleSuggestions: { [key: string]: 'major' | 'minor' | 'both' } = {
   'Locrian': 'minor',
   'Major Pentatonic': 'major',
   'Minor Pentatonic': 'minor',
+  'Harmonic Minor': 'minor',
 };
 
 // Define which scales support traditional chord progressions
@@ -383,70 +576,104 @@ export const diatonicScales = [
   'Lydian',
   'Mixolydian',
   'Aeolian (Natural Minor)',
-  'Locrian'
+  'Locrian',
+  'Harmonic Minor'
 ];
 
+// Chord-tone chromatic positions (0–11) for a chord rooted at `root`. Use for
+// enharmonic-aware highlighting: compare via getChromaticPosition(fretNote).
+export const getChordChromaticPositions = (
+  root: string,
+  type: keyof typeof chordTypes
+): number[] => {
+  const rootPos = getChromaticPosition(root);
+  return chordTypes[type].intervals.map(i => (rootPos + i) % 12);
+};
+
+// Interval-name spellings per chord type, in the same order as chordTypes[t].intervals.
+// Lets us render "1 / 3 / ♯5" for augmented, "1 / ♭3 / ♭5 / 𝄫7" for dim7, etc.
+export const chordIntervalSpellings: Record<keyof typeof chordTypes, string[]> = {
+  major: ['1', '3', '5'],
+  minor: ['1', '♭3', '5'],
+  diminished: ['1', '♭3', '♭5'],
+  augmented: ['1', '3', '♯5'],
+  major7: ['1', '3', '5', '7'],
+  minor7: ['1', '♭3', '5', '♭7'],
+  dominant7: ['1', '3', '5', '♭7'],
+  diminished7: ['1', '♭3', '♭5', '𝄫7'],
+  'half-diminished7': ['1', '♭3', '♭5', '♭7'],
+};
+
+// Resolve a chord-tone's interval label relative to the chord root.
+// Returns null if the target isn't a member of the chord.
+export const getChordIntervalName = (
+  target: string,
+  chordRoot: string,
+  type: keyof typeof chordTypes
+): string | null => {
+  const semitones = (getChromaticPosition(target) - getChromaticPosition(chordRoot) + 12) % 12;
+  const idx = chordTypes[type].intervals.indexOf(semitones);
+  if (idx === -1) return null;
+  return chordIntervalSpellings[type][idx] ?? null;
+};
+
+// Classify a triad by the semitone intervals from the root to the stacked 3rd and 5th.
+// Returns one of the four triad qualities defined in chordTypes.
+const classifyTriad = (t3: number, t5: number): keyof typeof chordTypes => {
+  if (t3 === 4 && t5 === 7) return 'major';
+  if (t3 === 3 && t5 === 7) return 'minor';
+  if (t3 === 3 && t5 === 6) return 'diminished';
+  if (t3 === 4 && t5 === 8) return 'augmented';
+  // Exotic interval stack (e.g. sus-like from non-standard scales): fall back by the 3rd.
+  return t3 <= 3 ? 'minor' : 'major';
+};
+
 export const getScaleChords = (rootNote: string, scaleType: keyof typeof scales) => {
-  // Special handling for pentatonic scales - use the full 7-note scale for chord generation
-  let chordsScaleType = scaleType;
+  // Pentatonic scales don't support tertian stacking directly — swap to the parent
+  // diatonic scale so thirds stack through real scale degrees.
   let chordsScaleNotes: string[];
-  
   if (scaleType === 'Major Pentatonic') {
-    // Use Major (Ionian) scale for chord generation
-    chordsScaleType = 'Major (Ionian)';
     chordsScaleNotes = getScaleNotes(rootNote, 'Major (Ionian)');
   } else if (scaleType === 'Minor Pentatonic') {
-    // Use Aeolian (Natural Minor) scale for chord generation
-    chordsScaleType = 'Aeolian (Natural Minor)';
     chordsScaleNotes = getScaleNotes(rootNote, 'Aeolian (Natural Minor)');
   } else {
-    // For all other scales, use their own notes
     chordsScaleNotes = getScaleNotes(rootNote, scaleType);
   }
-  
+
   const chords: { roman: string; note: string; type: string; symbol: string }[] = [];
-  
-  // Define chord patterns for diatonic scales
-  const chordPatterns: { [key: string]: string[] } = {
-    'Major (Ionian)': ['major', 'minor', 'minor', 'major', 'major', 'minor', 'diminished'],
-    'Dorian': ['minor', 'minor', 'major', 'major', 'minor', 'diminished', 'major'],
-    'Phrygian': ['minor', 'major', 'major', 'minor', 'diminished', 'major', 'minor'],
-    'Lydian': ['major', 'major', 'minor', 'diminished', 'major', 'minor', 'minor'],
-    'Mixolydian': ['major', 'minor', 'diminished', 'major', 'minor', 'minor', 'major'],
-    'Aeolian (Natural Minor)': ['minor', 'diminished', 'major', 'minor', 'minor', 'major', 'major'],
-    'Locrian': ['diminished', 'major', 'minor', 'minor', 'major', 'major', 'minor'],
-  };
-  
-  // For diatonic scales, use specific patterns
-  let chordPattern = chordPatterns[chordsScaleType];
-  
-  // For non-diatonic scales, create simple major chords for each note
-  if (!chordPattern) {
-    chordPattern = chordsScaleNotes.map(() => 'major');
-  }
-  
-  chordsScaleNotes.forEach((note, index) => {
-    const chordType = chordPattern[index] || 'major';
-    const isMinor = chordType === 'minor';
-    const isDiminished = chordType === 'diminished';
-    const isAugmented = chordType === 'augmented';
-    
-    let roman = romanNumerals[index] || `${index + 1}`;
-    if (isDiminished) {
+  const n = chordsScaleNotes.length;
+  if (n === 0) return chords;
+
+  // Build each chord by stacking thirds (scale degrees i, i+2, i+4).
+  // The chord quality is derived from the actual semitone intervals, so
+  // anything scale-correct stays correct — no hardcoded per-mode lookup.
+  for (let i = 0; i < n; i++) {
+    const rootNoteInScale = chordsScaleNotes[i];
+    const thirdNote = chordsScaleNotes[(i + 2) % n];
+    const fifthNote = chordsScaleNotes[(i + 4) % n];
+
+    const rootPos = getChromaticPosition(rootNoteInScale);
+    const t3 = (getChromaticPosition(thirdNote) - rootPos + 12) % 12;
+    const t5 = (getChromaticPosition(fifthNote) - rootPos + 12) % 12;
+
+    const chordType = classifyTriad(t3, t5);
+
+    let roman = romanNumerals[i] || `${i + 1}`;
+    if (chordType === 'diminished') {
       roman = roman.toLowerCase() + '°';
-    } else if (isAugmented) {
+    } else if (chordType === 'augmented') {
       roman = roman.toUpperCase() + '+';
-    } else if (isMinor) {
+    } else if (chordType === 'minor') {
       roman = roman.toLowerCase();
     }
-    
+
     chords.push({
       roman,
-      note,
+      note: rootNoteInScale,
       type: chordType,
-      symbol: chordTypes[chordType as keyof typeof chordTypes]?.symbol || ''
+      symbol: chordTypes[chordType].symbol,
     });
-  });
-  
+  }
+
   return chords;
 };

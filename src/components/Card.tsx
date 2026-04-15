@@ -20,6 +20,7 @@ export const Card: React.FC<CardProps> = ({ title, children, isActive = true }) 
     if (title.includes('Fretboard') || title.includes('Guitar Fretboard')) return 'guitarNeck';
     if (title.includes('Chord Progression') || title.includes('Chord')) return 'chordProgression';
     if (title.includes('Circle of Fifths')) return 'circleOfFifths';
+    if (title.includes('Harmony')) return 'harmonyMaker';
     return 'default';
   };
   

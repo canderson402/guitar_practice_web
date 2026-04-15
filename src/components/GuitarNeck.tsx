@@ -1,6 +1,14 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { notes, getScaleNotes, scales, getChromaticScale } from '../data/musicData';
+import {
+  notes,
+  getScaleNotes,
+  scales,
+  getChromaticScale,
+  chordTypes,
+  getChordChromaticPositions,
+  getChordIntervalName,
+} from '../data/musicData';
 import { generateFretboard, fretMarkers, doubleFretMarkers, isNoteInScale } from '../data/guitarData';
 import './GuitarNeckNew.css';
 
@@ -22,13 +30,24 @@ export const GuitarNeck: React.FC = () => {
   
   // Generate the fretboard data
   const fretboard = generateFretboard(undefined, show24Frets ? 24 : 15);
-  
+
   // Get current scale notes
   const currentNotes = note.selectedScale && note.selectedNote
     ? getScaleNotes(note.selectedNote, note.selectedScale as keyof typeof import('../data/musicData').scales)
     : note.selectedNote
     ? getChromaticScale(note.selectedNote) // Use reordered chromatic scale starting from root
     : notes; // Show all notes by default
+
+  // Chord-focus mode: when a chord is selected from the chord card, only the
+  // chord tones light up on the fretboard and the chord root takes over as the
+  // "root" highlight. Deselecting falls back to plain scale display.
+  const selectedChord = note.selectedChord;
+  const chordType = selectedChord
+    ? (selectedChord.type as keyof typeof chordTypes)
+    : null;
+  const chordPositions = selectedChord && chordType
+    ? getChordChromaticPositions(selectedChord.note, chordType)
+    : null;
   
   // Get current note being highlighted
   const currentHighlightNote = currentNotes.length > 0 
@@ -139,25 +158,47 @@ export const GuitarNeck: React.FC = () => {
           {fretboard.map((string, stringIndex) => {
             const fretNote = string[fret];
             if (!fretNote) return null; // Safety check
-            const isInScale = currentNotes.length > 0 && isNoteInScale(fretNote.note, currentNotes);
-            const isCurrentNote = currentHighlightNote && areNotesEquivalent(fretNote.note, currentHighlightNote);
-            const isRootNote = note.selectedNote && areNotesEquivalent(fretNote.note, note.selectedNote);
-            
+
+            const fretChromatic = getChromaticPosition(fretNote.note);
+
+            // In chord-focus mode, "in-scale" means "in-chord" and the chord
+            // root replaces the scale root for highlighting purposes.
+            const isInChord = chordPositions ? chordPositions.includes(fretChromatic) : false;
+            const isInScale = chordPositions
+              ? isInChord
+              : currentNotes.length > 0 && isNoteInScale(fretNote.note, currentNotes);
+
+            // The "current" scale-interval overlay is a scale-cycler feature
+            // and doesn't map cleanly onto chord tones (chord intervals are
+            // relative to the chord root, not the scale). Suppress it entirely
+            // in chord-focus mode; the control is greyed out to match.
+            const isCurrentNote = !chordPositions
+              && currentHighlightNote
+              && areNotesEquivalent(fretNote.note, currentHighlightNote);
+
+            const rootRef = selectedChord ? selectedChord.note : note.selectedNote;
+            const isRootNote = rootRef && areNotesEquivalent(fretNote.note, rootRef);
+
             // Determine which note types should be shown
-            const shouldShowNote = (isRootNote && showRoot) || 
-                                  (isInScale && showScale) || 
+            const shouldShowNote = (isRootNote && showRoot) ||
+                                  (isInScale && showScale) ||
                                   (isCurrentNote && showCurrent);
-            
+
+            // Label: chord-tone interval when focused on a chord, otherwise scale interval
+            const intervalLabel = chordPositions && chordType && selectedChord
+              ? getChordIntervalName(fretNote.note, selectedChord.note, chordType)
+              : getInterval(fretNote.note);
+
             return (
               <div key={stringIndex} className="string-container">
                 <div className={`guitar-string string-${stringIndex}`} />
-                <div 
+                <div
                   className={`note-position ${shouldShowNote ? 'visible' : ''} ${isCurrentNote && showCurrent ? 'current' : isRootNote && showRoot ? 'root' : isInScale && showScale ? 'in-scale' : ''} ${whiteText ? 'white-text' : 'black-text'}`}
                   title={`${fretNote.note} - String ${6 - stringIndex}, Fret ${fret}`}
                 >
                   {shouldShowNote && (
                     <span className="note-label">
-                      {showIntervals ? getInterval(fretNote.note) || fretNote.note : fretNote.note}
+                      {showIntervals ? intervalLabel || fretNote.note : fretNote.note}
                     </span>
                   )}
                 </div>
@@ -211,13 +252,18 @@ export const GuitarNeck: React.FC = () => {
             <span>Scale</span>
           </div>
           
-          <div className="legend-item current-item" onClick={() => setShowCurrent(!showCurrent)}>
-            <input 
-              type="checkbox" 
-              checked={showCurrent} 
+          <div
+            className={`legend-item current-item ${selectedChord ? 'disabled' : ''}`}
+            onClick={() => { if (!selectedChord) setShowCurrent(!showCurrent); }}
+            title={selectedChord ? 'Disabled while a chord is highlighted' : undefined}
+          >
+            <input
+              type="checkbox"
+              checked={showCurrent && !selectedChord}
+              disabled={!!selectedChord}
               onChange={() => setShowCurrent(!showCurrent)}
             />
-            <span>Interval{currentInterval ? `: ${currentInterval}` : ''}</span>
+            <span>Interval{currentInterval && !selectedChord ? `: ${currentInterval}` : ''}</span>
           </div>
 
           <div className="legend-item intervals-item" onClick={() => setShowIntervals(!showIntervals)}>
@@ -230,16 +276,24 @@ export const GuitarNeck: React.FC = () => {
           </div>
         </div>
         
-        {note.selectedScale && note.selectedNote && (
+        {selectedChord ? (
+          <div className="scale-info">
+            <span className="scale-name">
+              {selectedChord.note}{selectedChord.symbol} ({selectedChord.roman})
+            </span>
+            <span className="scale-context">
+              in {note.selectedNote} {note.selectedScale}
+            </span>
+          </div>
+        ) : note.selectedScale && note.selectedNote ? (
           <div className="scale-info">
             <span className="scale-name">{note.selectedNote} {note.selectedScale}</span>
           </div>
-        )}
-        {!note.selectedScale && note.selectedNote && (
+        ) : !note.selectedScale && note.selectedNote ? (
           <div className="scale-info">
             <span className="scale-name">Chromatic</span>
           </div>
-        )}
+        ) : null}
       </div>
       
       <div className={`fretboard ${show24Frets ? 'frets-24' : 'frets-15'}`}>

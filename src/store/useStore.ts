@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { IntervalSpec } from '../data/musicData';
 
 interface TimerState {
   isRunning: boolean;
@@ -17,6 +18,13 @@ interface MetronomeState {
   soundType: 'synth' | 'asrx';
 }
 
+export interface SelectedChord {
+  note: string;
+  type: string;
+  symbol: string;
+  roman: string;
+}
+
 interface NoteState {
   selectedNote: string | null;
   selectedScale: string | null;
@@ -27,6 +35,7 @@ interface NoteState {
   randomize: boolean;
   showNextNote: boolean;
   autoAdvanceEnabled: boolean;
+  selectedChord: SelectedChord | null;
 }
 
 interface ChordProgressionState {
@@ -48,6 +57,27 @@ interface CircleOfFifthsState {
   showNext: boolean;
   nextNote: string | null;
   countIn: number;
+}
+
+export interface FretPosition {
+  stringIndex: number;
+  fret: number;
+  note: string;
+}
+
+// One entry per base note placed on the HarmonyMaker fretboard. Insertion
+// order of `notes` is also the play order surfaced in the analysis panel.
+export interface HarmonyNote {
+  stringIndex: number;
+  fret: number;
+  note: string;
+  interval: IntervalSpec;  // per-note spec — overrides are simply a value diff
+  voicingIdx: number;      // index into the currently-computed voicings list
+}
+
+interface HarmonyMakerState {
+  notes: HarmonyNote[];
+  defaultInterval: IntervalSpec;
 }
 
 interface CardInfo {
@@ -75,9 +105,14 @@ export const configurationPresets: ConfigurationPreset[] = [
     enabledCards: ['noteSelector', 'circleOfFifths', 'chordProgression', 'guitarNeck'],
   },
   {
+    id: 'harmony',
+    name: 'Harmony',
+    enabledCards: ['noteSelector', 'harmonyMaker', 'guitarNeck'],
+  },
+  {
     id: 'all',
     name: 'All',
-    enabledCards: ['metronome', 'timer', 'noteSelector', 'noteTrainer', 'circleOfFifths', 'chordProgression', 'guitarNeck'],
+    enabledCards: ['metronome', 'timer', 'noteSelector', 'noteTrainer', 'circleOfFifths', 'chordProgression', 'harmonyMaker', 'guitarNeck'],
   },
 ];
 
@@ -87,6 +122,7 @@ interface StoreState {
   note: NoteState;
   chordProgression: ChordProgressionState;
   circleOfFifths: CircleOfFifthsState;
+  harmonyMaker: HarmonyMakerState;
   cards: CardInfo[];
   theme: string;
   currentConfiguration: string;
@@ -116,6 +152,7 @@ interface StoreState {
   setRandomize: (randomize: boolean) => void;
   setShowNextNote: (show: boolean) => void;
   setAutoAdvanceEnabled: (enabled: boolean) => void;
+  setSelectedChord: (chord: SelectedChord | null) => void;
   
   // Chord Progression actions
   setSelectedChordProgression: (progression: string | null) => void;
@@ -136,6 +173,19 @@ interface StoreState {
   setCircleNextNote: (nextNote: string | null) => void;
   setCircleCountIn: (countIn: number) => void;
   
+  // Harmony Maker actions — unified model: one list of HarmonyNote records +
+  // a default interval for new clicks. Reorder/delete carries each note's
+  // interval + voicing with it automatically.
+  addBaseNote: (pos: FretPosition) => void;
+  removeBaseNote: (stringIndex: number, fret: number) => void;
+  reorderNotes: (fromIdx: number, toIdx: number) => void;
+  setNoteInterval: (stringIndex: number, fret: number, spec: IntervalSpec) => void;
+  cycleNoteVoicing: (stringIndex: number, fret: number, totalVoicings: number) => void;
+  setNoteVoicingIdx: (stringIndex: number, fret: number, idx: number) => void;
+  setDefaultInterval: (spec: IntervalSpec) => void;
+  applyDefaultToAll: () => void;
+  clearHarmonyMaker: () => void;
+
   // Card management
   toggleCard: (cardId: string) => void;
   reorderCards: (startIndex: number, endIndex: number) => void;
@@ -173,6 +223,7 @@ export const useStore = create<StoreState>((set) => ({
     randomize: false,
     showNextNote: true,
     autoAdvanceEnabled: true,
+    selectedChord: null,
   },
   chordProgression: {
     selectedProgression: null,
@@ -193,6 +244,11 @@ export const useStore = create<StoreState>((set) => ({
     nextNote: null,
     countIn: 4,
   },
+  harmonyMaker: {
+    notes: [],
+    // Default to the diatonic 3rd — the most musically useful starting harmony.
+    defaultInterval: { kind: 'diatonic', degrees: 2 },
+  },
   cards: [
     { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
     { id: 'timer', title: 'Timer', isActive: false, layout: 'horizontal' },
@@ -200,6 +256,7 @@ export const useStore = create<StoreState>((set) => ({
     { id: 'noteTrainer', title: 'Note Trainer', isActive: true, layout: 'horizontal' },
     { id: 'circleOfFifths', title: 'Circle of Fifths', isActive: false, layout: 'horizontal' },
     { id: 'chordProgression', title: 'Chord', isActive: false, layout: 'horizontal' },
+    { id: 'harmonyMaker', title: 'Harmony Maker', isActive: false, layout: 'vertical' },
     { id: 'guitarNeck', title: 'Fretboard', isActive: false, layout: 'vertical' },
   ],
   theme: 'eighties',
@@ -243,11 +300,17 @@ export const useStore = create<StoreState>((set) => ({
   })),
   
   // Note actions
-  setSelectedNote: (selectedNote) => set((state) => ({ 
-    note: { ...state.note, selectedNote } 
+  setSelectedNote: (selectedNote) => set((state) => ({
+    // Clear any highlighted chord when the key changes — the old chord no
+    // longer fits the new scale context.
+    note: { ...state.note, selectedNote, selectedChord: null }
   })),
-  setSelectedScale: (selectedScale) => set((state) => ({ 
-    note: { ...state.note, selectedScale } 
+  setSelectedScale: (selectedScale) => set((state) => ({
+    // Same: chord highlight is scoped to the active scale.
+    note: { ...state.note, selectedScale, selectedChord: null }
+  })),
+  setSelectedChord: (selectedChord) => set((state) => ({
+    note: { ...state.note, selectedChord }
   })),
   setCurrentNoteIndex: (currentNoteIndex) => set((state) => ({ 
     note: { 
@@ -325,6 +388,104 @@ export const useStore = create<StoreState>((set) => ({
     circleOfFifths: { ...state.circleOfFifths, countIn }
   })),
   
+  // Harmony Maker actions — see interface comments above for the data model.
+  addBaseNote: (pos) => set((state) => {
+    // Toggle: clicking an existing note removes it; clicking a new spot adds
+    // it with the current default interval and voicing 0.
+    const exists = state.harmonyMaker.notes.some(
+      n => n.stringIndex === pos.stringIndex && n.fret === pos.fret
+    );
+    const notes = exists
+      ? state.harmonyMaker.notes.filter(
+          n => !(n.stringIndex === pos.stringIndex && n.fret === pos.fret)
+        )
+      : [
+          ...state.harmonyMaker.notes,
+          {
+            stringIndex: pos.stringIndex,
+            fret: pos.fret,
+            note: pos.note,
+            interval: state.harmonyMaker.defaultInterval,
+            voicingIdx: 0,
+          },
+        ];
+    return { harmonyMaker: { ...state.harmonyMaker, notes } };
+  }),
+  removeBaseNote: (stringIndex, fret) => set((state) => ({
+    harmonyMaker: {
+      ...state.harmonyMaker,
+      notes: state.harmonyMaker.notes.filter(
+        n => !(n.stringIndex === stringIndex && n.fret === fret)
+      ),
+    },
+  })),
+  reorderNotes: (fromIdx, toIdx) => set((state) => {
+    const arr = [...state.harmonyMaker.notes];
+    if (
+      fromIdx < 0 || fromIdx >= arr.length ||
+      toIdx < 0 || toIdx >= arr.length ||
+      fromIdx === toIdx
+    ) {
+      return state;
+    }
+    const [item] = arr.splice(fromIdx, 1);
+    arr.splice(toIdx, 0, item);
+    return { harmonyMaker: { ...state.harmonyMaker, notes: arr } };
+  }),
+  setNoteInterval: (stringIndex, fret, spec) => set((state) => ({
+    harmonyMaker: {
+      ...state.harmonyMaker,
+      // Changing the interval changes the target note, so reset voicingIdx —
+      // the previous voicing was for a different pitch.
+      notes: state.harmonyMaker.notes.map(n =>
+        n.stringIndex === stringIndex && n.fret === fret
+          ? { ...n, interval: spec, voicingIdx: 0 }
+          : n
+      ),
+    },
+  })),
+  cycleNoteVoicing: (stringIndex, fret, totalVoicings) => set((state) => {
+    if (totalVoicings <= 1) return state;
+    return {
+      harmonyMaker: {
+        ...state.harmonyMaker,
+        notes: state.harmonyMaker.notes.map(n =>
+          n.stringIndex === stringIndex && n.fret === fret
+            ? { ...n, voicingIdx: (n.voicingIdx + 1) % totalVoicings }
+            : n
+        ),
+      },
+    };
+  }),
+  setNoteVoicingIdx: (stringIndex, fret, idx) => set((state) => ({
+    harmonyMaker: {
+      ...state.harmonyMaker,
+      notes: state.harmonyMaker.notes.map(n =>
+        n.stringIndex === stringIndex && n.fret === fret
+          ? { ...n, voicingIdx: idx }
+          : n
+      ),
+    },
+  })),
+  setDefaultInterval: (spec) => set((state) => ({
+    // Existing notes are untouched — "Apply to all" is the separate action
+    // that propagates the default.
+    harmonyMaker: { ...state.harmonyMaker, defaultInterval: spec },
+  })),
+  applyDefaultToAll: () => set((state) => ({
+    harmonyMaker: {
+      ...state.harmonyMaker,
+      notes: state.harmonyMaker.notes.map(n => ({
+        ...n,
+        interval: state.harmonyMaker.defaultInterval,
+        voicingIdx: 0,
+      })),
+    },
+  })),
+  clearHarmonyMaker: () => set((state) => ({
+    harmonyMaker: { ...state.harmonyMaker, notes: [] },
+  })),
+
   // Card management
   toggleCard: (cardId) => set((state) => ({
     cards: state.cards.map(card => 
