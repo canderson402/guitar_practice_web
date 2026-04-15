@@ -256,16 +256,6 @@
   font-weight: var(--ds-font-medium);
 }
 
-/* Non-diatonic indicators */
-.harmony-pair.non-diatonic {
-  border-color: var(--ds-color-secondary);
-  border-style: dashed;
-}
-
-.harmony-pair-harmony.non-diatonic {
-  color: var(--ds-color-secondary);
-}
-
 @media (max-width: 768px) {
   .harmony-controls {
     gap: var(--ds-space-2);

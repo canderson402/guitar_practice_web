@@ -29,6 +29,9 @@ export interface DotInfo {
   /** Custom color override (e.g. for the GuitarNeck legend's scale-color
    *  coded root/scale/current dots, where the color shifts with text mode). */
   color?: string;
+  /** Render at reduced opacity + a smaller footprint. Used by HarmonyMaker's
+   *  diatonic overlay so placed base notes stay visually dominant. */
+  faint?: boolean;
 }
 
 export type PosKey = string;  // format: "${stringIndex}-${fret}"

@@ -12,6 +12,7 @@ import {
 import { generateFretboard, isNoteInScale } from '../data/guitarData';
 import { Checkbox } from '../ui';
 import { Fretboard, DotInfo, posKey } from './Fretboard';
+import { TuningPicker } from './TuningPicker';
 import './GuitarNeckNew.css';
 
 // ---------------------------------------------------------------------------
@@ -208,6 +209,7 @@ export const GuitarNeck: React.FC = () => {
     <div className="guitar-neck">
       <div className={`neck-info ${whiteText ? 'white-text-mode' : 'black-text-mode'}`}>
         <div className="neck-controls">
+          <TuningPicker />
           <Checkbox checked={whiteText} onCheckedChange={setWhiteText} label="White Text" />
           <Checkbox checked={show24Frets} onCheckedChange={setShow24Frets} label="Show 24 frets" />
           <Checkbox

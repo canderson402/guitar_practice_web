@@ -117,8 +117,9 @@ export const HarmonyMaker: React.FC = () => {
 
   // ----- Fretboard dot maps (shape compatible with the shared Fretboard) -----
 
-  // Scale-ghost dots for the base side when "Show Diatonic" is on. Composed
-  // with the base-note dots below (base notes always win over ghosts).
+  // Scale-ghost dots for the base side when "Show Diatonic" is on. Rendered
+  // faint so they sit in the background while placed notes + harmony voicings
+  // remain the visual focus.
   const scaleGhostDots = React.useMemo(() => {
     const m = new Map<string, DotInfo>();
     if (!showDiatonic || !note.selectedNote || scaleNotes.length === 0) return m;
@@ -129,9 +130,9 @@ export const HarmonyMaker: React.FC = () => {
         if (!cell) continue;
         const isRoot = getChromaticPosition(cell.note) === rootChroma;
         if (isRoot) {
-          m.set(posKey(si, f), { variant: 'root' });
+          m.set(posKey(si, f), { variant: 'root', faint: true });
         } else if (isNoteInScale(cell.note, scaleNotes)) {
-          m.set(posKey(si, f), { variant: 'scale' });
+          m.set(posKey(si, f), { variant: 'scale', faint: true });
         }
       }
     }

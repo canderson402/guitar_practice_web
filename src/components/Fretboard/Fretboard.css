@@ -7,8 +7,9 @@
 .fretboard-root {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: var(--ds-space-1);
+  width: 100%;
 }
 
 .fretboard-title {
@@ -17,66 +18,218 @@
   color: var(--ds-color-neutral-600);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  text-align: center;
 }
 
+/* Grid stretches to fill the parent card — fret sizing below uses flex with
+   diminishing nth-child weights to approximate real guitar fret spacing. */
 .fretboard-grid {
   display: flex;
   gap: var(--ds-space-1);
-  overflow-x: auto;
   align-items: center;
   padding-bottom: 20px;
-
-  /* Hide scrollbars; scroll still works. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  width: 100%;
+  min-width: 0;
 }
 
-.fretboard-grid::-webkit-scrollbar {
-  display: none;
-}
-
-/* String-note labels (E, B, G, D, A, E) on the left edge */
+/* String-note labels (E, B, G, D, A, E) on the left edge. Expands when the
+   labels become interactive dropdowns for tuning changes. */
 .fretboard-string-labels {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 150px;
-  padding: 12px 0;
-  width: 16px;
+  height: 190px;
+  padding: 4px 0;
+  width: 28px;
   flex-shrink: 0;
 }
 
+/* Label rows match the string-row height (26px) so when both columns use
+   `justify-content: space-between`, the labels and strings resolve to the
+   same vertical positions and centres align. */
 .fretboard-string-label {
+  height: 26px;
+  min-width: 20px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: var(--ds-font-xs);
-  font-weight: var(--ds-font-semibold);
-  color: var(--ds-color-neutral-600);
-  text-align: center;
+  font-weight: var(--ds-font-bold);
+  color: var(--ds-color-neutral-700);
+  border-radius: 13px;
+  box-sizing: border-box;
+  border: 2px solid transparent;
+  transition: all var(--ds-transition-fast);
 }
 
-/* Fret column container */
+/* Open-string dot variants projected onto the label. Mirrors the cell
+   variants so the open-string highlight reads the same visual language. */
+.fretboard-string-label.has-variant-root,
+.fretboard-string-label.has-variant-scale,
+.fretboard-string-label.has-variant-current {
+  background: var(--fretboard-dot-color, var(--ds-color-secondary));
+  border-color: var(--fretboard-dot-color, var(--ds-color-secondary));
+  color: var(--ds-color-white);
+}
+
+.fretboard-string-label.has-variant-base {
+  background: var(--fretboard-dot-color, var(--ds-color-primary));
+  border-color: var(--fretboard-dot-color, var(--ds-color-primary));
+  color: var(--ds-color-white);
+}
+
+.fretboard-string-label.has-variant-harmony {
+  background: var(--fretboard-dot-color, var(--ds-color-warning));
+  border-color: var(--fretboard-dot-color, var(--ds-color-warning));
+  color: var(--ds-color-white);
+}
+
+/* Matching outer ring + shadow on active open-string pills. */
+.fretboard-string-label.has-variant-root,
+.fretboard-string-label.has-variant-scale,
+.fretboard-string-label.has-variant-current,
+.fretboard-string-label.has-variant-base,
+.fretboard-string-label.has-variant-harmony {
+  box-shadow: 0 0 0 0.5px #b8b8b8, 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.fretboard-string-label.has-variant-alternate {
+  background: transparent;
+  border-color: var(--fretboard-dot-color, var(--ds-color-warning));
+  border-style: dashed;
+  color: var(--fretboard-dot-color, var(--ds-color-warning));
+}
+
+/* Faint modifier — matches the cell faint look (reduced opacity) */
+.fretboard-string-label.faint {
+  opacity: 0.4;
+}
+
+/* Clickable / draggable affordances when the parent passes interaction
+   handlers. Hover emphasises the pill so users know the label is active. */
+.fretboard-string-label.clickable {
+  cursor: pointer;
+}
+
+.fretboard-string-label.clickable:hover {
+  background: var(--ds-color-neutral-100);
+  border-color: var(--ds-color-neutral-400);
+}
+
+/* Hover on an ALREADY-active label (has-variant-*): dim slightly rather
+   than flip to neutral — same pattern as the checkbox pill. */
+.fretboard-string-label.clickable.has-variant-root:hover,
+.fretboard-string-label.clickable.has-variant-scale:hover,
+.fretboard-string-label.clickable.has-variant-current:hover,
+.fretboard-string-label.clickable.has-variant-base:hover,
+.fretboard-string-label.clickable.has-variant-harmony:hover {
+  opacity: 0.85;
+}
+
+.fretboard-string-label.draggable {
+  cursor: grab;
+}
+
+.fretboard-string-label.draggable:active {
+  cursor: grabbing;
+}
+
+/* Drop-target pulse on the label (same animation as cell dots) */
+.fretboard-string-label.drop-target {
+  animation: fretboard-drop-pulse 1.4s ease-in-out infinite;
+}
+
+/* Fret columns stretch to fill all remaining horizontal space. */
 .fretboard-frets {
   display: flex;
-  gap: 1px;
-  overflow: visible;
+  gap: 0;
+  flex: 1;
   min-width: 0;
-  flex-shrink: 0;
+  overflow: visible;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
-/* Individual fret column */
+/* Individual fret column — warm rosewood-style wood grain.
+   The vertical gradient (lighter at top/bottom, darker in the middle) fakes
+   the rounded fretboard surface. Each fret gets flex:1 then per-position
+   nth-child tweaks below for realistic diminishing spacing. */
 .fretboard-fret {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 48px;
-  background: var(--ds-color-neutral-50);
-  border-right: 2px solid var(--ds-color-neutral-400);
+  flex: 1;
+  min-width: 30px;
+  background: linear-gradient(
+    to bottom,
+    #6b4a2b 0%,
+    #4a2e16 50%,
+    #6b4a2b 100%
+  );
 }
 
-.fretboard-fret.nut {
-  background: var(--ds-color-neutral-800);
-  width: 6px;
-  border-right: 3px solid var(--ds-color-neutral-900);
+/* Fretwires: thin silver vertical line between frets. */
+.fretboard-fret:not(:first-child):not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to right, #888, #ddd, #888);
+  z-index: 0;
 }
+
+.fretboard-fret:last-child::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to right, #888, #ddd, #888);
+  z-index: 0;
+}
+
+/* Fret 0 — the nut column. Transparent neck, bone-white nut bar on its
+   right edge. Narrower than the frets. */
+.fretboard-fret.nut {
+  background: transparent;
+  flex: 0 0 14px;
+  min-width: 14px;
+}
+
+.fretboard-fret.nut::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to right, #c8b89a, #e8d9b8, #c8b89a);
+  z-index: 0;
+}
+
+/* Diminishing fret widths mimic real guitar scale length — each fret is
+   about 94% of the one before it (Rule of 18). Applies only when more than
+   a handful of frets are visible so short fretboards stay proportional. */
+.fretboard-fret:nth-child(2)  { flex: 1.12; }
+.fretboard-fret:nth-child(3)  { flex: 1.06; }
+.fretboard-fret:nth-child(4)  { flex: 1.00; }
+.fretboard-fret:nth-child(5)  { flex: 0.96; }
+.fretboard-fret:nth-child(6)  { flex: 0.92; }
+.fretboard-fret:nth-child(7)  { flex: 0.88; }
+.fretboard-fret:nth-child(8)  { flex: 0.84; }
+.fretboard-fret:nth-child(9)  { flex: 0.80; }
+.fretboard-fret:nth-child(10) { flex: 0.76; }
+.fretboard-fret:nth-child(11) { flex: 0.72; }
+.fretboard-fret:nth-child(12) { flex: 0.68; }
+.fretboard-fret:nth-child(13) { flex: 0.65; }
+.fretboard-fret:nth-child(14) { flex: 0.62; }
+.fretboard-fret:nth-child(15) { flex: 0.60; }
+.fretboard-fret:nth-child(16) { flex: 0.57; }
+.fretboard-fret:nth-child(n+17) { flex: 0.54; }
 
 /* Fret numbers (positioned absolutely so they don't take row space) */
 .fretboard-fret-number {
@@ -110,10 +263,12 @@
 }
 
 .fretboard-marker-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--ds-color-neutral-300);
+  width: 14px;
+  height: 14px;
+  background: #e8d9b8;   /* ivory — reads on the dark wood grain */
+  border: 1px solid #c8b89a;
   border-radius: 50%;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
 }
 
 .fretboard-marker-dot.double {
@@ -125,36 +280,34 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 150px;
-  padding: 12px 0;
+  height: 190px;
+  padding: 4px 0;
   position: relative;
 }
 
 .fretboard-string-row {
   position: relative;
-  height: 20px;
+  height: 26px;
   display: flex;
   align-items: center;
 }
 
-/* Physical string line (horizontal rule) */
+/* Physical string line (horizontal rule) — silvery against dark wood */
 .fretboard-string-line {
   position: absolute;
   left: 0;
   right: 0;
   height: 1.5px;
-  background: var(--ds-color-neutral-500);
+  background: linear-gradient(to bottom, #bbb, #888);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
   z-index: 2;
 }
 
-.fretboard-string-line.string-0,
-.fretboard-string-line.string-5 {
-  height: 2px;
-}
-
+/* Thicker strings (low E, A, D) get a slight bulk bump. */
 .fretboard-string-line.string-3,
-.fretboard-string-line.string-4 {
-  height: 2px;
+.fretboard-string-line.string-4,
+.fretboard-string-line.string-5 {
+  height: 2.25px;
 }
 
 /* ============================================
@@ -162,19 +315,31 @@
    All dots share the same circular positioning; variants override color.
    ============================================ */
 
-.fretboard-cell {
+/* Hit area fills the full fret cell so clicks land anywhere on the fret,
+   not just on the visible circle. The visible dot is its centered child. */
+.fretboard-cell-hit {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 3;
   cursor: pointer;
+}
+
+/* The visible circle — positioned by the hit area's flex centering rather
+   than absolute + transform. Scale transforms on hover still work. */
+.fretboard-cell {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all var(--ds-transition-base);
   opacity: 0;
   background: none;
@@ -195,11 +360,14 @@
 }
 
 /* Empty cells opt-in as hit targets (HarmonyMaker base side). Invisible
-   until hover so they don't clutter the fretboard. */
-.fretboard-cell.clickable-empty:hover {
+   until the parent hit area is hovered, then reveal at 22px — the shared
+   "secondary" size used by ghost/alternate/hover-preview. Listening on the
+   hit area means the whole fret cell lights up, not just the 26px circle. */
+.fretboard-cell-hit:hover .fretboard-cell.clickable-empty {
   opacity: 0.6;
+  width: 22px;
+  height: 22px;
   background: var(--ds-color-neutral-400);
-  transform: translate(-50%, -50%) scale(1.1);
 }
 
 /* ============================================
@@ -208,38 +376,34 @@
    (used for the fretboard legend's themed swatch colors).
    ============================================ */
 
-/* root: scale root marker (sky blue default, smaller, muted) */
-.fretboard-cell.variant-root {
-  width: 18px;
-  height: 18px;
-  opacity: 0.55;
+/* root / scale / current are all rendered as solid colored circles at the
+   same size and opacity — distinction comes from the per-instance color,
+   not from transparency. Keeps the main fretboard legible on the dark
+   wood-grain background. */
+.fretboard-cell.variant-root,
+.fretboard-cell.variant-scale,
+.fretboard-cell.variant-current {
+  opacity: 1;
   background: var(--fretboard-dot-color, var(--ds-color-secondary));
   border: 2px solid var(--fretboard-dot-color, var(--ds-color-secondary));
 }
 
-/* scale: in-scale ghost (gray by default, small, faint) */
-.fretboard-cell.variant-scale {
-  width: 18px;
-  height: 18px;
-  opacity: 0.35;
-  background: var(--fretboard-dot-color, var(--ds-color-neutral-300));
-  border: 1px solid var(--fretboard-dot-color, var(--ds-color-neutral-400));
+/* Subtle dark outer ring + drop shadow on every solid-fill variant — makes
+   the dots visually "self-contained" beads sitting on top of the wood grain
+   rather than flat colored splotches. */
+.fretboard-cell.variant-root,
+.fretboard-cell.variant-scale,
+.fretboard-cell.variant-current,
+.fretboard-cell.variant-base,
+.fretboard-cell.variant-harmony {
+  box-shadow: 0 0 0 0.5px #b8b8b8, 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* current: the currently cycled scale note (orange by default, prominent) */
-.fretboard-cell.variant-current {
-  opacity: 1;
-  background: var(--fretboard-dot-color, var(--ds-color-warning));
-  border: 2px solid var(--fretboard-dot-color, var(--ds-color-warning));
-  transform: translate(-50%, -50%) scale(1.1);
-}
-
-/* base: user-placed base note on HarmonyMaker (primary color, prominent) */
+/* base: user-placed base note on HarmonyMaker (primary color) */
 .fretboard-cell.variant-base {
   opacity: 1;
   background: var(--fretboard-dot-color, var(--ds-color-primary));
   border: 2px solid var(--fretboard-dot-color, var(--ds-color-primary));
-  transform: translate(-50%, -50%) scale(1.15);
   cursor: grab;
 }
 
@@ -247,12 +411,11 @@
   cursor: grabbing;
 }
 
-/* harmony: selected harmony voicing (warning color, prominent, draggable) */
+/* harmony: selected harmony voicing (warning color, draggable) */
 .fretboard-cell.variant-harmony {
   opacity: 1;
   background: var(--fretboard-dot-color, var(--ds-color-warning));
   border: 2px solid var(--fretboard-dot-color, var(--ds-color-warning));
-  transform: translate(-50%, -50%) scale(1.15);
   cursor: grab;
 }
 
@@ -260,10 +423,10 @@
   cursor: grabbing;
 }
 
-/* alternate: drag-revealed voicing (dashed outline, 18px, warning color) */
+/* alternate: drag-revealed voicing (dashed outline, warning color) */
 .fretboard-cell.variant-alternate {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   opacity: 0.7;
   background: transparent;
   border: 2px dashed var(--fretboard-dot-color, var(--ds-color-warning));
@@ -274,22 +437,33 @@
   text-shadow: none;
 }
 
-.fretboard-cell.variant-alternate:hover {
+.fretboard-cell-hit:hover .fretboard-cell.variant-alternate {
   opacity: 1;
   background: rgba(255, 152, 0, 0.15);
-  transform: translate(-50%, -50%) scale(1.12);
+  transform: scale(1.12);
 }
 
 /* ============================================
    MODIFIERS
    ============================================ */
 
-/* non-diatonic: dashed secondary-colored border */
-.fretboard-cell.variant-harmony.non-diatonic,
-.fretboard-cell.variant-alternate.non-diatonic {
-  background: var(--ds-color-secondary);
-  border-color: var(--ds-color-secondary);
-  border-style: dashed;
+/* faint: translucent + shrunken dot. Used by HarmonyMaker's diatonic overlay
+   so placed base notes remain the visual focus even with scale ghosts on.
+   Matches the hover-preview and alternate-voicing size. */
+.fretboard-cell.faint {
+  opacity: 0.4;
+  width: 22px;
+  height: 22px;
+}
+
+/* Ghost dots are still clickable. Hover on the hit area lifts the ghost
+   to full opacity so the user sees it's interactive. */
+.fretboard-cell-hit:hover .fretboard-cell.faint {
+  opacity: 1;
+}
+
+.fretboard-cell.faint .fretboard-note-label {
+  display: none;
 }
 
 /* drop-target: pulse animation for drop-hint dots during drag */
@@ -302,11 +476,11 @@
   50%      { box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1); }
 }
 
-/* Active-dot hover: slightly bigger */
-.fretboard-cell.variant-base:hover,
-.fretboard-cell.variant-harmony:hover,
-.fretboard-cell.variant-current:hover {
-  transform: translate(-50%, -50%) scale(1.25);
+/* Active-dot hover: subtle pop via the hit area so the whole fret lights up. */
+.fretboard-cell-hit:hover .fretboard-cell.variant-base,
+.fretboard-cell-hit:hover .fretboard-cell.variant-harmony,
+.fretboard-cell-hit:hover .fretboard-cell.variant-current {
+  transform: scale(1.1);
 }
 
 /* ============================================
@@ -327,15 +501,13 @@
   }
 
   .fretboard-cell {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
   }
 
-  .fretboard-cell.variant-root,
-  .fretboard-cell.variant-scale,
   .fretboard-cell.variant-alternate {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
   }
 
   .fretboard-note-label {

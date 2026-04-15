@@ -266,7 +266,7 @@ export const useStore = create<StoreState>((set) => ({
     { id: 'noteTrainer', title: 'Note Trainer', isActive: true, layout: 'horizontal' },
     { id: 'circleOfFifths', title: 'Circle of Fifths', isActive: false, layout: 'horizontal' },
     { id: 'chordProgression', title: 'Chord', isActive: false, layout: 'horizontal' },
-    { id: 'harmonyMaker', title: 'Harmony Maker', isActive: false, layout: 'vertical' },
+    { id: 'harmonyMaker', title: 'Harmony', isActive: false, layout: 'vertical' },
     { id: 'guitarNeck', title: 'Fretboard', isActive: false, layout: 'vertical' },
   ],
   theme: 'eighties',

@@ -23,7 +23,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
   onDragStart,
   onDragEnd,
   onDrop,
-  textMode = 'black',
+  textMode = 'white',
   clickableEmpty,
 }) => {
   // Always derive the note grid from tuning. Memoised so dot rendering
@@ -42,9 +42,68 @@ export const Fretboard: React.FC<FretboardProps> = ({
       <div className="fretboard-grid">
         {showStringLabels && (
           <div className="fretboard-string-labels">
-            {stringLabels.map((stringNote, index) => (
-              <div key={index} className="fretboard-string-label">{stringNote}</div>
-            ))}
+            {stringLabels.map((stringNote, index) => {
+              // Open-string (fret 0) dots render as styled labels here, and
+              // clicks/drags on the label drive the same handlers as any
+              // fretted cell. There's no cell rendered at fret 0 — this IS
+              // the fret-0 interaction surface.
+              const openDot = dots.get(posKey(index, 0));
+              const openNote = fretboard[index]?.[0]?.note ?? stringNote;
+              const labelText = openDot?.label ?? stringNote;
+              const isDragSource = !!openDot?.draggable;
+              const classes = [
+                'fretboard-string-label',
+                openDot ? `has-variant-${openDot.variant}` : '',
+                openDot?.faint ? 'faint' : '',
+                openDot?.nonDiatonic ? 'non-diatonic' : '',
+                openDot?.dropTargetHint ? 'drop-target' : '',
+                onCellClick ? 'clickable' : '',
+                isDragSource ? 'draggable' : '',
+              ]
+                .filter(Boolean)
+                .join(' ');
+              const style = openDot?.color
+                ? { ['--fretboard-dot-color' as any]: openDot.color }
+                : undefined;
+              return (
+                <div
+                  key={index}
+                  className={classes}
+                  style={style}
+                  onClick={onCellClick ? () => onCellClick(index, 0, openNote) : undefined}
+                  draggable={isDragSource}
+                  onDragStart={
+                    isDragSource && onDragStart
+                      ? (e) => {
+                          e.dataTransfer.effectAllowed = 'move';
+                          e.dataTransfer.setData('text/plain', posKey(index, 0));
+                          onDragStart(index, 0, openNote);
+                        }
+                      : undefined
+                  }
+                  onDragEnd={isDragSource && onDragEnd ? () => onDragEnd() : undefined}
+                  onDragOver={
+                    cellsAcceptDrops
+                      ? (e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                        }
+                      : undefined
+                  }
+                  onDrop={
+                    cellsAcceptDrops && onDrop
+                      ? (e) => {
+                          e.preventDefault();
+                          onDrop(index, 0, openNote);
+                        }
+                      : undefined
+                  }
+                  title={`${openNote} — open string ${strings - index}`}
+                >
+                  {labelText}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -74,23 +133,40 @@ export const Fretboard: React.FC<FretboardProps> = ({
                     const dot = dots.get(key);
                     const noteName = cell.note;
 
+                    // Fret 0 renders a horizontal string line only — no cell,
+                    // no dot. The open-string interaction lives on the
+                    // string-note label to the left of the fretboard.
+                    if (fret === 0) {
+                      return (
+                        <div key={stringIndex} className="fretboard-string-row">
+                          <div className={`fretboard-string-line string-${stringIndex}`} />
+                        </div>
+                      );
+                    }
+
+                    // At fret 0 the dot's visual is hoisted up to the string
+                    // label on the left; in the cell itself we skip the
+                    // variant styling and the text. Click/drag/drop handlers
+                    // stay wired so interaction still works through the nut.
+                    const visualDot = fret > 0 ? dot : undefined;
                     const classNames = [
                       'fretboard-cell',
-                      dot ? `variant-${dot.variant}` : '',
-                      dot?.nonDiatonic ? 'non-diatonic' : '',
-                      dot?.dropTargetHint ? 'drop-target' : '',
-                      clickableEmpty && !dot ? 'clickable-empty' : '',
+                      visualDot ? `variant-${visualDot.variant}` : '',
+                      visualDot?.nonDiatonic ? 'non-diatonic' : '',
+                      visualDot?.dropTargetHint ? 'drop-target' : '',
+                      visualDot?.faint ? 'faint' : '',
+                      clickableEmpty && !visualDot ? 'clickable-empty' : '',
                     ]
                       .filter(Boolean)
                       .join(' ');
 
                     // CSS var lets variant color be overridden per-dot
-                    const style: React.CSSProperties | undefined = dot?.color
-                      ? { ['--fretboard-dot-color' as any]: dot.color }
+                    const style: React.CSSProperties | undefined = visualDot?.color
+                      ? { ['--fretboard-dot-color' as any]: visualDot.color }
                       : undefined;
 
-                    const labelText = dot?.label ?? (dot ? noteName : '');
-                    const showLabel = dot !== undefined;
+                    const labelText = visualDot?.label ?? (visualDot ? noteName : '');
+                    const showLabel = visualDot !== undefined;
 
                     const handleClick = onCellClick
                       ? () => onCellClick(stringIndex, fret, noteName)
@@ -99,28 +175,17 @@ export const Fretboard: React.FC<FretboardProps> = ({
                     // Drag source: only on cells with draggable dots
                     const isDragSource = !!dot?.draggable;
 
+                    // The full-row hit area expands the clickable surface to
+                    // cover the whole fret cell (not just the small circle),
+                    // so there's no dead space on the fret. Drop handlers go
+                    // on the hit area too. The visible dot is a child div
+                    // that only catches the drag-source.
                     return (
                       <div key={stringIndex} className="fretboard-string-row">
                         <div className={`fretboard-string-line string-${stringIndex}`} />
                         <div
-                          className={classNames}
-                          style={style}
+                          className="fretboard-cell-hit"
                           onClick={handleClick}
-                          draggable={isDragSource}
-                          onDragStart={
-                            isDragSource && onDragStart
-                              ? (e) => {
-                                  e.dataTransfer.effectAllowed = 'move';
-                                  e.dataTransfer.setData('text/plain', key);
-                                  onDragStart(stringIndex, fret, noteName);
-                                }
-                              : undefined
-                          }
-                          onDragEnd={
-                            isDragSource && onDragEnd
-                              ? () => onDragEnd()
-                              : undefined
-                          }
                           onDragOver={
                             cellsAcceptDrops
                               ? (e) => {
@@ -139,9 +204,29 @@ export const Fretboard: React.FC<FretboardProps> = ({
                           }
                           title={`${noteName} — String ${strings - stringIndex}, Fret ${fret}`}
                         >
-                          {showLabel && (
-                            <span className="fretboard-note-label">{labelText}</span>
-                          )}
+                          <div
+                            className={classNames}
+                            style={style}
+                            draggable={isDragSource}
+                            onDragStart={
+                              isDragSource && onDragStart
+                                ? (e) => {
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData('text/plain', key);
+                                    onDragStart(stringIndex, fret, noteName);
+                                  }
+                                : undefined
+                            }
+                            onDragEnd={
+                              isDragSource && onDragEnd
+                                ? () => onDragEnd()
+                                : undefined
+                            }
+                          >
+                            {showLabel && (
+                              <span className="fretboard-note-label">{labelText}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
