@@ -91,7 +91,7 @@
 .fretboard-string-label.has-variant-current,
 .fretboard-string-label.has-variant-base,
 .fretboard-string-label.has-variant-harmony {
-  box-shadow: 0 0 0 0.5px #b8b8b8, 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 0.5px #000, 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .fretboard-string-label.has-variant-alternate {
@@ -396,7 +396,7 @@
 .fretboard-cell.variant-current,
 .fretboard-cell.variant-base,
 .fretboard-cell.variant-harmony {
-  box-shadow: 0 0 0 0.5px #b8b8b8, 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 0.5px #000, 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* base: user-placed base note on HarmonyMaker (primary color) */

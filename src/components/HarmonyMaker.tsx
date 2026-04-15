@@ -27,7 +27,8 @@ import {
 } from '../data/musicData';
 import { generateFretboard, isNoteInScale } from '../data/guitarData';
 import { findAllVoicings, VoicingPosition } from '../data/harmonyVoicings';
-import { Fretboard, DotInfo, posKey } from './Fretboard';
+import { DotInfo, posKey } from './Fretboard';
+import { FretboardOrPiano } from './FretboardOrPiano';
 import { HarmonyAnalysisPair } from './HarmonyAnalysisPair';
 import { Button, Chip, Checkbox } from '../ui';
 import './HarmonyMaker.css';
@@ -52,6 +53,7 @@ export const HarmonyMaker: React.FC = () => {
     setDefaultInterval,
     applyDefaultToAll,
     clearHarmonyMaker,
+    viewMode,
   } = useStore();
 
   // Display toggles — local, no need to persist. Alternate voicings reveal
@@ -345,12 +347,14 @@ export const HarmonyMaker: React.FC = () => {
             label="Show Diatonic"
             title="Overlay faint in-scale notes on the base fretboard"
           />
-          <Checkbox
-            checked={show24Frets}
-            onCheckedChange={setShow24Frets}
-            label="24 Frets"
-            title="Extend the fretboard to 24 frets and include those positions in voicing search"
-          />
+          {viewMode === 'fretboard' && (
+            <Checkbox
+              checked={show24Frets}
+              onCheckedChange={setShow24Frets}
+              label="24 Frets"
+              title="Extend the fretboard to 24 frets and include those positions in voicing search"
+            />
+          )}
         </div>
 
         <Button variant="outline" size="sm" onClick={clearHarmonyMaker}>
@@ -358,9 +362,13 @@ export const HarmonyMaker: React.FC = () => {
         </Button>
       </div>
 
-      {/* Dual Fretboards */}
-      <div className={`harmony-fretboards ${show24Frets ? 'harmony-fretboards--stacked' : ''}`}>
-        <Fretboard
+      {/* Dual Fretboards. Stacked vertically when 24-fret mode is on (too
+          wide side-by-side) or when piano view is active (the keyboard is
+          always full-width so there's no horizontal room to share). */}
+      <div
+        className={`harmony-fretboards ${show24Frets || viewMode === 'piano' ? 'harmony-fretboards--stacked' : ''}`}
+      >
+        <FretboardOrPiano
           strings={6}
           fretCount={fretCount}
           tuning={note.tuning}
@@ -370,7 +378,7 @@ export const HarmonyMaker: React.FC = () => {
           clickableEmpty
         />
         <div className="harmony-divider" />
-        <Fretboard
+        <FretboardOrPiano
           strings={6}
           fretCount={fretCount}
           tuning={note.tuning}

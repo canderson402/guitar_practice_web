@@ -12,7 +12,7 @@ import { CircleOfFifths } from './components/CircleOfFifths';
 import { NoteTrainer } from './components/NoteTrainer';
 import { HarmonyMaker } from './components/HarmonyMaker';
 import { DesignSystemPreview } from './ui/DesignSystemPreview';
-import { Select } from './ui';
+import { Select, Button, ToggleButtonGroup } from './ui';
 import { useStore, configurationPresets } from './store/useStore';
 import { themes, injectThemeStyles } from './utils/themeGenerator';
 import {
@@ -32,6 +32,15 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// The guitarNeck card shows either the Fretboard or Piano view — the card
+// title reflects whichever is active. Other cards keep the title from the store.
+const displayTitle = (card: { id: string; title: string }, viewMode: string): string => {
+  if (card.id === 'guitarNeck') {
+    return viewMode === 'piano' ? 'Piano' : 'Fretboard';
+  }
+  return card.title;
+};
+
 const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
   const {
     attributes,
@@ -48,7 +57,7 @@ const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
     opacity: isDragging ? 0.7 : 1,
   };
 
-  const { toggleCard } = useStore();
+  const { toggleCard, viewMode } = useStore();
 
   return (
     <div
@@ -65,7 +74,7 @@ const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
           onChange={() => toggleCard(card.id)}
           onClick={(e) => e.stopPropagation()}
         />
-        <span onClick={() => toggleCard(card.id)}>{card.title}</span>
+        <span onClick={() => toggleCard(card.id)}>{displayTitle(card, viewMode)}</span>
       </div>
       <div className="drag-icon">
         <div className="drag-dots">
@@ -82,7 +91,10 @@ const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
 };
 
 function App() {
-  const { cards, reorderCards, theme, setTheme, applyConfiguration, currentConfiguration } = useStore();
+  const {
+    cards, reorderCards, theme, setTheme, applyConfiguration, currentConfiguration,
+    viewMode, setViewMode,
+  } = useStore();
 
   // Hash-gated design-system preview. Navigate to `…/#design` to view every
   // primitive in one place; return to the app by clearing the hash. Updates
@@ -228,6 +240,27 @@ function App() {
               options={Object.entries(themes).map(([id, data]) => ({ value: id, label: data.name }))}
             />
           </div>
+          <div className="header-selector">
+            <label>View:</label>
+            <ToggleButtonGroup label="View mode" layout="segmented">
+              <Button
+                variant="ghost"
+                size="sm"
+                active={viewMode === 'fretboard'}
+                onClick={() => setViewMode('fretboard')}
+              >
+                Fretboard
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                active={viewMode === 'piano'}
+                onClick={() => setViewMode('piano')}
+              >
+                Piano
+              </Button>
+            </ToggleButtonGroup>
+          </div>
         </div>
       </header>
       
@@ -258,7 +291,7 @@ function App() {
               return (
                 <div key={element.key} className="card-container vertical-card" data-layout={element.card.layout}>
                   <Card 
-                    title={element.card.title} 
+                    title={displayTitle(element.card, viewMode)}
                     isActive={element.card.isActive}
                   >
                     {renderCardContent(element.card)}
@@ -310,7 +343,7 @@ function App() {
                     {leftCards.map((card: any) => (
                       <div key={card.id} className="card-container" data-layout={card.layout}>
                         <Card 
-                          title={card.title} 
+                          title={displayTitle(card, viewMode)}
                           isActive={card.isActive}
                         >
                           {renderCardContent(card)}
@@ -322,7 +355,7 @@ function App() {
                     {rightCards.map((card: any) => (
                       <div key={card.id} className="card-container" data-layout={card.layout}>
                         <Card 
-                          title={card.title} 
+                          title={displayTitle(card, viewMode)}
                           isActive={card.isActive}
                         >
                           {renderCardContent(card)}

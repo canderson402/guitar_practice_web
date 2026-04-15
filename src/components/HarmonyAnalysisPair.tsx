@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useStore } from '../store/useStore';
 import {
   IntervalSpec,
   diatonicIntervalOptions,
@@ -53,6 +54,10 @@ export const HarmonyAnalysisPair: React.FC<Props> = ({
   onIntervalChange,
   onCycle,
 }) => {
+  // Voicing cycling is a fretboard-side concept — cycling moves the
+  // selected position among equivalent-pitch spots on the neck. In piano
+  // view those collapse to the same key, so the cycle button is hidden.
+  const viewMode = useStore(s => s.viewMode);
   const {
     attributes,
     listeners,
@@ -127,7 +132,7 @@ export const HarmonyAnalysisPair: React.FC<Props> = ({
               ]}
             />
           </label>
-          {voicingCount > 1 && (
+          {voicingCount > 1 && viewMode === 'fretboard' && (
             <Button variant="outline" size="sm" onClick={onCycle}>
               Voicing {voicingIndex + 1}/{voicingCount} &mdash; cycle
             </Button>

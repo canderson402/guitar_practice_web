@@ -11,7 +11,8 @@ import {
 } from '../data/musicData';
 import { generateFretboard, isNoteInScale } from '../data/guitarData';
 import { Checkbox } from '../ui';
-import { Fretboard, DotInfo, posKey } from './Fretboard';
+import { DotInfo, posKey } from './Fretboard';
+import { FretboardOrPiano } from './FretboardOrPiano';
 import { TuningPicker } from './TuningPicker';
 import './GuitarNeckNew.css';
 
@@ -32,8 +33,8 @@ const SWATCHES = {
 };
 
 export const GuitarNeck: React.FC = () => {
-  const { note, setSelectedScale } = useStore();
-  const [show24Frets, setShow24Frets] = React.useState(false);
+  const { note, setSelectedScale, viewMode } = useStore();
+  const [show24Frets, setShow24Frets] = React.useState(true);
   const [showRoot, setShowRoot] = React.useState(true);
   const [showScale, setShowScale] = React.useState(true);
   const [showCurrent, setShowCurrent] = React.useState(true);
@@ -209,9 +210,11 @@ export const GuitarNeck: React.FC = () => {
     <div className="guitar-neck">
       <div className={`neck-info ${whiteText ? 'white-text-mode' : 'black-text-mode'}`}>
         <div className="neck-controls">
-          <TuningPicker />
+          {viewMode === 'fretboard' && <TuningPicker />}
           <Checkbox checked={whiteText} onCheckedChange={setWhiteText} label="White Text" />
-          <Checkbox checked={show24Frets} onCheckedChange={setShow24Frets} label="Show 24 frets" />
+          {viewMode === 'fretboard' && (
+            <Checkbox checked={show24Frets} onCheckedChange={setShow24Frets} label="Show 24 frets" />
+          )}
           <Checkbox
             checked={showRoot}
             onCheckedChange={setShowRoot}
@@ -255,7 +258,7 @@ export const GuitarNeck: React.FC = () => {
         ) : null}
       </div>
 
-      <Fretboard
+      <FretboardOrPiano
         strings={6}
         fretCount={fretCount}
         tuning={note.tuning}

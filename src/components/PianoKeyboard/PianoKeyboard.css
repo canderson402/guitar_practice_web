@@ -1,0 +1,253 @@
+/* ============================================
+   PIANO KEYBOARD — pitch-oriented view of fretboard data
+   Same DotVariants as Fretboard, same color semantics.
+   ============================================ */
+
+.piano-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ds-space-1);
+  width: 100%;
+}
+
+.piano-title {
+  font-size: var(--ds-font-sm);
+  font-weight: var(--ds-font-semibold);
+  color: var(--ds-color-neutral-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+/* Outer wrapper — fills the card width. Internal positioning is absolute
+   for black keys layered on top of the white-key row. */
+.piano-keyboard {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: 160px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  background: var(--ds-color-neutral-900);
+}
+
+/* White keys flow left to right in a flex row. Each takes equal width. */
+.piano-white-row {
+  display: flex;
+  height: 100%;
+}
+
+.piano-black-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 62%;
+  pointer-events: none;  /* only the black key itself catches clicks */
+}
+
+.piano-black-position {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Every key: reset button defaults, no border (only variants apply color). */
+.piano-key {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  font: inherit;
+  transition: background-color var(--ds-transition-fast);
+}
+
+/* White key: flex child, equal width. Tall. */
+.piano-key.white {
+  flex: 1;
+  height: 100%;
+  background: linear-gradient(to bottom, #fdfdfd 0%, #f2f0eb 100%);
+  border-right: 1px solid #c7c2b8;
+  padding-bottom: 6px;
+  color: var(--ds-color-neutral-700);
+}
+
+.piano-key.white:last-child {
+  border-right: none;
+}
+
+.piano-key.white:hover {
+  background: linear-gradient(to bottom, #fffcec 0%, #ece7d1 100%);
+}
+
+/* Black key: sized by its .piano-black-position wrapper. Narrower than a
+   white key — two-thirds width, centered over the gap between two whites. */
+.piano-key.black {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 66%;
+  height: 100%;
+  background: linear-gradient(to bottom, #2a2a2a 0%, #0f0f0f 100%);
+  border-radius: 0 0 3px 3px;
+  pointer-events: auto;
+  color: var(--ds-color-white);
+  padding-bottom: 4px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+.piano-key.black:hover {
+  background: linear-gradient(to bottom, #3a3a3a 0%, #1a1a1a 100%);
+}
+
+/* Name label at the bottom of each white key (C, D, E, …). Rendered only
+   when the key has no dot, so highlighted notes don't get double labels. */
+.piano-key-name {
+  font-size: 10px;
+  font-weight: var(--ds-font-medium);
+  color: var(--ds-color-neutral-500);
+  pointer-events: none;
+}
+
+/* ============================================
+   DOT on a key — fixed-diameter circle. Every variant produces the same
+   26×26 circle so notes read consistently regardless of which key they
+   land on. Label sits centered inside the circle.
+   ============================================ */
+
+.piano-key-dot {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--piano-key-color, var(--ds-color-secondary));
+  box-shadow: 0 0 0 0.5px #000, 0 1px 2px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  transition: transform var(--ds-transition-fast);
+}
+
+/* Vertical placement per key type. Both sit near the bottom of their own
+   key — black-key notes appear on the black-key body, white-key notes
+   appear in the clear zone below where black keys end. */
+.piano-key.white .piano-key-dot {
+  bottom: 12px;
+}
+
+.piano-key.black .piano-key-dot {
+  bottom: 10px;
+}
+
+.piano-key-label {
+  font-size: 10px;
+  font-weight: var(--ds-font-bold);
+  color: var(--ds-color-white);
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Per-variant colours (match Fretboard.css). --piano-key-color overrides
+   via inline style when the DotInfo carries a custom color. */
+.piano-key.variant-root .piano-key-dot,
+.piano-key.variant-scale .piano-key-dot,
+.piano-key.variant-current .piano-key-dot {
+  background: var(--piano-key-color, var(--ds-color-secondary));
+}
+
+.piano-key.variant-base .piano-key-dot {
+  background: var(--piano-key-color, var(--ds-color-primary));
+}
+
+.piano-key.variant-harmony .piano-key-dot {
+  background: var(--piano-key-color, var(--ds-color-warning));
+}
+
+.piano-key.variant-alternate .piano-key-dot {
+  background: transparent;
+  border: 2px dashed var(--piano-key-color, var(--ds-color-warning));
+  box-shadow: none;
+}
+
+.piano-key.variant-alternate .piano-key-label {
+  color: var(--piano-key-color, var(--ds-color-warning));
+  text-shadow: none;
+}
+
+/* faint — same size as hover preview / alternate variants on the fretboard */
+.piano-key.faint .piano-key-dot {
+  opacity: 0.4;
+  width: 22px;
+  height: 22px;
+}
+
+.piano-key.faint:hover .piano-key-dot {
+  opacity: 1;
+}
+
+/* drop-target pulse on the dot itself */
+.piano-key.drop-target .piano-key-dot {
+  animation: fretboard-drop-pulse 1.4s ease-in-out infinite;
+}
+
+/* Clickable-empty: hover reveals a neutral 22px preview dot in the same
+   position a real dot would occupy. Rendered as the ::after pseudo since
+   there's no real .piano-key-dot element to attach to on empty keys. */
+.piano-key.clickable-empty::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(120, 120, 120, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ds-transition-fast);
+}
+
+.piano-key.white.clickable-empty::after {
+  bottom: 14px;
+}
+
+.piano-key.black.clickable-empty::after {
+  bottom: 12px;
+}
+
+.piano-key.clickable-empty:hover::after {
+  opacity: 1;
+}
+
+/* Responsive — shorter keyboard on small screens */
+@media (max-width: 768px) {
+  .piano-keyboard {
+    height: 130px;
+  }
+
+  .piano-key-dot {
+    width: 22px;
+    height: 22px;
+  }
+
+  .piano-key-label {
+    font-size: 9px;
+  }
+
+  .piano-key-name {
+    font-size: 9px;
+  }
+}

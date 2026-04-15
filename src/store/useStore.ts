@@ -123,6 +123,11 @@ export const configurationPresets: ConfigurationPreset[] = [
   },
 ];
 
+/** App-level view mode — "fretboard" (default) or "piano" (shows the same
+ *  pitch-based data on a piano keyboard instead of a guitar neck). All
+ *  fretboard-consuming components respect this flag. */
+export type ViewMode = 'fretboard' | 'piano';
+
 interface StoreState {
   timer: TimerState;
   metronome: MetronomeState;
@@ -133,6 +138,7 @@ interface StoreState {
   cards: CardInfo[];
   theme: string;
   currentConfiguration: string;
+  viewMode: ViewMode;
   
   // Timer actions
   setTimerRunning: (isRunning: boolean) => void;
@@ -203,6 +209,9 @@ interface StoreState {
 
   // Configuration presets
   applyConfiguration: (presetId: string) => void;
+
+  // View mode — swaps fretboard / piano rendering across every consumer.
+  setViewMode: (mode: ViewMode) => void;
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -271,7 +280,8 @@ export const useStore = create<StoreState>((set) => ({
   ],
   theme: 'eighties',
   currentConfiguration: 'default',
-  
+  viewMode: 'fretboard',
+
   // Timer actions
   setTimerRunning: (isRunning) => set((state) => ({ 
     timer: { ...state.timer, isRunning } 
@@ -529,4 +539,6 @@ export const useStore = create<StoreState>((set) => ({
       })),
     };
   }),
+
+  setViewMode: (viewMode) => set({ viewMode }),
 }));

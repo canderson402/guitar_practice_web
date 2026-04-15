@@ -11,6 +11,7 @@ import {
   Card,
 } from './index';
 import { Fretboard, DotInfo, posKey } from '../components/Fretboard';
+import { PianoKeyboard } from '../components/PianoKeyboard';
 
 // ---------------------------------------------------------------------------
 // DesignSystemPreview — visual catalog of every primitive in every variant.
@@ -280,6 +281,31 @@ export const DesignSystemPreview: React.FC = () => {
           demo.set(posKey(2, 12), { variant: 'harmony', dropTargetHint: true });  // pulsing drop target
           return (
             <Fretboard
+              strings={6}
+              fretCount={12}
+              tuning={['E', 'B', 'G', 'D', 'A', 'E']}
+              dots={demo}
+              title="All variants"
+            />
+          );
+        })()}
+      </Section>
+
+      <Section title="PianoKeyboard">
+        <p style={{ color: 'var(--ds-color-neutral-500)', margin: '0 0 var(--ds-space-3)', fontSize: 'var(--ds-font-sm)' }}>
+          Same DotInfo data, pitch-oriented layout. Fretboard positions get
+          bucketed by MIDI pitch; variant priority resolves collisions.
+        </p>
+        {(() => {
+          const demo = new Map<string, DotInfo>();
+          demo.set(posKey(5, 3), { variant: 'root', label: 'G' });
+          demo.set(posKey(4, 5), { variant: 'scale' });
+          demo.set(posKey(3, 7), { variant: 'scale' });
+          demo.set(posKey(2, 9), { variant: 'current' });
+          demo.set(posKey(1, 8), { variant: 'base', label: '1' });
+          demo.set(posKey(0, 10), { variant: 'harmony', label: '1' });
+          return (
+            <PianoKeyboard
               strings={6}
               fretCount={12}
               tuning={['E', 'B', 'G', 'D', 'A', 'E']}
