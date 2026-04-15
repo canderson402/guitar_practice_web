@@ -22,6 +22,9 @@ interface FretboardCell {
 export interface VoicingPosition {
   stringIndex: number;
   fret: number;
+  /** The note name at this position — derived from the fretboard at the time
+   *  voicings were computed. Callers should treat this as advisory only; the
+   *  source of truth for note names is always fretboard[si][f].note. */
   note: string;
 }
 
@@ -37,18 +40,21 @@ export const positionDistance = (
   return stringDist + fretDist;
 };
 
-// For a given base note and interval spec, find every place the resolved
+// For a given base position and interval spec, find every place the resolved
 // harmony note can be played within the provided fretboard, sorted by
-// proximity to the base position.
+// proximity to the base position. The base note name is looked up from the
+// fretboard — positions are the only stored data.
 export const findAllVoicings = (
-  basePos: { stringIndex: number; fret: number; note: string },
+  basePos: { stringIndex: number; fret: number },
   spec: IntervalSpec,
   rootNote: string,
   scaleType: keyof typeof scales,
   fretboard: FretboardCell[][],
   fretCount: number
 ): { voicings: VoicingPosition[]; diatonic: boolean; targetNote: string } | null => {
-  const result = resolveInterval(basePos.note, rootNote, scaleType, spec);
+  const baseCell = fretboard[basePos.stringIndex]?.[basePos.fret];
+  if (!baseCell) return null;
+  const result = resolveInterval(baseCell.note, rootNote, scaleType, spec);
   if (!result) return null;
 
   const targetPos = getChromaticPosition(result.note);

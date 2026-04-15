@@ -9,9 +9,26 @@ import {
   getChordChromaticPositions,
   getChordIntervalName,
 } from '../data/musicData';
-import { generateFretboard, fretMarkers, doubleFretMarkers, isNoteInScale } from '../data/guitarData';
+import { generateFretboard, isNoteInScale } from '../data/guitarData';
 import { Checkbox } from '../ui';
+import { Fretboard, DotInfo, posKey } from './Fretboard';
 import './GuitarNeckNew.css';
+
+// ---------------------------------------------------------------------------
+// GuitarNeck — scale/chord-aware fretboard view. Builds a DotInfo map from
+// the global scale, root, chord, and cycle state, then hands it to the shared
+// Fretboard primitive. No per-note DOM rendering happens here.
+// ---------------------------------------------------------------------------
+
+const CHROMATIC_INTERVALS = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
+
+// Swatch colors (legend-coded) by white-vs-black text mode, mirroring the
+// GuitarNeck's historic palette.
+const SWATCHES = {
+  root: { white: '#1E90FF', black: '#87CEEB' },
+  scale: { white: '#228B22', black: '#90EE90' },
+  current: { white: '#FF8C00', black: '#FFD700' },
+};
 
 export const GuitarNeck: React.FC = () => {
   const { note, setSelectedScale } = useStore();
@@ -21,27 +38,28 @@ export const GuitarNeck: React.FC = () => {
   const [showCurrent, setShowCurrent] = React.useState(true);
   const [whiteText, setWhiteText] = React.useState(true);
   const [showIntervals, setShowIntervals] = React.useState(false);
-  
+
   // Validate selected scale and reset if invalid
   React.useEffect(() => {
     if (note.selectedScale && !scales[note.selectedScale as keyof typeof scales]) {
       setSelectedScale('Major (Ionian)');
     }
   }, [note.selectedScale, setSelectedScale]);
-  
-  // Generate the fretboard data
-  const fretboard = generateFretboard(undefined, show24Frets ? 24 : 15);
 
-  // Get current scale notes
+  const fretCount = show24Frets ? 24 : 15;
+  const fretboard = React.useMemo(
+    () => generateFretboard(note.tuning, fretCount),
+    [note.tuning, fretCount]
+  );
+
+  // Current scale notes (or chromatic if no scale selected).
   const currentNotes = note.selectedScale && note.selectedNote
-    ? getScaleNotes(note.selectedNote, note.selectedScale as keyof typeof import('../data/musicData').scales)
+    ? getScaleNotes(note.selectedNote, note.selectedScale as keyof typeof scales)
     : note.selectedNote
-    ? getChromaticScale(note.selectedNote) // Use reordered chromatic scale starting from root
-    : notes; // Show all notes by default
+    ? getChromaticScale(note.selectedNote)
+    : notes;
 
-  // Chord-focus mode: when a chord is selected from the chord card, only the
-  // chord tones light up on the fretboard and the chord root takes over as the
-  // "root" highlight. Deselecting falls back to plain scale display.
+  // Chord-focus mode short-circuits the scale overlay.
   const selectedChord = note.selectedChord;
   const chordType = selectedChord
     ? (selectedChord.type as keyof typeof chordTypes)
@@ -49,213 +67,172 @@ export const GuitarNeck: React.FC = () => {
   const chordPositions = selectedChord && chordType
     ? getChordChromaticPositions(selectedChord.note, chordType)
     : null;
-  
-  // Get current note being highlighted
-  const currentHighlightNote = currentNotes.length > 0 
+
+  // The currently cycled scale note (drives the orange "current" dot).
+  const currentHighlightNote = currentNotes.length > 0
     ? currentNotes[Math.min(note.currentNoteIndex, currentNotes.length - 1)]
     : null;
 
-  // Helper function to get chromatic position of a note
+  // Tiny local helpers — same math the old version used.
   const getChromaticPosition = (noteName: string): number => {
     const chromaticMap: { [key: string]: number } = {
-      'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 
+      'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
       'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
     };
     return chromaticMap[noteName] ?? 0;
   };
 
-  // Helper function to check if two notes are enharmonically equivalent
-  const areNotesEquivalent = (note1: string, note2: string): boolean => {
-    return getChromaticPosition(note1) === getChromaticPosition(note2);
-  };
+  const areNotesEquivalent = (a: string, b: string) =>
+    getChromaticPosition(a) === getChromaticPosition(b);
 
-  // Get interval information for any note relative to root
-  const getInterval = (targetNote: string) => {
-    if (!note.selectedNote) {
-      return null;
-    }
-    
-    // Always use chromatic distance calculation for consistent interval naming
-    const rootChromaticPos = getChromaticPosition(note.selectedNote);
-    const targetChromaticPos = getChromaticPosition(targetNote);
-    const interval = (targetChromaticPos - rootChromaticPos + 12) % 12;
-    
-    const chromaticIntervals = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
-    
-    // If we have a selected scale, check if this note is in the scale and use scale-specific intervals
+  // Scale-aware interval label for a given note.
+  const getInterval = (targetNote: string): string | null => {
+    if (!note.selectedNote) return null;
+    const rootPos = getChromaticPosition(note.selectedNote);
+    const targetPos = getChromaticPosition(targetNote);
+    const semis = (targetPos - rootPos + 12) % 12;
+
     if (note.selectedScale) {
-      const targetIndex = currentNotes.findIndex(n => areNotesEquivalent(n, targetNote));
-      if (targetIndex !== -1) {
+      const idx = currentNotes.findIndex(n => areNotesEquivalent(n, targetNote));
+      if (idx !== -1) {
         const scale = scales[note.selectedScale as keyof typeof scales];
-        if (scale && scale.description) {
-          const intervalNames = scale.description.split(' - ');
-          return intervalNames[targetIndex] || chromaticIntervals[interval];
+        if (scale?.description) {
+          const names = scale.description.split(' - ');
+          return names[idx] || CHROMATIC_INTERVALS[semis];
         }
       }
     }
-    
-    // For chromatic or notes not in scale, use chromatic intervals
-    return chromaticIntervals[interval];
+    return CHROMATIC_INTERVALS[semis];
   };
 
-  // Get interval for the current highlighted note based on scale position
-  const getCurrentScaleInterval = () => {
-    if (!note.selectedNote || !currentNotes.length) {
-      return null;
-    }
-    
-    const currentIndex = Math.min(note.currentNoteIndex, currentNotes.length - 1);
-    const currentHighlightedNote = currentNotes[currentIndex];
-    
-    // If we have a scale selected, use scale positions for interval names
+  // "Interval: X" label for the current-cycle checkbox.
+  const getCurrentScaleInterval = (): string | null => {
+    if (!note.selectedNote || !currentNotes.length) return null;
+    const idx = Math.min(note.currentNoteIndex, currentNotes.length - 1);
     if (note.selectedScale) {
       const scale = scales[note.selectedScale as keyof typeof scales];
-      if (scale && scale.description) {
-        const intervalNames = scale.description.split(' - ');
-        return intervalNames[currentIndex] || `${currentIndex + 1}`;
+      if (scale?.description) {
+        const names = scale.description.split(' - ');
+        return names[idx] || `${idx + 1}`;
       }
     }
-    
-    // For chromatic (no selected scale), use chromatic distance calculation for consistency
-    if (!note.selectedScale && currentHighlightedNote) {
-      const rootChromaticPos = getChromaticPosition(note.selectedNote);
-      const currentChromaticPos = getChromaticPosition(currentHighlightedNote);
-      const interval = (currentChromaticPos - rootChromaticPos + 12) % 12;
-      
-      const chromaticIntervals = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
-      return chromaticIntervals[interval];
+    if (!note.selectedScale && currentNotes[idx]) {
+      const semis = (getChromaticPosition(currentNotes[idx]) - getChromaticPosition(note.selectedNote) + 12) % 12;
+      return CHROMATIC_INTERVALS[semis];
     }
-    
-    // Fallback for other scales
-    return `${currentIndex + 1}`;
+    return `${idx + 1}`;
   };
 
-  // Get interval information for current note
-  const getCurrentInterval = () => {
-    return getCurrentScaleInterval();
-  };
+  const currentInterval = getCurrentScaleInterval();
 
-  const currentInterval = getCurrentInterval();
-  
-  const renderFret = (fret: number) => {
-    const isMarkedFret = fretMarkers.includes(fret);
-    const isDoubleDot = doubleFretMarkers.includes(fret);
-    
-    return (
-      <div key={fret} className={`fret ${fret === 0 ? 'nut' : ''}`}>
-        {/* Fret number */}
-        <div className="fret-number">{fret}</div>
-        
-        {/* Fret markers */}
-        {isMarkedFret && fret > 0 && (
-          <div className="fret-marker">
-            <div className={`marker-dot ${isDoubleDot ? 'double' : ''}`} />
-            {isDoubleDot && <div className="marker-dot double" />}
-          </div>
-        )}
-        
-        {/* Strings and notes */}
-        <div className="strings">
-          {fretboard.map((string, stringIndex) => {
-            const fretNote = string[fret];
-            if (!fretNote) return null; // Safety check
+  // Build the dots map. Priority when multiple could apply: current > root > scale.
+  const dots = React.useMemo(() => {
+    const m = new Map<string, DotInfo>();
+    const textMode: 'white' | 'black' = whiteText ? 'white' : 'black';
 
-            const fretChromatic = getChromaticPosition(fretNote.note);
+    for (let si = 0; si < fretboard.length; si++) {
+      for (let f = 0; f <= fretCount; f++) {
+        const cell = fretboard[si][f];
+        if (!cell) continue;
+        const fretNoteName = cell.note;
+        const fretChromatic = getChromaticPosition(fretNoteName);
 
-            // In chord-focus mode, "in-scale" means "in-chord" and the chord
-            // root replaces the scale root for highlighting purposes.
-            const isInChord = chordPositions ? chordPositions.includes(fretChromatic) : false;
-            const isInScale = chordPositions
-              ? isInChord
-              : currentNotes.length > 0 && isNoteInScale(fretNote.note, currentNotes);
+        // In chord-focus mode: only chord tones. Chord root → root dot;
+        // other chord tones → scale dot. "Current" is suppressed.
+        if (chordPositions) {
+          if (!chordPositions.includes(fretChromatic)) continue;
+          const isRoot = selectedChord && areNotesEquivalent(fretNoteName, selectedChord.note);
+          const label = showIntervals && selectedChord && chordType
+            ? getChordIntervalName(fretNoteName, selectedChord.note, chordType) ?? fretNoteName
+            : fretNoteName;
+          if (isRoot) {
+            if (!showRoot) continue;
+            m.set(posKey(si, f), {
+              variant: 'root',
+              label,
+              color: SWATCHES.root[textMode],
+            });
+          } else {
+            if (!showScale) continue;
+            m.set(posKey(si, f), {
+              variant: 'scale',
+              label,
+              color: SWATCHES.scale[textMode],
+            });
+          }
+          continue;
+        }
 
-            // The "current" scale-interval overlay is a scale-cycler feature
-            // and doesn't map cleanly onto chord tones (chord intervals are
-            // relative to the chord root, not the scale). Suppress it entirely
-            // in chord-focus mode; the control is greyed out to match.
-            const isCurrentNote = !chordPositions
-              && currentHighlightNote
-              && areNotesEquivalent(fretNote.note, currentHighlightNote);
+        // Scale mode: decide dot by priority (current > root > scale).
+        const isCurrent = currentHighlightNote
+          && areNotesEquivalent(fretNoteName, currentHighlightNote);
+        const isRoot = note.selectedNote
+          && areNotesEquivalent(fretNoteName, note.selectedNote);
+        const inScale = currentNotes.length > 0
+          && isNoteInScale(fretNoteName, currentNotes);
 
-            const rootRef = selectedChord ? selectedChord.note : note.selectedNote;
-            const isRootNote = rootRef && areNotesEquivalent(fretNote.note, rootRef);
+        const label = showIntervals ? getInterval(fretNoteName) ?? fretNoteName : fretNoteName;
 
-            // Determine which note types should be shown
-            const shouldShowNote = (isRootNote && showRoot) ||
-                                  (isInScale && showScale) ||
-                                  (isCurrentNote && showCurrent);
+        if (isCurrent && showCurrent) {
+          m.set(posKey(si, f), {
+            variant: 'current',
+            label,
+            color: SWATCHES.current[textMode],
+          });
+        } else if (isRoot && showRoot) {
+          m.set(posKey(si, f), {
+            variant: 'root',
+            label,
+            color: SWATCHES.root[textMode],
+          });
+        } else if (inScale && showScale) {
+          m.set(posKey(si, f), {
+            variant: 'scale',
+            label,
+            color: SWATCHES.scale[textMode],
+          });
+        }
+      }
+    }
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    fretboard, fretCount,
+    chordPositions, selectedChord, chordType,
+    note.selectedNote, note.selectedScale, note.currentNoteIndex,
+    currentHighlightNote, showIntervals, showRoot, showScale, showCurrent,
+    whiteText,
+  ]);
 
-            // Label: chord-tone interval when focused on a chord, otherwise scale interval
-            const intervalLabel = chordPositions && chordType && selectedChord
-              ? getChordIntervalName(fretNote.note, selectedChord.note, chordType)
-              : getInterval(fretNote.note);
-
-            return (
-              <div key={stringIndex} className="string-container">
-                <div className={`guitar-string string-${stringIndex}`} />
-                <div
-                  className={`note-position ${shouldShowNote ? 'visible' : ''} ${isCurrentNote && showCurrent ? 'current' : isRootNote && showRoot ? 'root' : isInScale && showScale ? 'in-scale' : ''} ${whiteText ? 'white-text' : 'black-text'}`}
-                  title={`${fretNote.note} - String ${6 - stringIndex}, Fret ${fret}`}
-                >
-                  {shouldShowNote && (
-                    <span className="note-label">
-                      {showIntervals ? intervalLabel || fretNote.note : fretNote.note}
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-  
   return (
     <div className="guitar-neck">
       <div className={`neck-info ${whiteText ? 'white-text-mode' : 'black-text-mode'}`}>
         <div className="neck-controls">
-          {/* Swatch colors match the dots drawn on the fretboard for each
-              overlay. They shift when the user toggles between black-text and
-              white-text modes (the fretboard's root/scale/interval colors
-              change too, so the legend should track). */}
-          <Checkbox
-            checked={whiteText}
-            onCheckedChange={setWhiteText}
-            label="White Text"
-          />
-          <Checkbox
-            checked={show24Frets}
-            onCheckedChange={setShow24Frets}
-            label="Show 24 frets"
-          />
+          <Checkbox checked={whiteText} onCheckedChange={setWhiteText} label="White Text" />
+          <Checkbox checked={show24Frets} onCheckedChange={setShow24Frets} label="Show 24 frets" />
           <Checkbox
             checked={showRoot}
             onCheckedChange={setShowRoot}
             label="Root"
-            swatchColor={whiteText ? '#1E90FF' : '#87CEEB'}
+            swatchColor={SWATCHES.root[whiteText ? 'white' : 'black']}
           />
           <Checkbox
             checked={showScale}
             onCheckedChange={setShowScale}
             label="Scale"
-            swatchColor={whiteText ? '#228B22' : '#90EE90'}
+            swatchColor={SWATCHES.scale[whiteText ? 'white' : 'black']}
           />
           <Checkbox
             checked={showCurrent && !selectedChord}
             onCheckedChange={setShowCurrent}
             disabled={!!selectedChord}
             label={`Interval${currentInterval && !selectedChord ? `: ${currentInterval}` : ''}`}
-            swatchColor={whiteText ? '#FF8C00' : '#FFD700'}
+            swatchColor={SWATCHES.current[whiteText ? 'white' : 'black']}
             title={selectedChord ? 'Disabled while a chord is highlighted' : undefined}
           />
-          <Checkbox
-            checked={showIntervals}
-            onCheckedChange={setShowIntervals}
-            label="Show Intervals"
-          />
+          <Checkbox checked={showIntervals} onCheckedChange={setShowIntervals} label="Show Intervals" />
         </div>
-        
+
         {selectedChord ? (
           <div className="scale-info">
             <span className="scale-name">
@@ -275,20 +252,15 @@ export const GuitarNeck: React.FC = () => {
           </div>
         ) : null}
       </div>
-      
-      <div className={`fretboard ${show24Frets ? 'frets-24' : 'frets-15'}`}>
-          <div className="string-labels">
-            {['E', 'B', 'G', 'D', 'A', 'E'].map((stringNote, index) => (
-              <div key={index} className="string-label">
-                {stringNote}
-              </div>
-            ))}
-          </div>
-          
-          <div className="frets-container">
-            {Array.from({ length: (show24Frets ? 25 : 16) }, (_, fret) => renderFret(fret))}
-          </div>
-        </div>
+
+      <Fretboard
+        strings={6}
+        fretCount={fretCount}
+        tuning={note.tuning}
+        dots={dots}
+        textMode={whiteText ? 'white' : 'black'}
+        showFretNumbers="bottom"
+      />
     </div>
   );
 };

@@ -10,6 +10,7 @@ import {
   Badge,
   Card,
 } from './index';
+import { Fretboard, DotInfo, posKey } from '../components/Fretboard';
 
 // ---------------------------------------------------------------------------
 // DesignSystemPreview — visual catalog of every primitive in every variant.
@@ -258,6 +259,35 @@ export const DesignSystemPreview: React.FC = () => {
           <Badge variant="warning">Warning</Badge>
           <Badge variant="neutral">Neutral</Badge>
         </Row>
+      </Section>
+
+      <Section title="Fretboard">
+        <p style={{ color: 'var(--ds-color-neutral-500)', margin: '0 0 var(--ds-space-3)', fontSize: 'var(--ds-font-sm)' }}>
+          Six variants of dot, each demoed on the same fretboard. New variants
+          land as additions to <code>DotVariant</code> + one CSS rule.
+        </p>
+        {(() => {
+          // Build a demo dots map hitting every variant + modifier.
+          const demo = new Map<string, DotInfo>();
+          demo.set(posKey(5, 3), { variant: 'root', label: 'G' });               // low E str, fret 3 → G
+          demo.set(posKey(4, 5), { variant: 'scale' });                           // scale ghost
+          demo.set(posKey(3, 7), { variant: 'scale' });
+          demo.set(posKey(2, 9), { variant: 'current' });                         // cycle highlight
+          demo.set(posKey(1, 8), { variant: 'base', label: '1' });                // placed base note
+          demo.set(posKey(0, 10), { variant: 'harmony', label: '1' });            // selected harmony
+          demo.set(posKey(0, 5), { variant: 'alternate' });                       // alternate voicing
+          demo.set(posKey(1, 12), { variant: 'alternate', nonDiatonic: true });   // non-diatonic alternate
+          demo.set(posKey(2, 12), { variant: 'harmony', dropTargetHint: true });  // pulsing drop target
+          return (
+            <Fretboard
+              strings={6}
+              fretCount={12}
+              tuning={['E', 'B', 'G', 'D', 'A', 'E']}
+              dots={demo}
+              title="All variants"
+            />
+          );
+        })()}
       </Section>
 
       <Section title="Card">

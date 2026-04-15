@@ -1,4 +1,6 @@
-/* HarmonyMaker Component Styles */
+/* HarmonyMaker local layout. Fretboard rendering lives in Fretboard.css;
+   this file only styles the surrounding chrome — controls bar, divider
+   between the two fretboards, and the interval analysis panel below. */
 
 .harmony-maker {
   display: flex;
@@ -11,7 +13,10 @@
   box-sizing: border-box;
 }
 
-/* Controls Bar */
+/* ============================================
+   CONTROLS BAR
+   ============================================ */
+
 .harmony-controls {
   display: flex;
   align-items: center;
@@ -42,24 +47,32 @@
   flex-wrap: wrap;
 }
 
-/* Row of display toggles (Order # / Show Diatonic / 24 Frets). */
 .harmony-display-toggles {
   display: flex;
   gap: var(--ds-space-1);
   flex-wrap: wrap;
 }
 
-/* Dual Fretboards */
+/* ============================================
+   DUAL FRETBOARDS
+   The individual fretboards render via <Fretboard> — this block just lays
+   them out side by side (or stacked in 24-fret mode / narrow viewports).
+   ============================================ */
+
 .harmony-fretboards {
   display: flex;
   gap: var(--ds-space-3);
   align-items: flex-start;
   justify-content: center;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-/* 24-fret mode is too wide to sit side-by-side on most screens. Stack the
-   two fretboards vertically and let the divider become a horizontal rule. */
+.harmony-fretboards::-webkit-scrollbar {
+  display: none;
+}
+
 .harmony-fretboards--stacked {
   flex-direction: column;
   align-items: center;
@@ -80,293 +93,23 @@
   border-radius: 1px;
 }
 
-.harmony-fretboard-wrapper {
-  flex: 0 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--ds-space-1);
+@media (max-width: 900px) {
+  .harmony-fretboards {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .harmony-divider {
+    width: auto;
+    height: 2px;
+    align-self: auto;
+  }
 }
 
-.harmony-fretboard-label {
-  text-align: center;
-  font-size: var(--ds-font-sm);
-  font-weight: var(--ds-font-semibold);
-  color: var(--ds-color-neutral-600);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+/* ============================================
+   INTERVAL ANALYSIS PANEL
+   ============================================ */
 
-.harmony-fretboard {
-  display: flex;
-  gap: var(--ds-space-1);
-  overflow-x: auto;
-  align-items: center;
-  padding-bottom: 20px;   /* leave room for fret numbers hanging below */
-  /* Hide scrollbars while keeping scroll behaviour on narrow viewports. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.harmony-fretboard::-webkit-scrollbar {
-  display: none;
-}
-
-/* Same treatment for the outer row so the dual-fretboard container doesn't
-   show its own horizontal scrollbar either. */
-.harmony-fretboards {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.harmony-fretboards::-webkit-scrollbar {
-  display: none;
-}
-
-.harmony-string-labels {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 150px;          /* match .harmony-strings height so labels align */
-  padding: 12px 0;        /* and same vertical padding so items land on strings */
-  width: 16px;
-  flex-shrink: 0;
-}
-
-.harmony-string-label {
-  font-size: var(--ds-font-xs);
-  font-weight: var(--ds-font-semibold);
-  color: var(--ds-color-neutral-600);
-  text-align: center;
-}
-
-.harmony-frets-container {
-  display: flex;
-  gap: 1px;
-  overflow: visible;
-  min-width: 0;
-  flex-shrink: 0;
-}
-
-.harmony-fret {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 48px;
-  background: var(--ds-color-neutral-50);
-  border-right: 2px solid var(--ds-color-neutral-400);
-}
-
-.harmony-fret.nut {
-  background: var(--ds-color-neutral-800);
-  width: 6px;
-  border-right: 3px solid var(--ds-color-neutral-900);
-}
-
-.harmony-fret-number {
-  position: absolute;
-  bottom: -18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  color: var(--ds-color-neutral-600);
-  font-weight: var(--ds-font-semibold);
-  font-variant-numeric: tabular-nums;
-}
-
-.harmony-fret-marker {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  gap: var(--ds-space-4);
-  z-index: 1;
-}
-
-.harmony-marker-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--ds-color-neutral-300);
-  border-radius: 50%;
-}
-
-.harmony-marker-dot.double {
-  margin: 1px 0;
-}
-
-.harmony-strings {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 150px;
-  padding: 12px 0;
-  position: relative;
-}
-
-.harmony-string-container {
-  position: relative;
-  height: 20px;
-  display: flex;
-  align-items: center;
-}
-
-.harmony-guitar-string {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1.5px;
-  background: var(--ds-color-neutral-500);
-  z-index: 2;
-}
-
-.harmony-guitar-string.string-0,
-.harmony-guitar-string.string-5 {
-  height: 2px;
-}
-
-.harmony-guitar-string.string-3,
-.harmony-guitar-string.string-4 {
-  height: 2px;
-}
-
-/* Note positions: invisible by default. Hover, in-scale (when Show Diatonic
-   is on), and active states each turn them on explicitly. */
-.harmony-note-position {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3;
-  cursor: pointer;
-  transition: all var(--ds-transition-base);
-  opacity: 0;
-  background: none;
-  border: 1px solid transparent;
-}
-
-.harmony-note-position.in-scale {
-  opacity: 0.25;
-  background: var(--ds-color-neutral-300);
-  border: 1px solid var(--ds-color-neutral-400);
-}
-
-/* Non-active dots (ghost scale notes, alternate voicings, root marker) get a
-   slightly smaller footprint so they don't visually crowd adjacent strings.
-   Active dots keep the full 22px hit target — :not(.active) prevents
-   shrinking a base note that happens to land on the scale root. */
-.harmony-note-position.in-scale:not(.active),
-.harmony-note-position.alternate:not(.active),
-.harmony-note-position.root:not(.active) {
-  width: 18px;
-  height: 18px;
-}
-
-.harmony-note-position.base:hover {
-  opacity: 0.6;
-  background: var(--ds-color-neutral-400);
-  transform: translate(-50%, -50%) scale(1.1);
-}
-
-.harmony-note-position.in-scale:hover {
-  opacity: 0.7;
-  transform: translate(-50%, -50%) scale(1.1);
-}
-
-.harmony-note-position.root {
-  opacity: 0.4;
-  background: var(--ds-color-secondary);
-  border: 2px solid var(--ds-color-secondary);
-}
-
-/* Base side active notes */
-.harmony-note-position.active.base {
-  opacity: 1;
-  background: var(--ds-color-primary);
-  border: 2px solid var(--ds-color-primary);
-  transform: translate(-50%, -50%) scale(1.15);
-}
-
-/* Harmony side active notes */
-.harmony-note-position.active.harmony {
-  opacity: 1;
-  background: var(--ds-color-warning);
-  border: 2px solid var(--ds-color-warning);
-  transform: translate(-50%, -50%) scale(1.15);
-  cursor: pointer;
-}
-
-/* Non-diatonic harmony notes: distinct color + dashed border */
-.harmony-note-position.active.harmony.non-diatonic {
-  background: var(--ds-color-secondary);
-  border: 2px dashed var(--ds-color-secondary);
-}
-
-/* Selected harmony dots double as drag sources for "drag to another voicing". */
-.harmony-note-position.active.harmony {
-  cursor: grab;
-}
-
-.harmony-note-position.active.harmony:active {
-  cursor: grabbing;
-}
-
-/* Drop target pulse: when a harmony voicing is being dragged, every voicing
-   option for that pair (including the source) glows as a valid target. */
-.harmony-note-position.drop-target {
-  animation: harmony-drop-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes harmony-drop-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.5); }
-  50%      { box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1); }
-}
-
-/* Alternate voicings: visible but outlined, clearly subordinate to the selected one */
-.harmony-note-position.alternate.harmony {
-  opacity: 0.7;
-  background: transparent;
-  border: 2px dashed var(--ds-color-warning);
-  cursor: pointer;
-}
-
-.harmony-note-position.alternate.harmony:hover {
-  opacity: 1;
-  background: rgba(255, 152, 0, 0.15);
-  transform: translate(-50%, -50%) scale(1.12);
-}
-
-.harmony-note-position.alternate.harmony .harmony-note-label {
-  color: var(--ds-color-warning);
-  text-shadow: none;
-}
-
-.harmony-note-position:hover {
-  opacity: 0.8;
-  transform: translate(-50%, -50%) scale(1.1);
-}
-
-.harmony-note-position.active:hover {
-  transform: translate(-50%, -50%) scale(1.25);
-}
-
-.harmony-note-label {
-  font-size: 8px;
-  font-weight: var(--ds-font-semibold);
-  color: var(--ds-color-white);
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-}
-
-/* Interval Analysis Panel */
 .harmony-analysis {
   background: var(--ds-color-white);
   border: 1px solid var(--ds-border-color);
@@ -381,6 +124,16 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: var(--ds-space-2);
+}
+
+.harmony-analysis-hint {
+  font-size: 10px;
+  color: var(--ds-color-neutral-400);
+  font-weight: var(--ds-font-medium);
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: var(--ds-space-2);
 }
 
 .harmony-pairs {
@@ -450,16 +203,6 @@
   min-width: 0;
 }
 
-.harmony-analysis-hint {
-  font-size: 10px;
-  color: var(--ds-color-neutral-400);
-  font-weight: var(--ds-font-medium);
-  font-style: italic;
-  text-transform: none;
-  letter-spacing: 0;
-  margin-left: var(--ds-space-2);
-}
-
 .harmony-pair-notes {
   display: flex;
   align-items: center;
@@ -496,7 +239,6 @@
   margin-top: 2px;
 }
 
-/* Row grouping the per-pair interval dropdown and cycle button */
 .harmony-pair-controls {
   display: flex;
   align-items: center;
@@ -514,7 +256,7 @@
   font-weight: var(--ds-font-medium);
 }
 
-/* Non-diatonic indicators in analysis panel */
+/* Non-diatonic indicators */
 .harmony-pair.non-diatonic {
   border-color: var(--ds-color-secondary);
   border-style: dashed;
@@ -524,42 +266,7 @@
   color: var(--ds-color-secondary);
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .harmony-fretboards {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .harmony-divider {
-    width: auto;
-    height: 2px;
-    align-self: auto;
-  }
-}
-
 @media (max-width: 768px) {
-  .harmony-fret {
-    width: 38px;
-  }
-
-  .harmony-strings {
-    height: 130px;
-  }
-
-  .harmony-string-container {
-    height: 18px;
-  }
-
-  .harmony-note-position {
-    width: 18px;
-    height: 18px;
-  }
-
-  .harmony-note-label {
-    font-size: 7px;
-  }
-
   .harmony-controls {
     gap: var(--ds-space-2);
   }

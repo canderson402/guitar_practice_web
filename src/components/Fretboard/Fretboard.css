@@ -1,0 +1,344 @@
+/* ============================================
+   FRETBOARD — generic guitar-neck renderer
+   Dot variants are keyed on .variant-{name}; modifiers layer on top.
+   Colors come from design-system.css tokens plus per-variant defaults below.
+   ============================================ */
+
+.fretboard-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ds-space-1);
+}
+
+.fretboard-title {
+  font-size: var(--ds-font-sm);
+  font-weight: var(--ds-font-semibold);
+  color: var(--ds-color-neutral-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fretboard-grid {
+  display: flex;
+  gap: var(--ds-space-1);
+  overflow-x: auto;
+  align-items: center;
+  padding-bottom: 20px;
+
+  /* Hide scrollbars; scroll still works. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.fretboard-grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* String-note labels (E, B, G, D, A, E) on the left edge */
+.fretboard-string-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 150px;
+  padding: 12px 0;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.fretboard-string-label {
+  font-size: var(--ds-font-xs);
+  font-weight: var(--ds-font-semibold);
+  color: var(--ds-color-neutral-600);
+  text-align: center;
+}
+
+/* Fret column container */
+.fretboard-frets {
+  display: flex;
+  gap: 1px;
+  overflow: visible;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* Individual fret column */
+.fretboard-fret {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 48px;
+  background: var(--ds-color-neutral-50);
+  border-right: 2px solid var(--ds-color-neutral-400);
+}
+
+.fretboard-fret.nut {
+  background: var(--ds-color-neutral-800);
+  width: 6px;
+  border-right: 3px solid var(--ds-color-neutral-900);
+}
+
+/* Fret numbers (positioned absolutely so they don't take row space) */
+.fretboard-fret-number {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--ds-color-neutral-600);
+  font-weight: var(--ds-font-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.fretboard-fret-number.top {
+  top: -16px;
+}
+
+.fretboard-fret-number.bottom {
+  bottom: -18px;
+}
+
+/* Inlay markers (dots at fret 3, 5, 7, 9, 12, etc.) */
+.fretboard-fret-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-4);
+  z-index: 1;
+}
+
+.fretboard-marker-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--ds-color-neutral-300);
+  border-radius: 50%;
+}
+
+.fretboard-marker-dot.double {
+  margin: 1px 0;
+}
+
+/* String rows inside a fret column */
+.fretboard-strings {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 150px;
+  padding: 12px 0;
+  position: relative;
+}
+
+.fretboard-string-row {
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+/* Physical string line (horizontal rule) */
+.fretboard-string-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: var(--ds-color-neutral-500);
+  z-index: 2;
+}
+
+.fretboard-string-line.string-0,
+.fretboard-string-line.string-5 {
+  height: 2px;
+}
+
+.fretboard-string-line.string-3,
+.fretboard-string-line.string-4 {
+  height: 2px;
+}
+
+/* ============================================
+   CELL / DOT — base styles
+   All dots share the same circular positioning; variants override color.
+   ============================================ */
+
+.fretboard-cell {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  cursor: pointer;
+  transition: all var(--ds-transition-base);
+  opacity: 0;
+  background: none;
+  border: 1px solid transparent;
+}
+
+.fretboard-note-label {
+  font-size: 8px;
+  font-weight: var(--ds-font-semibold);
+  color: var(--ds-color-white);
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.black-text-mode .fretboard-note-label {
+  color: var(--ds-color-neutral-900);
+  text-shadow: none;
+}
+
+/* Empty cells opt-in as hit targets (HarmonyMaker base side). Invisible
+   until hover so they don't clutter the fretboard. */
+.fretboard-cell.clickable-empty:hover {
+  opacity: 0.6;
+  background: var(--ds-color-neutral-400);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* ============================================
+   VARIANTS — one rule per DotVariant
+   --fretboard-dot-color CSS var allows per-instance color override
+   (used for the fretboard legend's themed swatch colors).
+   ============================================ */
+
+/* root: scale root marker (sky blue default, smaller, muted) */
+.fretboard-cell.variant-root {
+  width: 18px;
+  height: 18px;
+  opacity: 0.55;
+  background: var(--fretboard-dot-color, var(--ds-color-secondary));
+  border: 2px solid var(--fretboard-dot-color, var(--ds-color-secondary));
+}
+
+/* scale: in-scale ghost (gray by default, small, faint) */
+.fretboard-cell.variant-scale {
+  width: 18px;
+  height: 18px;
+  opacity: 0.35;
+  background: var(--fretboard-dot-color, var(--ds-color-neutral-300));
+  border: 1px solid var(--fretboard-dot-color, var(--ds-color-neutral-400));
+}
+
+/* current: the currently cycled scale note (orange by default, prominent) */
+.fretboard-cell.variant-current {
+  opacity: 1;
+  background: var(--fretboard-dot-color, var(--ds-color-warning));
+  border: 2px solid var(--fretboard-dot-color, var(--ds-color-warning));
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* base: user-placed base note on HarmonyMaker (primary color, prominent) */
+.fretboard-cell.variant-base {
+  opacity: 1;
+  background: var(--fretboard-dot-color, var(--ds-color-primary));
+  border: 2px solid var(--fretboard-dot-color, var(--ds-color-primary));
+  transform: translate(-50%, -50%) scale(1.15);
+  cursor: grab;
+}
+
+.fretboard-cell.variant-base:active {
+  cursor: grabbing;
+}
+
+/* harmony: selected harmony voicing (warning color, prominent, draggable) */
+.fretboard-cell.variant-harmony {
+  opacity: 1;
+  background: var(--fretboard-dot-color, var(--ds-color-warning));
+  border: 2px solid var(--fretboard-dot-color, var(--ds-color-warning));
+  transform: translate(-50%, -50%) scale(1.15);
+  cursor: grab;
+}
+
+.fretboard-cell.variant-harmony:active {
+  cursor: grabbing;
+}
+
+/* alternate: drag-revealed voicing (dashed outline, 18px, warning color) */
+.fretboard-cell.variant-alternate {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+  background: transparent;
+  border: 2px dashed var(--fretboard-dot-color, var(--ds-color-warning));
+}
+
+.fretboard-cell.variant-alternate .fretboard-note-label {
+  color: var(--fretboard-dot-color, var(--ds-color-warning));
+  text-shadow: none;
+}
+
+.fretboard-cell.variant-alternate:hover {
+  opacity: 1;
+  background: rgba(255, 152, 0, 0.15);
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+/* ============================================
+   MODIFIERS
+   ============================================ */
+
+/* non-diatonic: dashed secondary-colored border */
+.fretboard-cell.variant-harmony.non-diatonic,
+.fretboard-cell.variant-alternate.non-diatonic {
+  background: var(--ds-color-secondary);
+  border-color: var(--ds-color-secondary);
+  border-style: dashed;
+}
+
+/* drop-target: pulse animation for drop-hint dots during drag */
+.fretboard-cell.drop-target {
+  animation: fretboard-drop-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes fretboard-drop-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.5); }
+  50%      { box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1); }
+}
+
+/* Active-dot hover: slightly bigger */
+.fretboard-cell.variant-base:hover,
+.fretboard-cell.variant-harmony:hover,
+.fretboard-cell.variant-current:hover {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .fretboard-fret {
+    width: 38px;
+  }
+
+  .fretboard-strings {
+    height: 130px;
+  }
+
+  .fretboard-string-row {
+    height: 18px;
+  }
+
+  .fretboard-cell {
+    width: 18px;
+    height: 18px;
+  }
+
+  .fretboard-cell.variant-root,
+  .fretboard-cell.variant-scale,
+  .fretboard-cell.variant-alternate {
+    width: 14px;
+    height: 14px;
+  }
+
+  .fretboard-note-label {
+    font-size: 7px;
+  }
+}

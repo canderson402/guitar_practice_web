@@ -19,14 +19,15 @@ import {
   scales,
   getScaleNotes,
   getChromaticScale,
+  getChromaticPosition,
   IntervalSpec,
   diatonicIntervalOptions,
   intervalSpecKey,
   intervalSpecsEqual,
 } from '../data/musicData';
-import { generateFretboard } from '../data/guitarData';
+import { generateFretboard, isNoteInScale } from '../data/guitarData';
 import { findAllVoicings, VoicingPosition } from '../data/harmonyVoicings';
-import { HarmonyFretboard, BaseDotInfo, HarmonyDotInfo } from './HarmonyFretboard';
+import { Fretboard, DotInfo, posKey } from './Fretboard';
 import { HarmonyAnalysisPair } from './HarmonyAnalysisPair';
 import { Button, Chip, Checkbox } from '../ui';
 import './HarmonyMaker.css';
@@ -74,8 +75,8 @@ export const HarmonyMaker: React.FC = () => {
   );
 
   const fretboard = React.useMemo(
-    () => generateFretboard(undefined, fretCount),
-    [fretCount]
+    () => generateFretboard(note.tuning, fretCount),
+    [note.tuning, fretCount]
   );
 
   // Scale notes for faint in-scale highlighting on both fretboard sides.
@@ -94,7 +95,7 @@ export const HarmonyMaker: React.FC = () => {
     }
     return harmonyMaker.notes.map(n => {
       const result = findAllVoicings(
-        { stringIndex: n.stringIndex, fret: n.fret, note: n.note },
+        { stringIndex: n.stringIndex, fret: n.fret },
         n.interval,
         note.selectedNote!,
         note.selectedScale as keyof typeof scales,
@@ -114,58 +115,88 @@ export const HarmonyMaker: React.FC = () => {
     });
   }, [harmonyMaker.notes, note.selectedNote, note.selectedScale, fretboard]);
 
-  // ----- Fretboard dot maps -----
+  // ----- Fretboard dot maps (shape compatible with the shared Fretboard) -----
+
+  // Scale-ghost dots for the base side when "Show Diatonic" is on. Composed
+  // with the base-note dots below (base notes always win over ghosts).
+  const scaleGhostDots = React.useMemo(() => {
+    const m = new Map<string, DotInfo>();
+    if (!showDiatonic || !note.selectedNote || scaleNotes.length === 0) return m;
+    const rootChroma = getChromaticPosition(note.selectedNote);
+    for (let si = 0; si < fretboard.length; si++) {
+      for (let f = 0; f <= fretCount; f++) {
+        const cell = fretboard[si][f];
+        if (!cell) continue;
+        const isRoot = getChromaticPosition(cell.note) === rootChroma;
+        if (isRoot) {
+          m.set(posKey(si, f), { variant: 'root' });
+        } else if (isNoteInScale(cell.note, scaleNotes)) {
+          m.set(posKey(si, f), { variant: 'scale' });
+        }
+      }
+    }
+    return m;
+  }, [showDiatonic, note.selectedNote, scaleNotes, fretboard, fretCount]);
 
   const baseDots = React.useMemo(() => {
-    const m = new Map<string, BaseDotInfo>();
+    const m = new Map<string, DotInfo>(scaleGhostDots);
     harmonyMaker.notes.forEach((n, i) => {
-      m.set(`${n.stringIndex}-${n.fret}`, { order: i + 1 });
+      m.set(posKey(n.stringIndex, n.fret), {
+        variant: 'base',
+        label: showOrder ? String(i + 1) : undefined,
+      });
     });
     return m;
-  }, [harmonyMaker.notes]);
+  }, [scaleGhostDots, harmonyMaker.notes, showOrder]);
 
   const harmonyDots = React.useMemo(() => {
-    const m = new Map<string, HarmonyDotInfo>();
+    const m = new Map<string, DotInfo>();
     resolvedNotes.forEach((r, pairIdx) => {
       if (r.voicings.length === 0) return;
-      const basePosKey = `${r.note.stringIndex}-${r.note.fret}`;
-      // Alternate voicings reveal only while this pair is being dragged —
-      // when you're moving a note, you need to see the landing options.
+      const basePosKey = posKey(r.note.stringIndex, r.note.fret);
+      // Alternate voicings reveal only while this pair is being dragged.
       const isDragged = draggingBaseKey === basePosKey;
       const selectedIdx = r.note.voicingIdx % r.voicings.length;
+      const orderLabel = showOrder ? String(pairIdx + 1) : undefined;
+
       if (isDragged) {
-        // Paint every voicing for the pair being dragged.
+        // Paint every voicing — selected gets variant='harmony' w/ drop hint;
+        // others get 'alternate'. Selected wins collisions.
         r.voicings.forEach((v, vIdx) => {
-          const key = `${v.stringIndex}-${v.fret}`;
+          const key = posKey(v.stringIndex, v.fret);
           const isSelected = vIdx === selectedIdx;
           const existing = m.get(key);
-          if (!existing || (isSelected && !existing.selected)) {
-            m.set(key, {
-              order: pairIdx + 1,
-              diatonic: r.diatonic,
-              selected: isSelected,
-              basePosKey,
-              voicingIdx: vIdx,
-            });
-          }
+          if (existing && existing.variant === 'harmony') return;
+          m.set(key, isSelected
+            ? {
+                variant: 'harmony',
+                label: orderLabel,
+                draggable: true,
+                dropTargetHint: true,
+                nonDiatonic: !r.diatonic,
+              }
+            : {
+                variant: 'alternate',
+                dropTargetHint: true,
+                nonDiatonic: !r.diatonic,
+              });
         });
       } else if (r.selected) {
-        m.set(`${r.selected.stringIndex}-${r.selected.fret}`, {
-          order: pairIdx + 1,
-          diatonic: r.diatonic,
-          selected: true,
-          basePosKey,
-          voicingIdx: selectedIdx,
+        m.set(posKey(r.selected.stringIndex, r.selected.fret), {
+          variant: 'harmony',
+          label: orderLabel,
+          draggable: true,
+          nonDiatonic: !r.diatonic,
         });
       }
     });
     return m;
-  }, [resolvedNotes, draggingBaseKey]);
+  }, [resolvedNotes, draggingBaseKey, showOrder]);
 
   // ----- Click handlers -----
 
-  const handleBaseClick = (stringIndex: number, fret: number, noteName: string) => {
-    addBaseNote({ stringIndex, fret, note: noteName });
+  const handleBaseClick = (stringIndex: number, fret: number) => {
+    addBaseNote({ stringIndex, fret });
   };
 
   const handleHarmonyClick = (stringIndex: number, fret: number) => {
@@ -328,40 +359,39 @@ export const HarmonyMaker: React.FC = () => {
 
       {/* Dual Fretboards */}
       <div className={`harmony-fretboards ${show24Frets ? 'harmony-fretboards--stacked' : ''}`}>
-        <HarmonyFretboard
-          side="base"
-          fretboard={fretboard}
+        <Fretboard
+          strings={6}
           fretCount={fretCount}
-          scaleNotes={scaleNotes}
-          rootNote={note.selectedNote}
-          baseDots={baseDots}
-          harmonyDots={harmonyDots}
-          showOrder={showOrder}
-          showDiatonic={showDiatonic}
-          draggingBaseKey={draggingBaseKey}
-          onBaseClick={handleBaseClick}
-          onHarmonyClick={handleHarmonyClick}
-          onHarmonyDragStart={handleHarmonyDragStart}
-          onHarmonyDragEnd={handleHarmonyDragEnd}
-          onHarmonyDrop={handleHarmonyDrop}
+          tuning={note.tuning}
+          dots={baseDots}
+          title="Base Notes"
+          onCellClick={handleBaseClick}
+          clickableEmpty
         />
         <div className="harmony-divider" />
-        <HarmonyFretboard
-          side="harmony"
-          fretboard={fretboard}
+        <Fretboard
+          strings={6}
           fretCount={fretCount}
-          scaleNotes={scaleNotes}
-          rootNote={note.selectedNote}
-          baseDots={baseDots}
-          harmonyDots={harmonyDots}
-          showOrder={showOrder}
-          showDiatonic={showDiatonic}
-          draggingBaseKey={draggingBaseKey}
-          onBaseClick={handleBaseClick}
-          onHarmonyClick={handleHarmonyClick}
-          onHarmonyDragStart={handleHarmonyDragStart}
-          onHarmonyDragEnd={handleHarmonyDragEnd}
-          onHarmonyDrop={handleHarmonyDrop}
+          tuning={note.tuning}
+          dots={harmonyDots}
+          title="Harmony Notes"
+          onCellClick={handleHarmonyClick}
+          cellsAcceptDrops={draggingBaseKey !== null}
+          onDragStart={(si, fret) => {
+            // Only selected harmony dots are draggable (enforced via
+            // DotInfo.draggable). Map the voicing position back to the base
+            // note's posKey — that's the identity draggingBaseKey holds.
+            const pair = resolvedNotes.find(
+              r => r.selected
+                && r.selected.stringIndex === si
+                && r.selected.fret === fret
+            );
+            if (pair) {
+              handleHarmonyDragStart(posKey(pair.note.stringIndex, pair.note.fret));
+            }
+          }}
+          onDragEnd={handleHarmonyDragEnd}
+          onDrop={(si, fret) => handleHarmonyDrop(si, fret)}
         />
       </div>
 
@@ -382,12 +412,16 @@ export const HarmonyMaker: React.FC = () => {
                 {resolvedNotes.map((r, i) => {
                   if (!r.selected) return null;
                   const id = `${r.note.stringIndex}-${r.note.fret}`;
+                  // Derive the base note name from the live fretboard so it
+                  // re-renders correctly when tuning changes.
+                  const baseNote =
+                    fretboard[r.note.stringIndex]?.[r.note.fret]?.note ?? '';
                   return (
                     <HarmonyAnalysisPair
                       key={id}
                       id={id}
                       order={i + 1}
-                      baseNote={r.note.note}
+                      baseNote={baseNote}
                       baseStringIndex={r.note.stringIndex}
                       baseFret={r.note.fret}
                       selectedVoicing={r.selected}

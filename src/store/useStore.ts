@@ -36,6 +36,11 @@ interface NoteState {
   showNextNote: boolean;
   autoAdvanceEnabled: boolean;
   selectedChord: SelectedChord | null;
+  /** Guitar tuning as an array of open-string note names, in display order
+   *  (high-E first, low-E last). Default is standard EADGBE. Everything
+   *  downstream — fretboard note names, voicing search, interval analysis —
+   *  derives from this array. Change tuning → everything re-renders. */
+  tuning: string[];
 }
 
 interface ChordProgressionState {
@@ -59,10 +64,13 @@ interface CircleOfFifthsState {
   countIn: number;
 }
 
+/** A location on the fretboard. Note name derives from (stringIndex, fret, tuning)
+ *  at read time via fretboard[stringIndex][fret].note — never stored. This
+ *  means changing tuning automatically updates every derived note name with
+ *  no migration or reconciliation. */
 export interface FretPosition {
   stringIndex: number;
   fret: number;
-  note: string;
 }
 
 // One entry per base note placed on the HarmonyMaker fretboard. Insertion
@@ -70,7 +78,6 @@ export interface FretPosition {
 export interface HarmonyNote {
   stringIndex: number;
   fret: number;
-  note: string;
   interval: IntervalSpec;  // per-note spec — overrides are simply a value diff
   voicingIdx: number;      // index into the currently-computed voicings list
 }
@@ -153,6 +160,7 @@ interface StoreState {
   setShowNextNote: (show: boolean) => void;
   setAutoAdvanceEnabled: (enabled: boolean) => void;
   setSelectedChord: (chord: SelectedChord | null) => void;
+  setTuning: (tuning: string[]) => void;
   
   // Chord Progression actions
   setSelectedChordProgression: (progression: string | null) => void;
@@ -224,6 +232,8 @@ export const useStore = create<StoreState>((set) => ({
     showNextNote: true,
     autoAdvanceEnabled: true,
     selectedChord: null,
+    // Standard tuning: high E → low E, top-down on the rendered fretboard.
+    tuning: ['E', 'B', 'G', 'D', 'A', 'E'],
   },
   chordProgression: {
     selectedProgression: null,
@@ -311,6 +321,9 @@ export const useStore = create<StoreState>((set) => ({
   })),
   setSelectedChord: (selectedChord) => set((state) => ({
     note: { ...state.note, selectedChord }
+  })),
+  setTuning: (tuning) => set((state) => ({
+    note: { ...state.note, tuning }
   })),
   setCurrentNoteIndex: (currentNoteIndex) => set((state) => ({ 
     note: { 
@@ -404,7 +417,6 @@ export const useStore = create<StoreState>((set) => ({
           {
             stringIndex: pos.stringIndex,
             fret: pos.fret,
-            note: pos.note,
             interval: state.harmonyMaker.defaultInterval,
             voicingIdx: 0,
           },
