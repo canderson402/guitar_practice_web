@@ -176,13 +176,19 @@ export const romanLabel = (
     type === 'minor7' ||
     type === 'half-diminished7';
 
+  // Extract the optional accidental prefix ('b' or '#') and the degree letters
+  const prefixMatch = numeral.match(/^([b#]?)(.+)$/);
+  const prefix = prefixMatch?.[1] ?? '';
+  const degree = prefixMatch?.[2] ?? numeral;
+
   if (isDim) {
-    return numeral.replace(/([A-Z]+)/, m => m.toLowerCase()) + '°';
+    return prefix + degree.toLowerCase() + '°';
   }
   if (isMinor) {
-    return numeral.replace(/([A-Z]+)/, m => m.toLowerCase());
+    return prefix + degree.toLowerCase();
   }
-  return numeral.replace(/([a-z]+)/, m => m.toUpperCase());
+  // Major / augmented / dominant — degree stays uppercase
+  return prefix + degree.toUpperCase();
 }
 
 // ---------------------------------------------------------------------------
