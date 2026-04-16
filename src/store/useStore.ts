@@ -1,5 +1,16 @@
 import { create } from 'zustand';
-import { IntervalSpec } from '../data/musicData';
+import { IntervalSpec, scales, majorProgressions, minorProgressions } from '../data/musicData';
+import {
+  JamChord,
+  JamAlgorithm,
+  DrumPatternName,
+  generateNextChord,
+  buildJamChord,
+  buildPresetQueue,
+  WalkState,
+} from '../data/jamAlgorithms';
+
+export type { JamChord, JamAlgorithm, DrumPatternName };
 
 interface TimerState {
   isRunning: boolean;
@@ -87,6 +98,22 @@ interface HarmonyMakerState {
   defaultInterval: IntervalSpec;
 }
 
+interface JamState {
+  mode: 'preset' | 'infinite';
+  isPlaying: boolean;
+  bpm: number;
+  currentChordIndex: number;
+  chordQueue: JamChord[];
+  queueLength: number;
+  selectedPreset: string | null;
+  algorithm: JamAlgorithm;
+  drumsEnabled: boolean;
+  drumPattern: DrumPatternName;
+  beatsPerChord: number;
+  syncMetronome: boolean;
+  walkState: WalkState;
+}
+
 interface CardInfo {
   id: string;
   title: string;
@@ -119,7 +146,7 @@ export const configurationPresets: ConfigurationPreset[] = [
   {
     id: 'all',
     name: 'All',
-    enabledCards: ['metronome', 'timer', 'noteSelector', 'noteTrainer', 'circleOfFifths', 'chordProgression', 'harmonyMaker', 'guitarNeck'],
+    enabledCards: ['metronome', 'timer', 'noteSelector', 'noteTrainer', 'circleOfFifths', 'chordProgression', 'harmonyMaker', 'jam', 'guitarNeck'],
   },
 ];
 
@@ -135,6 +162,7 @@ interface StoreState {
   chordProgression: ChordProgressionState;
   circleOfFifths: CircleOfFifthsState;
   harmonyMaker: HarmonyMakerState;
+  jam: JamState;
   cards: CardInfo[];
   theme: string;
   currentConfiguration: string;
@@ -199,6 +227,19 @@ interface StoreState {
   setDefaultInterval: (spec: IntervalSpec) => void;
   applyDefaultToAll: () => void;
   clearHarmonyMaker: () => void;
+
+  // Jam actions
+  setJamMode: (mode: 'preset' | 'infinite') => void;
+  setJamPlaying: (playing: boolean) => void;
+  setJamBpm: (bpm: number) => void;
+  setJamPreset: (preset: string | null) => void;
+  setJamAlgorithm: (algo: JamAlgorithm) => void;
+  setJamDrumsEnabled: (enabled: boolean) => void;
+  setJamDrumPattern: (pattern: DrumPatternName) => void;
+  setJamBeatsPerChord: (beats: number) => void;
+  setJamSyncMetronome: (sync: boolean) => void;
+  advanceJamChord: () => void;
+  rebuildJamQueue: () => void;
 
   // Card management
   toggleCard: (cardId: string) => void;
@@ -268,6 +309,21 @@ export const useStore = create<StoreState>((set) => ({
     // Default to the diatonic 3rd — the most musically useful starting harmony.
     defaultInterval: { kind: 'diatonic', degrees: 2 },
   },
+  jam: {
+    mode: 'infinite',
+    isPlaying: false,
+    bpm: 120,
+    currentChordIndex: 0,
+    chordQueue: [],
+    queueLength: 8,
+    selectedPreset: null,
+    algorithm: 'fifths',
+    drumsEnabled: true,
+    drumPattern: 'rock',
+    beatsPerChord: 4,
+    syncMetronome: true,
+    walkState: {},
+  },
   cards: [
     { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
     { id: 'timer', title: 'Timer', isActive: false, layout: 'horizontal' },
@@ -276,6 +332,7 @@ export const useStore = create<StoreState>((set) => ({
     { id: 'circleOfFifths', title: 'Circle of Fifths', isActive: false, layout: 'horizontal' },
     { id: 'chordProgression', title: 'Chord', isActive: false, layout: 'horizontal' },
     { id: 'harmonyMaker', title: 'Harmony', isActive: false, layout: 'vertical' },
+    { id: 'jam', title: 'Jam', isActive: false, layout: 'horizontal' },
     { id: 'guitarNeck', title: 'Fretboard', isActive: false, layout: 'vertical' },
   ],
   theme: 'eighties',
@@ -507,6 +564,186 @@ export const useStore = create<StoreState>((set) => ({
   clearHarmonyMaker: () => set((state) => ({
     harmonyMaker: { ...state.harmonyMaker, notes: [] },
   })),
+
+  // Jam actions
+  setJamMode: (mode) => set((state) => ({
+    jam: {
+      ...state.jam,
+      mode,
+      currentChordIndex: 0,
+      chordQueue: [],
+      walkState: {},
+    },
+  })),
+  setJamPlaying: (isPlaying) => set((state) => ({
+    jam: { ...state.jam, isPlaying },
+  })),
+  setJamBpm: (bpm) => set((state) => {
+    const clamped = Math.max(40, Math.min(300, bpm));
+    return {
+      jam: { ...state.jam, bpm: clamped },
+      ...(state.jam.syncMetronome
+        ? { metronome: { ...state.metronome, bpm: clamped } }
+        : {}),
+    };
+  }),
+  setJamPreset: (selectedPreset) => set((state) => ({
+    jam: {
+      ...state.jam,
+      selectedPreset,
+      currentChordIndex: 0,
+      chordQueue: [],
+      walkState: {},
+    },
+  })),
+  setJamAlgorithm: (algorithm) => set((state) => ({
+    jam: {
+      ...state.jam,
+      algorithm,
+      currentChordIndex: 0,
+      chordQueue: [],
+      walkState: {},
+    },
+  })),
+  setJamDrumsEnabled: (drumsEnabled) => set((state) => ({
+    jam: { ...state.jam, drumsEnabled },
+  })),
+  setJamDrumPattern: (drumPattern) => set((state) => ({
+    jam: { ...state.jam, drumPattern },
+  })),
+  setJamBeatsPerChord: (beats) => set((state) => ({
+    jam: { ...state.jam, beatsPerChord: Math.max(1, Math.min(8, beats)) },
+  })),
+  setJamSyncMetronome: (syncMetronome) => set((state) => ({
+    jam: { ...state.jam, syncMetronome },
+  })),
+
+  advanceJamChord: () => set((state) => {
+    const jam = state.jam;
+    const nextIndex = jam.currentChordIndex + 1;
+
+    let newQueue = jam.chordQueue;
+    let newWalkState = jam.walkState;
+
+    if (jam.mode === 'preset') {
+      // Wrap around in preset mode
+      const wrappedIndex = jam.chordQueue.length > 0 ? nextIndex % jam.chordQueue.length : 0;
+      const currentChord = jam.chordQueue[wrappedIndex] ?? null;
+      return {
+        jam: { ...jam, currentChordIndex: wrappedIndex },
+        note: {
+          ...state.note,
+          selectedNote: currentChord?.note ?? state.note.selectedNote,
+          selectedChord: currentChord
+            ? {
+                note: currentChord.note,
+                type: currentChord.type,
+                symbol: currentChord.symbol,
+                roman: currentChord.roman,
+              }
+            : state.note.selectedChord,
+        },
+      };
+    } else {
+      // Infinite mode: append new chord if queue is running low
+      const remaining = jam.chordQueue.length - nextIndex;
+      if (remaining < jam.queueLength) {
+        const rootNote = state.note.selectedNote ?? 'C';
+        const scaleType = (state.note.selectedScale ?? 'Major (Ionian)') as keyof typeof scales;
+        const lastChord = jam.chordQueue[jam.chordQueue.length - 1];
+        const lastNote = lastChord?.note ?? rootNote;
+        const { chord, walkState: ws } = generateNextChord(
+          jam.algorithm,
+          lastNote,
+          rootNote,
+          scaleType,
+          jam.walkState,
+        );
+        newQueue = [...jam.chordQueue, chord];
+        newWalkState = ws;
+      }
+
+      const currentChord = newQueue[nextIndex] ?? null;
+      return {
+        jam: {
+          ...jam,
+          currentChordIndex: nextIndex,
+          chordQueue: newQueue,
+          walkState: newWalkState,
+        },
+        note: {
+          ...state.note,
+          selectedNote: currentChord?.note ?? state.note.selectedNote,
+          selectedChord: currentChord
+            ? {
+                note: currentChord.note,
+                type: currentChord.type,
+                symbol: currentChord.symbol,
+                roman: currentChord.roman,
+              }
+            : state.note.selectedChord,
+        },
+      };
+    }
+  }),
+
+  rebuildJamQueue: () => set((state) => {
+    const jam = state.jam;
+    const rootNote = state.note.selectedNote ?? 'C';
+    const scaleType = (state.note.selectedScale ?? 'Major (Ionian)') as keyof typeof scales;
+
+    let newQueue: JamChord[] = [];
+    let newWalkState: WalkState = {};
+
+    if (jam.mode === 'preset' && jam.selectedPreset !== null) {
+      const pool = { ...majorProgressions, ...minorProgressions } as Record<string, { chords: string[] }>;
+      const preset = pool[jam.selectedPreset];
+      if (preset) {
+        newQueue = buildPresetQueue(preset.chords, rootNote, scaleType);
+      }
+    } else {
+      // Infinite mode: seed with root chord then generate queueLength chords
+      const rootChord = buildJamChord(rootNote, rootNote, scaleType);
+      newQueue = [rootChord];
+      let ws: WalkState = {};
+      let lastNote = rootNote;
+      for (let i = 0; i < jam.queueLength; i++) {
+        const { chord, walkState: nextWs } = generateNextChord(
+          jam.algorithm,
+          lastNote,
+          rootNote,
+          scaleType,
+          ws,
+        );
+        newQueue.push(chord);
+        ws = nextWs;
+        lastNote = chord.note;
+      }
+      newWalkState = ws;
+    }
+
+    const firstChord = newQueue[0] ?? null;
+    return {
+      jam: {
+        ...jam,
+        chordQueue: newQueue,
+        currentChordIndex: 0,
+        walkState: newWalkState,
+      },
+      note: {
+        ...state.note,
+        selectedNote: firstChord?.note ?? state.note.selectedNote,
+        selectedChord: firstChord
+          ? {
+              note: firstChord.note,
+              type: firstChord.type,
+              symbol: firstChord.symbol,
+              roman: firstChord.roman,
+            }
+          : state.note.selectedChord,
+      },
+    };
+  }),
 
   // Card management
   toggleCard: (cardId) => set((state) => ({
