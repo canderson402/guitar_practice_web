@@ -11,6 +11,7 @@ import { ChordProgression } from './components/ChordProgression';
 import { CircleOfFifths } from './components/CircleOfFifths';
 import { NoteTrainer } from './components/NoteTrainer';
 import { HarmonyMaker } from './components/HarmonyMaker';
+import { JamCard } from './components/JamCard';
 import { DesignSystemPreview } from './ui/DesignSystemPreview';
 import { Select, Button, ToggleButtonGroup } from './ui';
 import { useStore, configurationPresets } from './store/useStore';
@@ -166,6 +167,8 @@ function App() {
         return <NoteTrainer />;
       case 'harmonyMaker':
         return <HarmonyMaker />;
+      case 'jam':
+        return <JamCard />;
       default:
         return null;
     }
@@ -313,6 +316,7 @@ function App() {
                   'chordProgression': 2,   // Medium height (chord list)
                   'circleOfFifths': 4,     // Very tall (large circle diagram)
                   'harmonyMaker': 4,       // Wide (dual fretboards)
+                  'jam': 3,               // Medium-tall (controls + chord display)
                   'guitarNeck': 5          // Tallest (but vertical, won't be here)
                 };
                 
