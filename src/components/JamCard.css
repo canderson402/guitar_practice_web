@@ -1,0 +1,128 @@
+/* JamCard Component Styles */
+/* Uses design-system.css for base styles */
+
+.jam-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---- Chord display ---- */
+
+.jam-chord-display {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.jam-current-chord {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.jam-chord-note {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ds-text-primary, #fff);
+  line-height: 1.1;
+}
+
+.jam-chord-empty {
+  opacity: 0.35;
+}
+
+.jam-chord-roman {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  color: var(--ds-text-primary, #fff);
+  margin-top: 2px;
+}
+
+/* ---- Upcoming chords ---- */
+
+.jam-upcoming {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  overflow: hidden;
+  flex: 1;
+  align-items: center;
+}
+
+.jam-upcoming-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.jam-upcoming-note {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ds-text-primary, #fff);
+  line-height: 1.2;
+}
+
+.jam-upcoming-roman {
+  font-size: 0.75rem;
+  opacity: 0.65;
+  color: var(--ds-text-primary, #fff);
+}
+
+/* ---- Drum row ---- */
+
+.jam-drum-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- BPM control ---- */
+
+.jam-bpm-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.jam-bpm-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
+  flex-shrink: 0;
+}
+
+.jam-bpm-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ds-text-primary, #fff);
+  line-height: 1.1;
+}
+
+.jam-bpm-label {
+  font-size: var(--ds-font-sm, 0.75rem);
+  color: var(--ds-text-primary, #fff);
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---- Controls row ---- */
+
+.jam-controls-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
