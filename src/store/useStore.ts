@@ -11,6 +11,7 @@ import {
 } from '../data/jamAlgorithms';
 
 export type { JamChord, JamAlgorithm, DrumPatternName };
+// JamMixer and JamMixerPart are exported alongside their definitions below.
 
 interface TimerState {
   isRunning: boolean;
@@ -22,6 +23,10 @@ interface TimerState {
 interface MetronomeState {
   bpm: number;
   isPlaying: boolean;
+  /** Silence the click audio without stopping the beat clock. Timing still
+   *  advances (including the beat-dot display); the playClick call just
+   *  bails before it schedules any sound. */
+  muted: boolean;
   currentBeat: number;
   beatsPerMeasure: number;
   subdivision: 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet';
@@ -98,20 +103,33 @@ interface HarmonyMakerState {
   defaultInterval: IntervalSpec;
 }
 
+export interface JamMixer {
+  /** Master output level — controls the engine's master gain node.
+   *  Range 0-150 where 100 = unity. No mute (Play/Stop covers that role). */
+  master:  { volume: number };
+  chords:  { volume: number; muted: boolean };
+  bass:    { volume: number; muted: boolean };
+  strum:   { volume: number; muted: boolean };
+  drums:   { volume: number; muted: boolean };
+}
+
+/** Parts that have a mute toggle (everything except master). */
+export type JamMixerPart = 'chords' | 'bass' | 'strum' | 'drums';
+
 interface JamState {
   mode: 'preset' | 'infinite';
   isPlaying: boolean;
-  bpm: number;
   currentChordIndex: number;
   chordQueue: JamChord[];
   queueLength: number;
   selectedPreset: string | null;
   algorithm: JamAlgorithm;
-  drumsEnabled: boolean;
   drumPattern: DrumPatternName;
-  beatsPerChord: number;
-  syncMetronome: boolean;
+  /** How many bars each chord is held before advancing. 1-16.
+   *  (Scheduler multiplies by 4 internally to get beats, assuming 4/4.) */
+  barsPerChord: number;
   walkState: WalkState;
+  mixer: JamMixer;
 }
 
 interface CardInfo {
@@ -182,6 +200,7 @@ interface StoreState {
   setSubdivision: (subdivision: 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet') => void;
   setEmphasizeFirstBeat: (emphasize: boolean) => void;
   setMetronomeSoundType: (soundType: 'synth' | 'asrx') => void;
+  setMetronomeMuted: (muted: boolean) => void;
   
   // Note actions
   setSelectedNote: (note: string | null) => void;
@@ -228,16 +247,15 @@ interface StoreState {
   applyDefaultToAll: () => void;
   clearHarmonyMaker: () => void;
 
-  // Jam actions
+  // Jam actions — BPM comes from metronome.bpm (single source of truth)
   setJamMode: (mode: 'preset' | 'infinite') => void;
   setJamPlaying: (playing: boolean) => void;
-  setJamBpm: (bpm: number) => void;
   setJamPreset: (preset: string | null) => void;
   setJamAlgorithm: (algo: JamAlgorithm) => void;
-  setJamDrumsEnabled: (enabled: boolean) => void;
   setJamDrumPattern: (pattern: DrumPatternName) => void;
-  setJamBeatsPerChord: (beats: number) => void;
-  setJamSyncMetronome: (sync: boolean) => void;
+  setJamBarsPerChord: (bars: number) => void;
+  setJamMixerVolume: (part: keyof JamMixer, volume: number) => void;
+  setJamMixerMuted: (part: JamMixerPart, muted: boolean) => void;
   advanceJamChord: () => void;
   rebuildJamQueue: () => void;
 
@@ -265,6 +283,7 @@ export const useStore = create<StoreState>((set) => ({
   metronome: {
     bpm: 120,
     isPlaying: false,
+    muted: false,
     currentBeat: 0,
     beatsPerMeasure: 4,
     subdivision: 'quarter',
@@ -312,17 +331,21 @@ export const useStore = create<StoreState>((set) => ({
   jam: {
     mode: 'infinite',
     isPlaying: false,
-    bpm: 120,
     currentChordIndex: 0,
     chordQueue: [],
     queueLength: 8,
     selectedPreset: null,
     algorithm: 'fifths',
-    drumsEnabled: true,
     drumPattern: 'rock',
-    beatsPerChord: 4,
-    syncMetronome: true,
+    barsPerChord: 2,
     walkState: {},
+    mixer: {
+      master: { volume: 100 },
+      chords: { volume: 100, muted: false },
+      bass:   { volume: 100, muted: false },
+      strum:  { volume:  80, muted: false },
+      drums:  { volume:  90, muted: false },
+    },
   },
   cards: [
     { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
@@ -374,6 +397,9 @@ export const useStore = create<StoreState>((set) => ({
   })),
   setMetronomeSoundType: (soundType) => set((state) => ({
     metronome: { ...state.metronome, soundType }
+  })),
+  setMetronomeMuted: (muted) => set((state) => ({
+    metronome: { ...state.metronome, muted }
   })),
   
   // Note actions
@@ -578,15 +604,6 @@ export const useStore = create<StoreState>((set) => ({
   setJamPlaying: (isPlaying) => set((state) => ({
     jam: { ...state.jam, isPlaying },
   })),
-  setJamBpm: (bpm) => set((state) => {
-    const clamped = Math.max(40, Math.min(300, bpm));
-    return {
-      jam: { ...state.jam, bpm: clamped },
-      ...(state.jam.syncMetronome
-        ? { metronome: { ...state.metronome, bpm: clamped } }
-        : {}),
-    };
-  }),
   setJamPreset: (selectedPreset) => set((state) => ({
     jam: {
       ...state.jam,
@@ -605,19 +622,33 @@ export const useStore = create<StoreState>((set) => ({
       walkState: {},
     },
   })),
-  setJamDrumsEnabled: (drumsEnabled) => set((state) => ({
-    jam: { ...state.jam, drumsEnabled },
-  })),
   setJamDrumPattern: (drumPattern) => set((state) => ({
     jam: { ...state.jam, drumPattern },
   })),
-  setJamBeatsPerChord: (beats) => set((state) => ({
-    jam: { ...state.jam, beatsPerChord: Math.max(1, Math.min(8, beats)) },
+  setJamBarsPerChord: (bars) => set((state) => ({
+    jam: { ...state.jam, barsPerChord: Math.max(1, Math.min(16, bars)) },
   })),
-  setJamSyncMetronome: (syncMetronome) => set((state) => ({
-    jam: { ...state.jam, syncMetronome },
+  setJamMixerVolume: (part, volume) => set((state) => {
+    const clamped = Math.max(0, Math.min(100, volume));
+    return {
+      jam: {
+        ...state.jam,
+        mixer: {
+          ...state.jam.mixer,
+          [part]: { ...state.jam.mixer[part], volume: clamped },
+        },
+      },
+    };
+  }),
+  setJamMixerMuted: (part, muted) => set((state) => ({
+    jam: {
+      ...state.jam,
+      mixer: {
+        ...state.jam.mixer,
+        [part]: { ...state.jam.mixer[part], muted },
+      },
+    },
   })),
-
   advanceJamChord: () => set((state) => {
     const jam = state.jam;
     const nextIndex = jam.currentChordIndex + 1;
@@ -631,18 +662,16 @@ export const useStore = create<StoreState>((set) => ({
       const currentChord = jam.chordQueue[wrappedIndex] ?? null;
       return {
         jam: { ...jam, currentChordIndex: wrappedIndex },
-        note: {
+        // Only update selectedChord — do NOT change selectedNote (that's the key root)
+        note: currentChord ? {
           ...state.note,
-          selectedNote: currentChord?.note ?? state.note.selectedNote,
-          selectedChord: currentChord
-            ? {
-                note: currentChord.note,
-                type: currentChord.type,
-                symbol: currentChord.symbol,
-                roman: currentChord.roman,
-              }
-            : state.note.selectedChord,
-        },
+          selectedChord: {
+            note: currentChord.note,
+            type: currentChord.type,
+            symbol: currentChord.symbol,
+            roman: currentChord.roman,
+          },
+        } : state.note,
       };
     } else {
       // Infinite mode: append new chord if queue is running low
@@ -671,18 +700,16 @@ export const useStore = create<StoreState>((set) => ({
           chordQueue: newQueue,
           walkState: newWalkState,
         },
-        note: {
+        // Only update selectedChord — do NOT change selectedNote (that's the key root)
+        note: currentChord ? {
           ...state.note,
-          selectedNote: currentChord?.note ?? state.note.selectedNote,
-          selectedChord: currentChord
-            ? {
-                note: currentChord.note,
-                type: currentChord.type,
-                symbol: currentChord.symbol,
-                roman: currentChord.roman,
-              }
-            : state.note.selectedChord,
-        },
+          selectedChord: {
+            note: currentChord.note,
+            type: currentChord.type,
+            symbol: currentChord.symbol,
+            roman: currentChord.roman,
+          },
+        } : state.note,
       };
     }
   }),
@@ -730,18 +757,17 @@ export const useStore = create<StoreState>((set) => ({
         currentChordIndex: 0,
         walkState: newWalkState,
       },
-      note: {
+      // Only highlight the chord if jam is actively playing — don't hijack
+      // the chord card selection when the user is just changing keys.
+      note: (jam.isPlaying && firstChord) ? {
         ...state.note,
-        selectedNote: firstChord?.note ?? state.note.selectedNote,
-        selectedChord: firstChord
-          ? {
-              note: firstChord.note,
-              type: firstChord.type,
-              symbol: firstChord.symbol,
-              roman: firstChord.roman,
-            }
-          : state.note.selectedChord,
-      },
+        selectedChord: {
+          note: firstChord.note,
+          type: firstChord.type,
+          symbol: firstChord.symbol,
+          roman: firstChord.roman,
+        },
+      } : state.note,
     };
   }),
 

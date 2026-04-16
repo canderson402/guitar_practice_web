@@ -1,5 +1,4 @@
 /* JamCard Component Styles */
-/* Uses design-system.css for base styles */
 
 .jam-card {
   display: flex;
@@ -13,24 +12,44 @@
 
 .jam-chord-display {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
 }
 
-.jam-current-chord {
+.jam-main-chords {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+}
+
+.jam-current-chord,
+.jam-next-chord {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 80px;
-  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.jam-chord-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+  margin-bottom: 2px;
 }
 
 .jam-chord-note {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--ds-text-primary, #fff);
+  color: var(--ds-color-neutral-900);
   line-height: 1.1;
+}
+
+.jam-next-chord .jam-chord-note {
+  font-size: 1.6rem;
+  opacity: 0.8;
 }
 
 .jam-chord-empty {
@@ -40,55 +59,105 @@
 .jam-chord-roman {
   font-size: 0.85rem;
   opacity: 0.7;
-  color: var(--ds-text-primary, #fff);
+  color: var(--ds-color-neutral-700);
   margin-top: 2px;
 }
 
-/* ---- Upcoming chords ---- */
+.jam-arrow {
+  font-size: 1.4rem;
+  opacity: 0.5;
+  margin-top: 12px; /* align with chord note, below label */
+}
+
+/* ---- Upcoming trail ---- */
 
 .jam-upcoming {
   display: flex;
-  flex-direction: row;
-  gap: 12px;
+  justify-content: center;
+  gap: 10px;
   overflow: hidden;
-  flex: 1;
-  align-items: center;
 }
 
 .jam-upcoming-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   flex-shrink: 0;
 }
 
 .jam-upcoming-note {
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: var(--ds-text-primary, #fff);
-  line-height: 1.2;
+  color: var(--ds-color-neutral-800);
 }
 
-.jam-upcoming-roman {
-  font-size: 0.75rem;
-  opacity: 0.65;
-  color: var(--ds-text-primary, #fff);
-}
+/* ---- Mixer ---- */
 
-/* ---- Drum row ---- */
-
-.jam-drum-row {
+.jam-mixer {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--ds-border-color);
+  border-radius: 6px;
+  background: var(--ds-bg-subtle);
+}
+
+.jam-mixer-header {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.jam-mixer-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  font-weight: 600;
+}
+
+.jam-mixer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jam-mixer-row .ds-checkbox-label,
+.jam-mixer-row label {
+  min-width: 56px;
+  font-size: 0.8rem;
+}
+
+.jam-mixer-slider {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--ds-color-primary);
+  cursor: pointer;
+}
+
+.jam-mixer-row--master {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--ds-border-color);
+  margin-bottom: 2px;
+}
+
+.jam-mixer-row--master .jam-mixer-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  color: var(--ds-color-neutral-800);
+  min-width: 56px;
+}
+
+.jam-mixer-slider:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 /* ---- BPM control ---- */
 
 .jam-bpm-row {
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -99,19 +168,17 @@
   flex-direction: column;
   align-items: center;
   min-width: 56px;
-  flex-shrink: 0;
 }
 
 .jam-bpm-value {
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--ds-text-primary, #fff);
+  color: var(--ds-color-neutral-900);
   line-height: 1.1;
 }
 
 .jam-bpm-label {
-  font-size: var(--ds-font-sm, 0.75rem);
-  color: var(--ds-text-primary, #fff);
+  font-size: 0.65rem;
   opacity: 0.6;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -121,8 +188,25 @@
 
 .jam-controls-row {
   display: flex;
-  flex-direction: row;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+/* ---- Bars input ---- */
+
+.jam-beats-input {
+  width: 52px;
+  padding: 4px 6px;
+  font-size: 0.85rem;
+  text-align: center;
+  border: 1px solid var(--ds-border-color);
+  border-radius: 4px;
+  background: var(--ds-color-white);
+  color: var(--ds-color-neutral-900);
+}
+
+.jam-beats-input:focus {
+  outline: none;
+  border-color: var(--ds-border-color-focus);
 }

@@ -19,6 +19,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-scripts": "5.0.1",
+    "smplr": "^0.20.0",
+    "soundfont-player": "^0.12.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4",
     "zustand": "^5.0.5"

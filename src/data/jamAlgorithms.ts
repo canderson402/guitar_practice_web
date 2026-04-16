@@ -38,12 +38,13 @@ export interface JamChord {
 }
 
 export type DrumPatternName = 'rock' | 'bossa' | 'hiphop';
-export type DrumInstrument = 'kick' | 'snare' | 'hat';
+export type DrumInstrument = 'kick' | 'snare' | 'hat' | 'openhat';
 
 export interface DrumHit {
   instrument: DrumInstrument;
   position: number;
   gain: number;
+  accent?: boolean; // true for hits that should be louder (beat 1, snare hits)
 }
 
 export interface WalkState {
@@ -198,12 +199,28 @@ export const romanLabel = (
 /**
  * Build a full JamChord for `note` in the given key/scale context.
  */
+/** Clamp any chord type to just major or minor. Diminished/half-dim → minor,
+ *  augmented/dominant → major. Keeps things simple and harmonically varied. */
+const clampType = (type: string): { type: string; symbol: string } => {
+  switch (type) {
+    case 'minor':
+    case 'minor7':
+    case 'diminished':
+    case 'diminished7':
+    case 'half-diminished7':
+      return { type: 'minor', symbol: chordTypes.minor.symbol };
+    default:
+      return { type: 'major', symbol: chordTypes.major.symbol };
+  }
+};
+
 export const buildJamChord = (
   note: string,
   rootNote: string,
   scaleType: keyof typeof scales
 ): JamChord => {
-  const { type, symbol } = getChordQuality(note, rootNote, scaleType);
+  const raw = getChordQuality(note, rootNote, scaleType);
+  const { type, symbol } = clampType(raw.type);
   const roman = romanLabel(note, type, rootNote, scaleType);
   const midi = chordToMidi(note, type);
   return { note, type, symbol, roman, midi };
@@ -422,11 +439,11 @@ export const generateNextChord = (
 export const drumPatterns: Record<DrumPatternName, DrumHit[]> = {
   rock: [
     // Kick: beats 1 and 3
-    { instrument: 'kick',  position: 0, gain: 1.0 },
+    { instrument: 'kick',  position: 0, gain: 1.0, accent: true },
     { instrument: 'kick',  position: 2, gain: 1.0 },
     // Snare: beats 2 and 4
-    { instrument: 'snare', position: 1, gain: 1.0 },
-    { instrument: 'snare', position: 3, gain: 1.0 },
+    { instrument: 'snare', position: 1, gain: 1.0, accent: true },
+    { instrument: 'snare', position: 3, gain: 1.0, accent: true },
     // Hat: every eighth note (8 hits)
     { instrument: 'hat', position: 0,    gain: 0.3 },
     { instrument: 'hat', position: 0.5,  gain: 0.3 },
@@ -440,12 +457,12 @@ export const drumPatterns: Record<DrumPatternName, DrumHit[]> = {
 
   bossa: [
     // Kick: beat 1, and-of-2, beat 4
-    { instrument: 'kick',  position: 0,   gain: 1.0 },
+    { instrument: 'kick',  position: 0,   gain: 1.0, accent: true },
     { instrument: 'kick',  position: 1.5, gain: 0.8 },
     { instrument: 'kick',  position: 3,   gain: 1.0 },
     // Snare: beats 2 and 4 (lighter)
-    { instrument: 'snare', position: 1,   gain: 0.3 },
-    { instrument: 'snare', position: 3,   gain: 0.3 },
+    { instrument: 'snare', position: 1,   gain: 0.3, accent: true },
+    { instrument: 'snare', position: 3,   gain: 0.3, accent: true },
     // Hat: every eighth note
     { instrument: 'hat', position: 0,    gain: 0.3 },
     { instrument: 'hat', position: 0.5,  gain: 0.3 },
@@ -459,11 +476,11 @@ export const drumPatterns: Record<DrumPatternName, DrumHit[]> = {
 
   hiphop: [
     // Kick: beat 1 and and-of-3
-    { instrument: 'kick',  position: 0,   gain: 1.0 },
+    { instrument: 'kick',  position: 0,   gain: 1.0, accent: true },
     { instrument: 'kick',  position: 2.5, gain: 0.9 },
     // Snare: beats 2 and 4
-    { instrument: 'snare', position: 1,   gain: 1.0 },
-    { instrument: 'snare', position: 3,   gain: 1.0 },
+    { instrument: 'snare', position: 1,   gain: 1.0, accent: true },
+    { instrument: 'snare', position: 3,   gain: 1.0, accent: true },
     // Hat: every sixteenth note (16 hits, gain 0.2)
     { instrument: 'hat', position: 0,     gain: 0.2 },
     { instrument: 'hat', position: 0.25,  gain: 0.2 },
@@ -482,6 +499,731 @@ export const drumPatterns: Record<DrumPatternName, DrumHit[]> = {
     { instrument: 'hat', position: 3.5,   gain: 0.2 },
     { instrument: 'hat', position: 3.75,  gain: 0.2 },
   ],
+};
+
+// ---------------------------------------------------------------------------
+// Velocity humanization — adds ±variation to a base gain, clamped 0–1.
+// Call per-hit in the scheduler for a more natural feel.
+// ---------------------------------------------------------------------------
+
+/** Return a slightly randomized gain for humanized velocity.
+ *  Returns 0 when baseGain is 0 (so muting via slider=0 is truly silent). */
+export const humanize = (baseGain: number, variation = 0.15): number => {
+  if (baseGain <= 0) return 0;
+  const offset = (Math.random() * 2 - 1) * variation * baseGain;
+  return Math.max(0, Math.min(1, baseGain + offset));
+};
+
+/** Micro-timing humanization — shifts an audio time by ±variation seconds.
+ *  Apply only to non-downbeat hits so the downbeat stays rock-solid. */
+export const humanizeTime = (baseTime: number, variation = 0.008): number => {
+  return baseTime + (Math.random() - 0.5) * 2 * variation;
+};
+
+// ---------------------------------------------------------------------------
+// Swing / groove — per-style timing shift for odd subdivisions.
+// ---------------------------------------------------------------------------
+
+/**
+ * Swing ratio per drum pattern style. 0.5 = straight, 0.58 = moderate swing,
+ * 0.66 = shuffle triplet. Values below 0.52 are inaudible; above 0.66 feels
+ * hard shuffle. Tuned to match genre norms:
+ *  - rock: straight
+ *  - bossa: subtle (classic bossa 8ths are slightly swung)
+ *  - hiphop: MPC-style ~56% — the "boom-bap" feel
+ */
+export const DRUM_PATTERN_SWING: Record<DrumPatternName, number> = {
+  rock:   0.50,
+  bossa:  0.54,
+  hiphop: 0.56,
+};
+
+/**
+ * Shift a beat position by swing ratio. `subdivision` is the grid unit
+ * (0.5 for 8ths, 0.25 for 16ths). Positions on the grid stay put;
+ * off-subdivision positions (the "and" between grid points) shift later.
+ *
+ * At ratio=0.5 this is a no-op.
+ */
+export const applySwing = (
+  position: number,
+  ratio: number,
+  subdivision = 0.5,
+): number => {
+  if (ratio === 0.5) return position;
+  const unit = subdivision * 2;        // length of one paired group (e.g. 1.0 for 8ths)
+  const phase = position % unit;       // 0 = on-grid, subdivision = off-grid
+  // Only shift the off-grid half (phase in [subdivision, unit)).
+  if (phase < subdivision - 1e-6) return position;
+  const shift = (ratio - 0.5) * 2 * subdivision;   // ratio=0.58, sub=0.5 → +0.08
+  return position + shift;
+};
+
+// ---------------------------------------------------------------------------
+// Chord voicing — drop-2 with bass root and optional dominant 7th.
+// Takes the bare triad that lives in JamChord.midi and spreads it across
+// ~1.5 octaves for an open, pianistic sound. Adds a minor 7th on top when
+// the chord is functioning as a dominant (V or symbol with `7`).
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect whether a chord is acting as a dominant.
+ *
+ * Triggers:
+ *   - roman numeral is 'V' (case-insensitive match, with/without accidental)
+ *   - chord symbol already contains '7' (dominant7/major7/minor7 etc. all
+ *     benefit from the 7th in the voicing — but we only add the minor 7
+ *     which stays consonant with major triads)
+ */
+export const isDominantContext = (chord: JamChord): boolean => {
+  const romanBase = chord.roman.replace(/^[b#]/, '').toUpperCase();
+  if (romanBase.startsWith('V') && !romanBase.startsWith('VI') && !romanBase.startsWith('VII')) {
+    return true;
+  }
+  if (chord.symbol.includes('7')) return true;
+  return false;
+};
+
+/**
+ * Build a rich voicing for the chord pad.
+ *
+ * Layout (low → high):
+ *   [ bass root (oct 2) , 3rd (oct 3) , 5th (oct 3) , [7th (oct 3)], root (oct 4) ]
+ *
+ * Then drop-2 is applied: the second-from-top note is dropped an octave.
+ * This produces an open voicing with clear separation between bass and
+ * upper structure — no more cluster-in-one-octave mud.
+ *
+ * `spice` (0-1) — probability of adding a colour note (9th / 6th / high-3rd)
+ * for variety on that specific hit. Applied non-deterministically so repeated
+ * hits on the same chord don't sound mechanical.
+ */
+export const buildVoicing = (
+  chord: JamChord,
+  isDominant: boolean,
+  spice = 0,
+): number[] => {
+  const [root, third, fifth] = chord.midi;
+  if (root == null) return [];
+
+  const voicing: number[] = [];
+  // Bass root, octave down from existing triad.
+  voicing.push(root - 12);
+  // 3rd & 5th from the existing triad (already in oct 3).
+  if (third != null) voicing.push(third);
+  if (fifth != null) voicing.push(fifth);
+  // Optional minor 7th for dominant colour.
+  if (isDominant) voicing.push(root + 10);
+  // Root an octave above.
+  voicing.push(root + 12);
+
+  // Drop-2: take the 2nd-highest note and drop it an octave. For a 4-note
+  // voicing (no 7th) this pulls the 5th down into the bass register; for a
+  // 5-note voicing (with 7th) it pulls the 7th down. Both sound open.
+  if (voicing.length >= 2) {
+    const dropIdx = voicing.length - 2;
+    voicing[dropIdx] = voicing[dropIdx] - 12;
+  }
+
+  // Spice: occasionally stack a colour note on top for extra interest.
+  //   - 9th:   root + 14 (octave + 2)
+  //   - 6th:   root + 9  (major 6)
+  //   - high-3rd: third + 12 (upper-octave 3rd, doubles for piano-like bell)
+  if (spice > 0 && Math.random() < spice) {
+    const r = Math.random();
+    if (r < 0.4) {
+      voicing.push(root + 14); // add 9
+    } else if (r < 0.75) {
+      voicing.push(root + 9);  // add 6
+    } else if (third != null) {
+      voicing.push(third + 12); // doubled 3rd on top
+    }
+  }
+
+  // Sort ascending so strum-by-order still reads low-to-high.
+  voicing.sort((a, b) => a - b);
+  return voicing;
+};
+
+/**
+ * Voice-led voicing builder.
+ *
+ * Keeps the bass root fixed one octave below the chord, then for each
+ * pitch-class in the chord (root, 3rd, 5th, optional 7th) finds the octave
+ * placement in MIDI range [55–80] nearest to the previous voicing. The sum
+ * of (for each previous upper voice, the min distance to any candidate
+ * pitch) is the "movement cost" — we minimise it. Result: common tones stay
+ * put, and voices move by the smallest possible step.
+ *
+ * If `prevVoicing` is empty, falls back to `buildVoicing` (drop-2 default).
+ */
+export const buildVoicingVoiceLed = (
+  chord: JamChord,
+  isDominant: boolean,
+  prevVoicing: number[],
+  spice = 0,
+): number[] => {
+  if (prevVoicing.length === 0) {
+    return buildVoicing(chord, isDominant, spice);
+  }
+  const [root, third, fifth] = chord.midi;
+  if (root == null) return [];
+
+  const bassMidi = root - 12;
+  const prevUppers = prevVoicing.filter(m => m > bassMidi);
+
+  // Pitch classes we need to voice in the upper register.
+  const pitchClasses: number[] = [];
+  if (third != null) pitchClasses.push(third % 12);
+  if (fifth != null) pitchClasses.push(fifth % 12);
+  pitchClasses.push(root % 12);  // at least one octave-above-bass root
+  if (isDominant) pitchClasses.push((root + 10) % 12);  // min-7
+
+  // For each pitch class, pick the single octave placement closest to
+  // *some* previous upper voice. Independent per pitch class → greedy but
+  // effective and cheap.
+  const upper: number[] = [];
+  for (const pc of pitchClasses) {
+    let bestMidi = 60 + pc;  // fallback ~middle C-ish
+    let bestDist = Infinity;
+    for (let oct = 3; oct <= 5; oct++) {
+      const m = pc + (oct + 1) * 12;  // MIDI: C3=48, C4=60, C5=72...
+      if (m < 55 || m > 82) continue;
+      // Distance to nearest previous upper voice.
+      let d = Infinity;
+      for (const p of prevUppers) {
+        d = Math.min(d, Math.abs(m - p));
+      }
+      if (d < bestDist) {
+        bestDist = d;
+        bestMidi = m;
+      }
+    }
+    upper.push(bestMidi);
+  }
+
+  // Deduplicate (same pitch picked twice → drop one).
+  const dedup = Array.from(new Set(upper));
+
+  // Spice: occasional color note at the top.
+  if (spice > 0 && Math.random() < spice) {
+    const r = Math.random();
+    if (r < 0.4) dedup.push(root + 14);        // 9th
+    else if (r < 0.75) dedup.push(root + 21);  // 13th
+    else if (third != null) dedup.push(third + 12);
+  }
+
+  const voicing = [bassMidi, ...dedup].sort((a, b) => a - b);
+  return voicing;
+};
+
+// ---------------------------------------------------------------------------
+// Bass patterns — played on the chord root (or fifth) one octave below.
+// See bassPatternBank below for the full set of variations.
+// ---------------------------------------------------------------------------
+
+export interface BassHit {
+  position: number;    // quarter-note beats within one bar (0-indexed)
+  degree: 'root' | 'fifth';
+  gain: number;
+  duration: number;    // note length in beats
+}
+
+/** Get the bass MIDI note for a chord — root or fifth, one octave below voicing. */
+export const bassMidi = (chord: JamChord, degree: 'root' | 'fifth'): number => {
+  const root = chord.midi[0]; // lowest note in the chord voicing
+  const bassRoot = root - 12; // one octave down
+  if (degree === 'fifth') {
+    return bassRoot + 7; // perfect fifth above bass root
+  }
+  return bassRoot;
+};
+
+// ---------------------------------------------------------------------------
+// Strum patterns — arpeggiated chord voicings for rhythm guitar feel.
+// See strumPatternBank below for the full set of variations.
+// ---------------------------------------------------------------------------
+
+export interface StrumHit {
+  position: number;          // quarter-note beats within one bar
+  direction: 'down' | 'up'; // down = low-to-high, up = high-to-low
+  gain: number;
+  /** How many of the chord's notes to play (0 = all). */
+  notes: number;
+}
+
+// ---------------------------------------------------------------------------
+// Bar-1 drum variants — keep drums with a stable bar-0/bar-1 feel (not
+// random) so the listener feels a 2-bar loop. Bass and strum use the random
+// banks below for higher variety.
+// ---------------------------------------------------------------------------
+
+/** Bar-1 drum variations. Rock drops the kick on beat 3 and opens the hat on
+ *  the and-of-4. Bossa and hiphop stay identical (their base patterns are
+ *  already syncopated enough that variation would feel disruptive). */
+export const drumPatternsBar1: Partial<Record<DrumPatternName, DrumHit[]>> = {
+  rock: [
+    { instrument: 'kick',  position: 0, gain: 1.0, accent: true },
+    { instrument: 'snare', position: 1, gain: 1.0, accent: true },
+    { instrument: 'snare', position: 3, gain: 1.0, accent: true },
+    { instrument: 'hat',     position: 0,    gain: 0.3 },
+    { instrument: 'hat',     position: 0.5,  gain: 0.3 },
+    { instrument: 'hat',     position: 1,    gain: 0.3 },
+    { instrument: 'hat',     position: 1.5,  gain: 0.3 },
+    { instrument: 'hat',     position: 2,    gain: 0.3 },
+    { instrument: 'hat',     position: 2.5,  gain: 0.3 },
+    { instrument: 'hat',     position: 3,    gain: 0.3 },
+    { instrument: 'openhat', position: 3.5,  gain: 0.5 },
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Bass pattern bank — ~10 variations per style. Scheduler picks one at
+// random on each downbeat so no two bars feel identical.
+// ---------------------------------------------------------------------------
+
+export const bassPatternBank: Record<DrumPatternName, BassHit[][]> = {
+  rock: [
+    // 1. Classic root-fifth-root
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 1.5 },
+      { position: 2,   degree: 'fifth', gain: 0.7, duration: 0.8 },
+      { position: 2.5, degree: 'root',  gain: 0.6, duration: 0.4 },
+    ],
+    // 2. Root pedal on all four beats
+    [
+      { position: 0, degree: 'root', gain: 0.9, duration: 0.9 },
+      { position: 1, degree: 'root', gain: 0.7, duration: 0.9 },
+      { position: 2, degree: 'root', gain: 0.8, duration: 0.9 },
+      { position: 3, degree: 'root', gain: 0.7, duration: 0.9 },
+    ],
+    // 3. Walking: root, fifth, root, fifth
+    [
+      { position: 0, degree: 'root',  gain: 0.9, duration: 0.9 },
+      { position: 1, degree: 'fifth', gain: 0.7, duration: 0.9 },
+      { position: 2, degree: 'root',  gain: 0.8, duration: 0.9 },
+      { position: 3, degree: 'fifth', gain: 0.7, duration: 0.9 },
+    ],
+    // 4. Long root sustained whole bar
+    [
+      { position: 0, degree: 'root', gain: 0.95, duration: 3.8 },
+    ],
+    // 5. Pumping eighths on beats 1-2
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 0.4 },
+      { position: 0.5, degree: 'root',  gain: 0.7, duration: 0.4 },
+      { position: 1,   degree: 'root',  gain: 0.8, duration: 0.4 },
+      { position: 1.5, degree: 'root',  gain: 0.6, duration: 0.4 },
+      { position: 2,   degree: 'fifth', gain: 0.75, duration: 1.0 },
+      { position: 3,   degree: 'root',  gain: 0.75, duration: 1.0 },
+    ],
+    // 6. Syncopated push on and-of-2
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 1.4 },
+      { position: 1.5, degree: 'fifth', gain: 0.7, duration: 1.4 },
+      { position: 3,   degree: 'root',  gain: 0.75, duration: 0.9 },
+    ],
+    // 7. Pickup going into the next chord
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 1.4 },
+      { position: 2,   degree: 'fifth', gain: 0.7, duration: 0.8 },
+      { position: 2.75, degree: 'root', gain: 0.6, duration: 0.2 },
+      { position: 3.5, degree: 'fifth', gain: 0.7, duration: 0.4 },
+    ],
+    // 8. Beat 1 and beat 3 only (halves)
+    [
+      { position: 0, degree: 'root', gain: 0.95, duration: 1.8 },
+      { position: 2, degree: 'root', gain: 0.85, duration: 1.8 },
+    ],
+    // 9. Dotted quarter root, fifth rebound
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 1.3 },
+      { position: 1.5, degree: 'root',  gain: 0.7, duration: 0.4 },
+      { position: 2,   degree: 'fifth', gain: 0.75, duration: 1.9 },
+    ],
+    // 10. Full-bar root + accent on and-of-3
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 2.4 },
+      { position: 2.5, degree: 'fifth', gain: 0.65, duration: 0.4 },
+      { position: 3,   degree: 'root',  gain: 0.75, duration: 0.9 },
+    ],
+  ],
+
+  bossa: [
+    // 1. Classic bossa root/and-of-2/fifth-and-of-3/root-4
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 1.0 },
+      { position: 1.5, degree: 'root',  gain: 0.7, duration: 0.4 },
+      { position: 2.5, degree: 'fifth', gain: 0.6, duration: 0.4 },
+      { position: 3,   degree: 'root',  gain: 0.7, duration: 0.8 },
+    ],
+    // 2. Simpler bossa: root on 1 and 3
+    [
+      { position: 0, degree: 'root', gain: 0.9, duration: 1.8 },
+      { position: 2, degree: 'root', gain: 0.8, duration: 1.8 },
+    ],
+    // 3. Samba push
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 0.8 },
+      { position: 1,   degree: 'fifth', gain: 0.6, duration: 0.4 },
+      { position: 1.5, degree: 'root',  gain: 0.75, duration: 0.8 },
+      { position: 2.5, degree: 'fifth', gain: 0.65, duration: 0.4 },
+      { position: 3,   degree: 'root',  gain: 0.75, duration: 0.9 },
+    ],
+    // 4. Long sustained root with fifth pickup
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 2.8 },
+      { position: 3.5, degree: 'fifth', gain: 0.55, duration: 0.4 },
+    ],
+    // 5. Tumbao-lite: 1, and-of-2, 3.5
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 1.2 },
+      { position: 1.5, degree: 'fifth', gain: 0.65, duration: 1.2 },
+      { position: 3,   degree: 'root',  gain: 0.7, duration: 0.9 },
+    ],
+    // 6. Four on the floor (steady)
+    [
+      { position: 0, degree: 'root',  gain: 0.85, duration: 0.9 },
+      { position: 1, degree: 'root',  gain: 0.7,  duration: 0.9 },
+      { position: 2, degree: 'fifth', gain: 0.75, duration: 0.9 },
+      { position: 3, degree: 'root',  gain: 0.75, duration: 0.9 },
+    ],
+    // 7. Syncopated anticipation
+    [
+      { position: 0,   degree: 'root',  gain: 0.9, duration: 0.8 },
+      { position: 0.75, degree: 'fifth', gain: 0.55, duration: 0.4 },
+      { position: 1.5, degree: 'root',  gain: 0.75, duration: 1.3 },
+      { position: 3,   degree: 'root',  gain: 0.7, duration: 0.9 },
+    ],
+    // 8. Bossa partido alto
+    [
+      { position: 0,    degree: 'root',  gain: 0.9,  duration: 0.9 },
+      { position: 1,    degree: 'root',  gain: 0.65, duration: 0.4 },
+      { position: 1.75, degree: 'fifth', gain: 0.6,  duration: 0.4 },
+      { position: 2.5,  degree: 'root',  gain: 0.7,  duration: 0.9 },
+      { position: 3.5,  degree: 'fifth', gain: 0.55, duration: 0.4 },
+    ],
+    // 9. Mellow half-notes
+    [
+      { position: 0, degree: 'root',  gain: 0.85, duration: 1.9 },
+      { position: 2, degree: 'fifth', gain: 0.75, duration: 1.9 },
+    ],
+    // 10. Fifth-centered vamp
+    [
+      { position: 0,   degree: 'fifth', gain: 0.85, duration: 1.0 },
+      { position: 1.5, degree: 'root',  gain: 0.8,  duration: 1.3 },
+      { position: 3,   degree: 'fifth', gain: 0.7,  duration: 0.9 },
+    ],
+  ],
+
+  hiphop: [
+    // 1. Sustained root + and-of-3 bump
+    [
+      { position: 0,   degree: 'root', gain: 1.0, duration: 2.0 },
+      { position: 2.5, degree: 'root', gain: 0.7, duration: 0.5 },
+    ],
+    // 2. Root on 1 and and-of-3 only (classic boom-bap bass)
+    [
+      { position: 0,   degree: 'root', gain: 1.0, duration: 0.8 },
+      { position: 2.75, degree: 'root', gain: 0.8, duration: 0.4 },
+    ],
+    // 3. 808-style long root
+    [
+      { position: 0, degree: 'root', gain: 1.0, duration: 3.5 },
+    ],
+    // 4. Root + fifth octave jump
+    [
+      { position: 0,   degree: 'root',  gain: 1.0, duration: 1.4 },
+      { position: 2,   degree: 'fifth', gain: 0.75, duration: 0.9 },
+      { position: 3,   degree: 'root',  gain: 0.85, duration: 0.9 },
+    ],
+    // 5. Syncopated slides on and-of-beats
+    [
+      { position: 0,   degree: 'root',  gain: 1.0, duration: 1.0 },
+      { position: 1.5, degree: 'fifth', gain: 0.6, duration: 0.4 },
+      { position: 2,   degree: 'root',  gain: 0.85, duration: 1.4 },
+    ],
+    // 6. Trap bounce
+    [
+      { position: 0,    degree: 'root', gain: 1.0, duration: 0.5 },
+      { position: 0.5,  degree: 'root', gain: 0.7, duration: 0.4 },
+      { position: 1.75, degree: 'root', gain: 0.8, duration: 0.4 },
+      { position: 2.5,  degree: 'root', gain: 0.75, duration: 0.9 },
+    ],
+    // 7. Minimal — just beat 1
+    [
+      { position: 0, degree: 'root', gain: 1.0, duration: 1.2 },
+    ],
+    // 8. Fifth-pushed
+    [
+      { position: 0,   degree: 'root',  gain: 1.0, duration: 0.9 },
+      { position: 1.5, degree: 'fifth', gain: 0.7, duration: 0.9 },
+      { position: 3,   degree: 'root',  gain: 0.85, duration: 0.9 },
+    ],
+    // 9. Two-beat pattern repeated
+    [
+      { position: 0,   degree: 'root',  gain: 1.0, duration: 0.9 },
+      { position: 1.5, degree: 'root',  gain: 0.75, duration: 0.4 },
+      { position: 2,   degree: 'root',  gain: 0.9, duration: 0.9 },
+      { position: 3.5, degree: 'root',  gain: 0.7, duration: 0.4 },
+    ],
+    // 10. Slow thump on beat 1 + beat 3.5 ghost
+    [
+      { position: 0,   degree: 'root', gain: 1.0, duration: 2.3 },
+      { position: 3.5, degree: 'fifth', gain: 0.5, duration: 0.4 },
+    ],
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Strum pattern bank — ~10 variations per style. Random per bar.
+// ---------------------------------------------------------------------------
+
+export const strumPatternBank: Record<DrumPatternName, StrumHit[][]> = {
+  rock: [
+    // 1. Classic D-D-U-D-D-U
+    [
+      { position: 0,   direction: 'down', gain: 0.7, notes: 0 },
+      { position: 1,   direction: 'down', gain: 0.6, notes: 0 },
+      { position: 1.5, direction: 'up',   gain: 0.45, notes: 3 },
+      { position: 2,   direction: 'down', gain: 0.7, notes: 0 },
+      { position: 3,   direction: 'down', gain: 0.6, notes: 0 },
+      { position: 3.5, direction: 'up',   gain: 0.45, notes: 3 },
+    ],
+    // 2. All downs on every quarter
+    [
+      { position: 0, direction: 'down', gain: 0.7, notes: 0 },
+      { position: 1, direction: 'down', gain: 0.6, notes: 0 },
+      { position: 2, direction: 'down', gain: 0.7, notes: 0 },
+      { position: 3, direction: 'down', gain: 0.6, notes: 0 },
+    ],
+    // 3. Sparse — downs on 1 and 3 only
+    [
+      { position: 0, direction: 'down', gain: 0.75, notes: 0 },
+      { position: 2, direction: 'down', gain: 0.7,  notes: 0 },
+    ],
+    // 4. Pop D-U-D-U-D-U-D-U (eighths alternating)
+    [
+      { position: 0,   direction: 'down', gain: 0.7, notes: 0 },
+      { position: 0.5, direction: 'up',   gain: 0.4, notes: 3 },
+      { position: 1,   direction: 'down', gain: 0.6, notes: 0 },
+      { position: 1.5, direction: 'up',   gain: 0.4, notes: 3 },
+      { position: 2,   direction: 'down', gain: 0.7, notes: 0 },
+      { position: 2.5, direction: 'up',   gain: 0.4, notes: 3 },
+      { position: 3,   direction: 'down', gain: 0.6, notes: 0 },
+      { position: 3.5, direction: 'up',   gain: 0.4, notes: 3 },
+    ],
+    // 5. Reggae — offbeat ups only
+    [
+      { position: 0.5, direction: 'up', gain: 0.55, notes: 3 },
+      { position: 1.5, direction: 'up', gain: 0.55, notes: 3 },
+      { position: 2.5, direction: 'up', gain: 0.55, notes: 3 },
+      { position: 3.5, direction: 'up', gain: 0.55, notes: 3 },
+    ],
+    // 6. Heavy downs (chuck style)
+    [
+      { position: 0, direction: 'down', gain: 0.8, notes: 0 },
+      { position: 1, direction: 'down', gain: 0.7, notes: 0 },
+      { position: 2, direction: 'down', gain: 0.8, notes: 0 },
+      { position: 3, direction: 'down', gain: 0.7, notes: 0 },
+    ],
+    // 7. Syncopated push
+    [
+      { position: 0,   direction: 'down', gain: 0.7,  notes: 0 },
+      { position: 1.5, direction: 'up',   gain: 0.55, notes: 4 },
+      { position: 2,   direction: 'down', gain: 0.7,  notes: 0 },
+      { position: 3.5, direction: 'up',   gain: 0.55, notes: 4 },
+    ],
+    // 8. Galloping eighths on beats 1, 3
+    [
+      { position: 0,   direction: 'down', gain: 0.7, notes: 0 },
+      { position: 0.5, direction: 'down', gain: 0.55, notes: 3 },
+      { position: 1,   direction: 'up',   gain: 0.4, notes: 3 },
+      { position: 2,   direction: 'down', gain: 0.7, notes: 0 },
+      { position: 2.5, direction: 'down', gain: 0.55, notes: 3 },
+      { position: 3,   direction: 'up',   gain: 0.4, notes: 3 },
+    ],
+    // 9. Ballad half-time
+    [
+      { position: 0, direction: 'down', gain: 0.75, notes: 0 },
+      { position: 2, direction: 'up',   gain: 0.45, notes: 4 },
+    ],
+    // 10. Power stabs on 1-and-2, 3-and-4
+    [
+      { position: 0,   direction: 'down', gain: 0.8, notes: 0 },
+      { position: 0.5, direction: 'up',   gain: 0.5, notes: 3 },
+      { position: 1,   direction: 'down', gain: 0.65, notes: 0 },
+      { position: 2,   direction: 'down', gain: 0.8, notes: 0 },
+      { position: 2.5, direction: 'up',   gain: 0.5, notes: 3 },
+      { position: 3,   direction: 'down', gain: 0.65, notes: 0 },
+    ],
+  ],
+
+  bossa: [
+    // 1. Fingerpick-style sparse
+    [
+      { position: 0,   direction: 'down', gain: 0.6, notes: 0 },
+      { position: 1,   direction: 'up',   gain: 0.35, notes: 2 },
+      { position: 1.5, direction: 'down', gain: 0.5,  notes: 3 },
+      { position: 3,   direction: 'up',   gain: 0.4,  notes: 2 },
+      { position: 3.5, direction: 'down', gain: 0.35, notes: 3 },
+    ],
+    // 2. Two-feel — hits on 1 and 3
+    [
+      { position: 0, direction: 'down', gain: 0.65, notes: 0 },
+      { position: 2, direction: 'down', gain: 0.6,  notes: 4 },
+    ],
+    // 3. Samba-ish syncopation
+    [
+      { position: 0.5, direction: 'up',   gain: 0.4,  notes: 2 },
+      { position: 1,   direction: 'down', gain: 0.55, notes: 3 },
+      { position: 2.5, direction: 'up',   gain: 0.4,  notes: 2 },
+      { position: 3,   direction: 'down', gain: 0.55, notes: 3 },
+    ],
+    // 4. Chord on every half-note only
+    [
+      { position: 0, direction: 'down', gain: 0.55, notes: 0 },
+      { position: 2, direction: 'down', gain: 0.5,  notes: 0 },
+    ],
+    // 5. And-of-1 up, 2, and-of-3 down
+    [
+      { position: 0.5, direction: 'up',   gain: 0.4,  notes: 3 },
+      { position: 2,   direction: 'down', gain: 0.55, notes: 0 },
+      { position: 2.5, direction: 'down', gain: 0.4,  notes: 3 },
+    ],
+    // 6. Classic bossa-nova comp
+    [
+      { position: 0,   direction: 'down', gain: 0.6, notes: 0 },
+      { position: 1.5, direction: 'down', gain: 0.55, notes: 4 },
+      { position: 2,   direction: 'up',   gain: 0.4,  notes: 2 },
+      { position: 3.5, direction: 'down', gain: 0.45, notes: 3 },
+    ],
+    // 7. Sustained — one chord hit per bar
+    [
+      { position: 0, direction: 'down', gain: 0.6, notes: 0 },
+    ],
+    // 8. Push on 2.5
+    [
+      { position: 0,   direction: 'down', gain: 0.55, notes: 0 },
+      { position: 2.5, direction: 'up',   gain: 0.5,  notes: 4 },
+    ],
+    // 9. Both ends — and-of-1 and and-of-4
+    [
+      { position: 0,   direction: 'down', gain: 0.55, notes: 0 },
+      { position: 0.5, direction: 'up',   gain: 0.4,  notes: 3 },
+      { position: 2,   direction: 'down', gain: 0.55, notes: 0 },
+      { position: 3.5, direction: 'up',   gain: 0.4,  notes: 3 },
+    ],
+    // 10. Subtle triplet-feel
+    [
+      { position: 0,    direction: 'down', gain: 0.55, notes: 0 },
+      { position: 1.33, direction: 'up',   gain: 0.35, notes: 2 },
+      { position: 2,    direction: 'down', gain: 0.5,  notes: 3 },
+      { position: 3.33, direction: 'up',   gain: 0.35, notes: 2 },
+    ],
+  ],
+
+  hiphop: [
+    // 1. Minimal — 2 and 4 stabs
+    [
+      { position: 1, direction: 'down', gain: 0.45, notes: 0 },
+      { position: 3, direction: 'down', gain: 0.45, notes: 0 },
+    ],
+    // 2. Only beat 1
+    [
+      { position: 0, direction: 'down', gain: 0.5, notes: 0 },
+    ],
+    // 3. Beat 1 + and-of-3
+    [
+      { position: 0,   direction: 'down', gain: 0.5,  notes: 0 },
+      { position: 2.5, direction: 'up',   gain: 0.4,  notes: 3 },
+    ],
+    // 4. Chord stabs on every eighth of beat 2
+    [
+      { position: 1,   direction: 'down', gain: 0.5, notes: 0 },
+      { position: 1.5, direction: 'up',   gain: 0.35, notes: 3 },
+      { position: 3,   direction: 'down', gain: 0.45, notes: 0 },
+    ],
+    // 5. Silent strum (chords only, no strum part) — empty pattern
+    [],
+    // 6. Swelled chord on beat 2
+    [
+      { position: 1, direction: 'down', gain: 0.55, notes: 0 },
+    ],
+    // 7. Off-grid accent
+    [
+      { position: 0.75, direction: 'up',   gain: 0.4,  notes: 3 },
+      { position: 2,    direction: 'down', gain: 0.5,  notes: 0 },
+    ],
+    // 8. Three stabs
+    [
+      { position: 0, direction: 'down', gain: 0.45, notes: 0 },
+      { position: 1, direction: 'down', gain: 0.45, notes: 0 },
+      { position: 3, direction: 'down', gain: 0.45, notes: 0 },
+    ],
+    // 9. Downbeat + and-of-4 pickup
+    [
+      { position: 0,   direction: 'down', gain: 0.5,  notes: 0 },
+      { position: 3.5, direction: 'up',   gain: 0.4,  notes: 3 },
+    ],
+    // 10. Chord on beat 3 only (reverse feel)
+    [
+      { position: 2, direction: 'down', gain: 0.55, notes: 0 },
+    ],
+  ],
+};
+
+/** Pick a random pattern from a bank. Returns `null` if the bank is empty. */
+export const pickRandomPattern = <T,>(bank: T[]): T | null => {
+  if (bank.length === 0) return null;
+  return bank[Math.floor(Math.random() * bank.length)];
+};
+
+/**
+ * Build a guitar-style chord voicing — 5–6 notes spread across ~2 octaves
+ * to mimic a real open/barre chord on 6 strings. `chord.midi` alone is only
+ * 3 notes (bare triad in octave 3), which sounds like an arpeggio when
+ * "strummed" with a small stagger. This spreads it properly.
+ *
+ * Layout (low → high):
+ *   [ root-12 (oct 2), fifth-12 (oct 2), root (oct 3), third (oct 3),
+ *     fifth (oct 3), root+12 (oct 4) ]
+ *
+ * This mirrors a real open C or G chord shape — low root, fifth, octave
+ * root, third, fifth, high root. Sounds like a guitar when strummed.
+ */
+export const buildGuitarVoicing = (chord: JamChord): number[] => {
+  const [root, third, fifth] = chord.midi;
+  if (root == null) return [];
+  const voicing: number[] = [];
+  voicing.push(root - 12);                     // low root (oct 2)
+  if (fifth != null) voicing.push(fifth - 12); // low fifth
+  voicing.push(root);                          // octave root (oct 3)
+  if (third != null) voicing.push(third);
+  if (fifth != null) voicing.push(fifth);
+  voicing.push(root + 12);                     // high root (oct 4)
+  return voicing;
+};
+
+/** Build an array of { midi, delay } pairs for a strum hit.
+ *  Accepts a pre-built voicing so callers can pass a guitar-shaped
+ *  voicing instead of the bare triad in `chord.midi`.
+ *  delay is in seconds — feed to audioTime + delay for each note. */
+export const strumMidis = (
+  voicing: number[],
+  direction: 'down' | 'up',
+  noteCount: number,
+): { midi: number; delay: number }[] => {
+  let notes = [...voicing];
+  if (noteCount > 0 && noteCount < notes.length) {
+    // Take the lowest N for down, highest N for up
+    notes = direction === 'down'
+      ? notes.slice(0, noteCount)
+      : notes.slice(-noteCount);
+  }
+  if (direction === 'up') notes.reverse();
+  const strumDelay = 0.022; // 22ms between each string — natural strum speed
+  return notes.map((midi, i) => ({ midi, delay: i * strumDelay }));
 };
 
 // ---------------------------------------------------------------------------

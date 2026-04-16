@@ -21,7 +21,11 @@
       "Bash(touch:*)",
       "Bash(brew install:*)",
       "Bash(curl:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(tree:*)",
+      "Bash(npx tsc *)",
+      "Bash(/Users/codyanderson/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh *)",
+      "WebSearch"
     ],
     "deny": []
   }

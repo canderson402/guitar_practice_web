@@ -12,6 +12,15 @@ import {
 } from './index';
 import { Fretboard, DotInfo, posKey } from '../components/Fretboard';
 import { PianoKeyboard } from '../components/PianoKeyboard';
+import {
+  playNote,
+  playChord,
+  playKick,
+  playSnare,
+  playHat,
+  createScheduler,
+  Scheduler,
+} from '../audio';
 
 // ---------------------------------------------------------------------------
 // DesignSystemPreview — visual catalog of every primitive in every variant.
@@ -65,6 +74,87 @@ const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, ch
     </div>
   </div>
 );
+
+// Audio playground — lets us verify every Phase 5a primitive by ear.
+const AudioDemo: React.FC = () => {
+  const [bpm, setBpm] = React.useState(100);
+  const [running, setRunning] = React.useState(false);
+  const schedulerRef = React.useRef<Scheduler | null>(null);
+
+  React.useEffect(() => () => schedulerRef.current?.stop(), []);
+
+  // Toggle a simple 4-on-the-floor kick + offbeat hat groove at the
+  // current BPM. Demonstrates the scheduler firing sample-accurate events.
+  const toggleGroove = () => {
+    if (running) {
+      schedulerRef.current?.stop();
+      setRunning(false);
+      return;
+    }
+    const sched = createScheduler(bpm, (beat, time) => {
+      // Quarter-note kicks, snare on 2 & 4, eighth-note closed hats.
+      playKick(time);
+      if (beat % 2 === 1) playSnare(time);
+      playHat(time);
+      playHat(time + 30 / bpm); // between-beat hat (eighth)
+    });
+    schedulerRef.current = sched;
+    sched.start();
+    setRunning(true);
+  };
+
+  const cMajor = [60, 64, 67];  // C E G
+  const aMinor = [57, 60, 64];  // A C E
+  const fMajor = [53, 57, 60];  // F A C
+  const gMajor = [55, 59, 62];  // G B D
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--ds-space-3)' }}>
+      <Row label="Single notes">
+        <Button variant="outline" size="sm" onClick={() => playNote(60, 0.5)}>C4</Button>
+        <Button variant="outline" size="sm" onClick={() => playNote(64, 0.5)}>E4</Button>
+        <Button variant="outline" size="sm" onClick={() => playNote(67, 0.5)}>G4</Button>
+        <Button variant="outline" size="sm" onClick={() => playNote(72, 0.8)}>C5</Button>
+      </Row>
+      <Row label="Chords">
+        <Button variant="outline" size="sm" onClick={() => playChord(cMajor, 1.0)}>C major</Button>
+        <Button variant="outline" size="sm" onClick={() => playChord(aMinor, 1.0)}>A minor</Button>
+        <Button variant="outline" size="sm" onClick={() => playChord(fMajor, 1.0)}>F major</Button>
+        <Button variant="outline" size="sm" onClick={() => playChord(gMajor, 1.0)}>G major</Button>
+      </Row>
+      <Row label="Drum hits">
+        <Button variant="outline" size="sm" onClick={() => playKick()}>Kick</Button>
+        <Button variant="outline" size="sm" onClick={() => playSnare()}>Snare</Button>
+        <Button variant="outline" size="sm" onClick={() => playHat(undefined, true)}>Hat (closed)</Button>
+        <Button variant="outline" size="sm" onClick={() => playHat(undefined, false)}>Hat (open)</Button>
+      </Row>
+      <Row label="Scheduler">
+        <Button
+          variant={running ? 'danger' : 'primary'}
+          size="sm"
+          onClick={toggleGroove}
+        >
+          {running ? 'Stop' : 'Start groove'}
+        </Button>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--ds-space-1)', fontSize: 'var(--ds-font-xs)' }}>
+          BPM
+          <input
+            type="number"
+            min={40}
+            max={220}
+            value={bpm}
+            onChange={e => {
+              const next = Number(e.target.value) || 100;
+              setBpm(next);
+              schedulerRef.current?.setBpm(next);
+            }}
+            style={{ width: 60 }}
+          />
+        </label>
+      </Row>
+    </div>
+  );
+};
 
 export const DesignSystemPreview: React.FC = () => {
   // Each section has its own state so flipping one toggle doesn't change
@@ -314,6 +404,15 @@ export const DesignSystemPreview: React.FC = () => {
             />
           );
         })()}
+      </Section>
+
+      <Section title="Audio (Phase 5a)">
+        <p style={{ color: 'var(--ds-color-neutral-500)', margin: '0 0 var(--ds-space-3)', fontSize: 'var(--ds-font-sm)' }}>
+          Synthesised note/chord/drum primitives + tempo-accurate scheduler.
+          Browsers block audio until a user gesture — first click on any
+          button here unlocks the context.
+        </p>
+        <AudioDemo />
       </Section>
 
       <Section title="Card">
