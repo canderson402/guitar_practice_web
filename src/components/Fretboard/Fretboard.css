@@ -303,12 +303,13 @@
   z-index: 2;
 }
 
-/* Thicker strings (low E, A, D) get a slight bulk bump. */
-.fretboard-string-line.string-3,
-.fretboard-string-line.string-4,
-.fretboard-string-line.string-5 {
-  height: 2.25px;
-}
+/* Progressive thickness high-E → low-E so the bottom string reads thickest. */
+.fretboard-string-line.string-0 { height: 1px; }
+.fretboard-string-line.string-1 { height: 1.25px; }
+.fretboard-string-line.string-2 { height: 1.5px; }
+.fretboard-string-line.string-3 { height: 2px; }
+.fretboard-string-line.string-4 { height: 2.5px; }
+.fretboard-string-line.string-5 { height: 3px; }
 
 /* ============================================
    CELL / DOT — base styles

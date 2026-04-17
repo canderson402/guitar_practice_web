@@ -9,6 +9,18 @@ import {
   buildPresetQueue,
   WalkState,
 } from '../data/jamAlgorithms';
+import {
+  Prompt as NoteReadingPrompt,
+  Label as NoteReadingLabel,
+  nextPromptAvoidingRepeat,
+  validateAnswer as validateNoteReadingAnswer,
+} from '../logic/noteReadingLogic';
+import {
+  Melody,
+  countPlayableNotes,
+  getPlayableNote,
+} from '../data/famousMelodies';
+import { generatePhrase, PhraseConfig, NotesPerBar, ClefTarget } from '../data/generatePhrase';
 
 export type { JamChord, JamAlgorithm, DrumPatternName };
 // JamMixer and JamMixerPart are exported alongside their definitions below.
@@ -132,6 +144,35 @@ interface JamState {
   mixer: JamMixer;
 }
 
+type NoteReadingMode = 'staff' | 'fretboard' | 'phrase';
+
+interface NoteReadingState {
+  mode: NoteReadingMode;
+  fretCount: 12 | 24;
+  /** When mode === 'phrase', how many bars of chords per phrase (1–4). */
+  phraseBars: 1 | 2 | 3 | 4;
+  /** null → pick a random key each phrase; otherwise lock to this key. */
+  phraseKey: string | null;
+  phraseNotesPerBar: NotesPerBar;
+  /** Which clefs to show. At least one must be enabled. */
+  trebleEnabled: boolean;
+  bassEnabled: boolean;
+  /** When mode === 'phrase', the currently-active generated melody. */
+  phraseMelody: Melody | null;
+  /** When mode === 'phrase', which note within the melody is the current target. */
+  phraseNoteIndex: number;
+  prompt: NoteReadingPrompt | null;
+  answerState: 'waiting' | 'correct';
+  wrongPresses: NoteReadingLabel[];
+  justPressedCorrect: NoteReadingLabel | null;
+  hadWrongThisRound: boolean;
+  score: {
+    correct: number;
+    total: number;
+    streak: number;
+  };
+}
+
 interface CardInfo {
   id: string;
   title: string;
@@ -144,6 +185,39 @@ interface ConfigurationPreset {
   name: string;
   enabledCards: string[];
 }
+
+const buildPhrasePrompt = (
+  melody: Melody,
+  noteIndex: number,
+): NoteReadingPrompt => {
+  const n = getPlayableNote(melody, noteIndex)!;
+  return {
+    kind: 'phrase',
+    melody,
+    noteIndex,
+    midi: n.midi,
+    spelling: n.spelling,
+  };
+};
+
+const deriveClefTarget = (treble: boolean, bass: boolean): ClefTarget => {
+  if (treble && bass) return 'mixed';
+  if (bass) return 'bass';
+  return 'treble';
+};
+
+const phraseConfigFromState = (nr: {
+  phraseBars: number;
+  phraseKey: string | null;
+  phraseNotesPerBar: NotesPerBar;
+  trebleEnabled: boolean;
+  bassEnabled: boolean;
+}): PhraseConfig => ({
+  bars: nr.phraseBars,
+  key: nr.phraseKey,
+  notesPerBar: nr.phraseNotesPerBar,
+  clefTarget: deriveClefTarget(nr.trebleEnabled, nr.bassEnabled),
+});
 
 export const configurationPresets: ConfigurationPreset[] = [
   {
@@ -181,6 +255,7 @@ interface StoreState {
   circleOfFifths: CircleOfFifthsState;
   harmonyMaker: HarmonyMakerState;
   jam: JamState;
+  noteReading: NoteReadingState;
   cards: CardInfo[];
   theme: string;
   currentConfiguration: string;
@@ -258,6 +333,20 @@ interface StoreState {
   setJamMixerMuted: (part: JamMixerPart, muted: boolean) => void;
   advanceJamChord: () => void;
   rebuildJamQueue: () => void;
+
+  // Note Reading actions
+  setNoteReadingMode: (mode: NoteReadingMode) => void;
+  setNoteReadingFretCount: (fretCount: 12 | 24) => void;
+  setNoteReadingPhraseConfig: (patch: Partial<{
+    phraseBars: 1 | 2 | 3 | 4;
+    phraseKey: string | null;
+    phraseNotesPerBar: NotesPerBar;
+    trebleEnabled: boolean;
+    bassEnabled: boolean;
+  }>) => void;
+  nextNoteReadingPrompt: () => void;
+  pressNoteReadingAnswer: (label: NoteReadingLabel) => void;
+  resetNoteReadingScore: () => void;
 
   // Card management
   toggleCard: (cardId: string) => void;
@@ -346,6 +435,23 @@ export const useStore = create<StoreState>((set) => ({
       strum:  { volume:  80, muted: false },
       drums:  { volume:  90, muted: false },
     },
+  },
+  noteReading: {
+    mode: 'staff',
+    fretCount: 12,
+    phraseBars: 1,
+    phraseKey: null,
+    phraseNotesPerBar: 4,
+    trebleEnabled: true,
+    bassEnabled: true,
+    phraseMelody: null,
+    phraseNoteIndex: 0,
+    prompt: null,
+    answerState: 'waiting',
+    wrongPresses: [],
+    justPressedCorrect: null,
+    hadWrongThisRound: false,
+    score: { correct: 0, total: 0, streak: 0 },
   },
   cards: [
     { id: 'metronome', title: 'Metronome', isActive: true, layout: 'horizontal' },
@@ -771,10 +877,201 @@ export const useStore = create<StoreState>((set) => ({
     };
   }),
 
+  // Note Reading actions
+  setNoteReadingMode: (mode) => set((state) => {
+    if (mode === 'phrase') {
+      const melody = generatePhrase(phraseConfigFromState(state.noteReading));
+      return {
+        noteReading: {
+          ...state.noteReading,
+          mode,
+          phraseMelody: melody,
+          phraseNoteIndex: 0,
+          prompt: buildPhrasePrompt(melody, 0),
+          answerState: 'waiting',
+          wrongPresses: [],
+          justPressedCorrect: null,
+          hadWrongThisRound: false,
+        },
+      };
+    }
+    const next = nextPromptAvoidingRepeat(
+      null,
+      mode,
+      state.note.tuning,
+      state.noteReading.fretCount,
+      { treble: state.noteReading.trebleEnabled, bass: state.noteReading.bassEnabled },
+    );
+    return {
+      noteReading: {
+        ...state.noteReading,
+        mode,
+        prompt: next,
+        answerState: 'waiting',
+        wrongPresses: [],
+        justPressedCorrect: null,
+        hadWrongThisRound: false,
+      },
+    };
+  }),
+
+  setNoteReadingFretCount: (fretCount) => set((state) => {
+    const next = state.noteReading.mode === 'fretboard'
+      ? nextPromptAvoidingRepeat(null, 'fretboard', state.note.tuning, fretCount)
+      : state.noteReading.prompt;
+    return {
+      noteReading: {
+        ...state.noteReading,
+        fretCount,
+        prompt: next,
+        answerState: 'waiting',
+        wrongPresses: [],
+        justPressedCorrect: null,
+        hadWrongThisRound: false,
+      },
+    };
+  }),
+
+  setNoteReadingPhraseConfig: (patch) => set((state) => {
+    const merged = { ...state.noteReading, ...patch };
+    // Guard: at least one clef must stay enabled. If the patch would turn
+    // both off, silently flip the other one back on.
+    if (!merged.trebleEnabled && !merged.bassEnabled) {
+      if ('trebleEnabled' in patch) merged.bassEnabled = true;
+      else merged.trebleEnabled = true;
+    }
+    if (merged.mode === 'phrase') {
+      const melody = generatePhrase(phraseConfigFromState(merged));
+      return {
+        noteReading: {
+          ...merged,
+          phraseMelody: melody,
+          phraseNoteIndex: 0,
+          prompt: buildPhrasePrompt(melody, 0),
+          answerState: 'waiting',
+          wrongPresses: [],
+          justPressedCorrect: null,
+          hadWrongThisRound: false,
+        },
+      };
+    }
+    // Staff mode: regenerate the prompt so a clef-toggle change immediately
+    // pulls a note from the newly-valid pool.
+    const clefChanged = 'trebleEnabled' in patch || 'bassEnabled' in patch;
+    if (merged.mode === 'staff' && clefChanged) {
+      const next = nextPromptAvoidingRepeat(
+        null,
+        'staff',
+        state.note.tuning,
+        merged.fretCount,
+        { treble: merged.trebleEnabled, bass: merged.bassEnabled },
+      );
+      return {
+        noteReading: {
+          ...merged,
+          prompt: next,
+          answerState: 'waiting',
+          wrongPresses: [],
+          justPressedCorrect: null,
+          hadWrongThisRound: false,
+        },
+      };
+    }
+    return { noteReading: merged };
+  }),
+
+  nextNoteReadingPrompt: () => set((state) => {
+    if (state.noteReading.mode === 'phrase') {
+      const currentMelody = state.noteReading.phraseMelody;
+      const nextIndex = state.noteReading.phraseNoteIndex + 1;
+      if (currentMelody && nextIndex < countPlayableNotes(currentMelody)) {
+        return {
+          noteReading: {
+            ...state.noteReading,
+            phraseNoteIndex: nextIndex,
+            prompt: buildPhrasePrompt(currentMelody, nextIndex),
+            answerState: 'waiting',
+            wrongPresses: [],
+            justPressedCorrect: null,
+            hadWrongThisRound: false,
+          },
+        };
+      }
+      const newMelody = generatePhrase(phraseConfigFromState(state.noteReading));
+      return {
+        noteReading: {
+          ...state.noteReading,
+          phraseMelody: newMelody,
+          phraseNoteIndex: 0,
+          prompt: buildPhrasePrompt(newMelody, 0),
+          answerState: 'waiting',
+          wrongPresses: [],
+          justPressedCorrect: null,
+          hadWrongThisRound: false,
+        },
+      };
+    }
+    const next = nextPromptAvoidingRepeat(
+      state.noteReading.prompt,
+      state.noteReading.mode,
+      state.note.tuning,
+      state.noteReading.fretCount,
+      { treble: state.noteReading.trebleEnabled, bass: state.noteReading.bassEnabled },
+    );
+    return {
+      noteReading: {
+        ...state.noteReading,
+        prompt: next,
+        answerState: 'waiting',
+        wrongPresses: [],
+        justPressedCorrect: null,
+        hadWrongThisRound: false,
+      },
+    };
+  }),
+
+  pressNoteReadingAnswer: (label) => set((state) => {
+    const { prompt, wrongPresses, score, hadWrongThisRound, answerState } = state.noteReading;
+    if (!prompt) return {};
+    if (answerState === 'correct') return {};       // locked during feedback pause
+    if (wrongPresses.includes(label)) return {};    // already disabled this round
+    const result = validateNoteReadingAnswer(prompt, label);
+    if (result === 'wrong') {
+      return {
+        noteReading: {
+          ...state.noteReading,
+          wrongPresses: [...wrongPresses, label],
+          hadWrongThisRound: true,
+        },
+      };
+    }
+    const newCorrect = hadWrongThisRound ? score.correct : score.correct + 1;
+    const newStreak = hadWrongThisRound ? 0 : score.streak + 1;
+    return {
+      noteReading: {
+        ...state.noteReading,
+        answerState: 'correct',
+        justPressedCorrect: label,
+        score: {
+          correct: newCorrect,
+          total: score.total + 1,
+          streak: newStreak,
+        },
+      },
+    };
+  }),
+
+  resetNoteReadingScore: () => set((state) => ({
+    noteReading: {
+      ...state.noteReading,
+      score: { correct: 0, total: 0, streak: 0 },
+    },
+  })),
+
   // Card management
   toggleCard: (cardId) => set((state) => ({
-    cards: state.cards.map(card => 
-      card.id === cardId 
+    cards: state.cards.map(card =>
+      card.id === cardId
         ? { ...card, isActive: !card.isActive }
         : card
     )

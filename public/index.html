@@ -27,6 +27,18 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>Guitar Practice</title>
+    <script>
+      // GH Pages SPA redirect counterpart — unpack the `?/<path>` encoding
+      // from 404.html back into real path + query before React loads.
+      (function(l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(null, '', l.pathname.slice(0, -1) + decoded + l.hash);
+        }
+      }(window.location));
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JVTXZSH0HZ"></script>
     <script>

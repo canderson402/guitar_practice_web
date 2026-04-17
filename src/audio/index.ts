@@ -26,3 +26,4 @@ export { createPadSynth } from './padSynth';
 export type { PadSynth, PadVoiceOpts } from './padSynth';
 export { scheduleClick, loadClickSamples } from './click';
 export type { ClickOpts } from './click';
+export { playPianoNote } from './piano';

@@ -1,0 +1,13 @@
+.grand-staff {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 180px;
+}
+
+.grand-staff svg {
+  /* VexFlow emits inline fills. We override so staff/notes inherit the card
+   * theme's text color where possible. */
+  color: currentColor;
+}

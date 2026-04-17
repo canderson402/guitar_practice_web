@@ -1,0 +1,29 @@
+.melody-staff {
+  display: inline-block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.melody-staff svg {
+  display: block;
+}
+
+/* Completed / current highlights are applied via CSS class flips on the
+ * VexFlow <g class="vf-stavenote"> groups — no VexFlow redraw needed per press. */
+.melody-staff g.vf-stavenote.note-done path,
+.melody-staff g.vf-stavenote.note-done polygon,
+.melody-staff g.vf-stavenote.note-done rect,
+.melody-staff g.vf-stavenote.note-done line,
+.melody-staff g.vf-stavenote.note-done text {
+  fill: #3cc85a;
+  stroke: #3cc85a;
+}
+
+.melody-staff g.vf-stavenote.note-current path,
+.melody-staff g.vf-stavenote.note-current polygon,
+.melody-staff g.vf-stavenote.note-current rect,
+.melody-staff g.vf-stavenote.note-current line,
+.melody-staff g.vf-stavenote.note-current text {
+  fill: #ff8c00;
+  stroke: #ff8c00;
+}
