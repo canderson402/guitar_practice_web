@@ -140,6 +140,8 @@ interface JamState {
   /** How many bars each chord is held before advancing. 1-16.
    *  (Scheduler multiplies by 4 internally to get beats, assuming 4/4.) */
   barsPerChord: number;
+  /** Count-in beats before the first chord plays. 0 = disabled. */
+  countIn: number;
   walkState: WalkState;
   mixer: JamMixer;
 }
@@ -329,6 +331,7 @@ interface StoreState {
   setJamAlgorithm: (algo: JamAlgorithm) => void;
   setJamDrumPattern: (pattern: DrumPatternName) => void;
   setJamBarsPerChord: (bars: number) => void;
+  setJamCountIn: (countIn: number) => void;
   setJamMixerVolume: (part: keyof JamMixer, volume: number) => void;
   setJamMixerMuted: (part: JamMixerPart, muted: boolean) => void;
   advanceJamChord: () => void;
@@ -426,7 +429,8 @@ export const useStore = create<StoreState>((set) => ({
     selectedPreset: null,
     algorithm: 'fifths',
     drumPattern: 'rock',
-    barsPerChord: 2,
+    barsPerChord: 4,
+    countIn: 4,
     walkState: {},
     mixer: {
       master: { volume: 100 },
@@ -733,6 +737,9 @@ export const useStore = create<StoreState>((set) => ({
   })),
   setJamBarsPerChord: (bars) => set((state) => ({
     jam: { ...state.jam, barsPerChord: Math.max(1, Math.min(16, bars)) },
+  })),
+  setJamCountIn: (countIn) => set((state) => ({
+    jam: { ...state.jam, countIn: Math.max(0, countIn) },
   })),
   setJamMixerVolume: (part, volume) => set((state) => {
     const clamped = Math.max(0, Math.min(100, volume));

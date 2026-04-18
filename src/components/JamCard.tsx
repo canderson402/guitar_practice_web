@@ -147,7 +147,7 @@ export const JamCard: React.FC = () => {
   const {
     jam, note, metronome,
     setJamMode, setJamPlaying, setJamPreset, setJamAlgorithm,
-    setJamBarsPerChord,
+    setJamBarsPerChord, setJamCountIn,
     setJamMixerVolume, setJamMixerMuted,
     rebuildJamQueue, setMetronomePlaying, setMetronomeMuted,
     setBpm, setCurrentBeat,
@@ -162,6 +162,9 @@ export const JamCard: React.FC = () => {
 
   // Show/hide the pad settings panel.
   const [showPadSettings, setShowPadSettings] = useState(false);
+
+  // Live bar/beat countdown state
+  const [barCountdown, setBarCountdown] = useState<{ bar: number; total: number; beat?: number; beatTotal?: number; countIn?: number } | null>(null);
 
   // Wire up the pad channel + synth on mount, and kick off click-sample
   // loading so the scheduler can fire them in sync from the first beat.
@@ -213,11 +216,17 @@ export const JamCard: React.FC = () => {
   const startPlayback = useCallback(() => {
     if (moduleScheduler?.isRunning()) return;
 
+    // Reset chord position so we always start from the top
+    rebuildJamQueue();
+
     // Fresh pad + restore channel gain (stopPlayback ducks it to silence).
     const { channel, synth } = ensurePad();
     const ctx = getAudioContext();
     channel.duckGain.gain.cancelScheduledValues(ctx.currentTime);
     channel.duckGain.gain.setValueAtTime(1, ctx.currentTime);
+
+    // Snapshot the count-in length at start so changing it mid-play is safe
+    const countInBeats = useStore.getState().jam.countIn;
 
     const scheduler = createScheduler(metronome.bpm, (beatIndex, audioTime) => {
       const state = useStore.getState();
@@ -225,43 +234,55 @@ export const JamCard: React.FC = () => {
       const m = state.metronome;
       const mx = j.mixer;
       const beatsPerBar = m.beatsPerMeasure;
-      const beatsPerChord = j.barsPerChord * beatsPerBar;
-      const beatInBar = beatIndex % beatsPerBar;
-      const beatInChord = beatIndex % beatsPerChord;
       const p = padRef.current;
 
-      // Drive the metronome click here too — both chord changes and clicks
-      // share the same audio-time schedule, so they can never drift. Clicks
-      // fire on every beat (quarter-note granularity).
+      // Count-in phase: click only, no chords, no chord advance
+      const isCountingIn = beatIndex < countInBeats;
+      const musicBeat = beatIndex - countInBeats; // negative during count-in
+      const beatInBar = isCountingIn
+        ? beatIndex % beatsPerBar
+        : musicBeat % beatsPerBar;
+
+      // Drive the metronome click — fires during count-in too
       scheduleClick(audioTime, {
         soundType: m.soundType,
         muted: m.muted,
-        isAccent: true,             // every beat is a downbeat at quarter granularity
+        isAccent: true,
         isFirstBeat: beatInBar === 0,
         emphasizeFirstBeat: m.emphasizeFirstBeat,
       });
 
-      // Update the UI synchronously. Scheduler fires ~100 ms before audio
-      // hits, so dots + chord label visually *lead* the click by that much
-      // — uniform, imperceptible. Previously this was delayed via setTimeout
-      // to match audioTime, but setTimeout jitter under main-thread load
-      // (React re-renders triggered by the store updates themselves) made
-      // the visual land inconsistently late — felt like an extra 8th/16th
-      // note of hesitation before each chord changeover.
-      const isChordChange = beatInChord === 0 && beatIndex > 0;
       const s = useStore.getState();
       s.setCurrentBeat(beatInBar);
+
+      if (isCountingIn) {
+        const countInRemaining = countInBeats - beatIndex;
+        setBarCountdown({ bar: 0, total: 0, countIn: countInRemaining });
+        return; // nothing else during count-in
+      }
+
+      // Normal music phase
+      const beatsPerChord = j.barsPerChord * beatsPerBar;
+      const beatInChord = musicBeat % beatsPerChord;
+
+      const isChordChange = beatInChord === 0 && musicBeat > 0;
       if (isChordChange) s.advanceJamChord();
 
-      // Pad only triggers on chord boundaries — voices sustain the rest of
-      // the time. First beat of playback (beatIndex===0) kicks off the
-      // initial chord; later chord-change beats do the crossfade.
-      const isFirstBeat = beatIndex === 0;
-      if (!isFirstBeat && !isChordChange) return;
+      // Live bar/beat countdown for the UI
+      const currentBarInChord = Math.floor(beatInChord / beatsPerBar) + 1;
+      const barsRemaining = j.barsPerChord - currentBarInChord + 1;
+      if (barsRemaining === 1) {
+        const beatsRemaining = beatsPerBar - beatInBar;
+        setBarCountdown({ bar: currentBarInChord, total: j.barsPerChord, beat: beatsRemaining, beatTotal: beatsPerBar });
+      } else {
+        setBarCountdown({ bar: currentBarInChord, total: j.barsPerChord });
+      }
+
+      // Pad only triggers on chord boundaries
+      const isFirstMusicBeat = musicBeat === 0;
+      if (!isFirstMusicBeat && !isChordChange) return;
       if (mx.chords.muted) return;
 
-      // Which chord? isChordChange peeks the next queue slot (store advance
-      // is deferred to audioTime above).
       const queue = j.chordQueue;
       if (queue.length === 0) return;
       const voicingIndex = isChordChange
@@ -274,13 +295,8 @@ export const JamCard: React.FC = () => {
       if (voicing.length === 0) return;
 
       const vol = mx.chords.volume / 100;
-      // Per-voice gain: divide by a polyphony-ish factor so 4 voices don't
-      // clip. Square root scales apparent loudness more naturally than /N.
       const perVoiceGain = (vol * 0.45) / Math.sqrt(Math.max(voicing.length, 1));
 
-      // Release held voices (if any) and start the new voicing. Old voices
-      // fade out over `release` while new voices fade in over `attack` —
-      // natural crossfade across the chord boundary.
       synth.noteOff(audioTime, p.release);
       voicing.forEach((midi, i) => {
         synth.noteOn([midi], audioTime + i * p.stagger, {
@@ -299,7 +315,7 @@ export const JamCard: React.FC = () => {
     scheduler.start();
     setJamPlaying(true);
     setMetronomePlaying(true);
-  }, [metronome.bpm, setJamPlaying, setMetronomePlaying]);
+  }, [metronome.bpm, setJamPlaying, setMetronomePlaying, rebuildJamQueue]);
 
   const stopPlayback = useCallback(() => {
     // Cut pad audio immediately: duck the whole channel to silence over
@@ -321,6 +337,7 @@ export const JamCard: React.FC = () => {
     setJamPlaying(false);
     setMetronomePlaying(false);
     setCurrentBeat(0);
+    setBarCountdown(null);
   }, [setJamPlaying, setMetronomePlaying, setCurrentBeat]);
 
   // Keep the ref pointing at the latest stopPlayback so the linkage effect
@@ -428,6 +445,16 @@ export const JamCard: React.FC = () => {
             ))}
           </div>
         )}
+        {jam.isPlaying && barCountdown && (
+          <div className={`jam-countdown${barCountdown.beat != null ? ' jam-countdown--final' : ''}${barCountdown.countIn != null ? ' jam-countdown--countin' : ''}`}>
+            {barCountdown.countIn != null
+              ? <span>Count-in: {barCountdown.countIn}</span>
+              : barCountdown.beat != null
+                ? <span>Next in: {barCountdown.beat} {barCountdown.beat === 1 ? 'beat' : 'beats'}</span>
+                : <span>Bar {barCountdown.bar} of {barCountdown.total}</span>
+            }
+          </div>
+        )}
       </div>
 
       {/* Mixer — Master + Pad volume + Metronome-click mute */}
@@ -524,7 +551,7 @@ export const JamCard: React.FC = () => {
         <Button variant="outline" size="sm" onClick={() => handleBpmChange(5)}>+5</Button>
       </div>
 
-      {/* Bars per chord */}
+      {/* Bars per chord + Count-in */}
       <div className="jam-controls-row">
         <label className="ds-label-inline">Bars/chord:</label>
         <input
@@ -532,8 +559,19 @@ export const JamCard: React.FC = () => {
           min={1}
           max={16}
           value={jam.barsPerChord}
-          onChange={(e) => setJamBarsPerChord(Number(e.target.value) || 2)}
+          onChange={(e) => setJamBarsPerChord(Number(e.target.value) || 4)}
           className="jam-beats-input"
+        />
+        <label className="ds-label-inline">Count-in:</label>
+        <Select
+          size="sm"
+          value={jam.countIn}
+          onChange={(e) => setJamCountIn(Number(e.target.value))}
+          options={[
+            { value: '0', label: 'None' },
+            { value: '4', label: '4 beats' },
+            { value: '8', label: '8 beats' },
+          ]}
         />
       </div>
 

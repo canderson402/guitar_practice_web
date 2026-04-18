@@ -210,3 +210,38 @@
   outline: none;
   border-color: var(--ds-border-color-focus);
 }
+
+/* ---- Bar countdown ---- */
+
+.jam-countdown {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ds-color-neutral-500);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  background: var(--ds-color-secondary-light, rgba(59, 130, 246, 0.08));
+  border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  margin-top: 4px;
+}
+
+.jam-countdown--final {
+  color: var(--ds-color-warning, #b45309);
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+  animation: jam-pulse 0.6s ease-in-out infinite alternate;
+}
+
+.jam-countdown--countin {
+  color: var(--ds-color-primary, #2563eb);
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.25);
+  animation: jam-pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes jam-pulse {
+  from { opacity: 0.8; }
+  to { opacity: 1; }
+}
