@@ -155,10 +155,12 @@ export const PianoKeyboard: React.FC<FretboardProps> = ({
         {/* Black keys overlay on top. Position them by white-key index. */}
         <div className="piano-black-row">
           {blackKeys.map((k) => {
-            // Black key sits on the boundary between two white keys. Find its
-            // left offset as a percentage of the white-key row.
+            // Black key sits on the boundary between two white keys. Center
+            // the wrapper on that boundary by shifting left by half a white-
+            // key width — otherwise the inner button (centered in the
+            // wrapper) ends up over the next white key instead of the gap.
             const whiteBefore = whiteKeys.filter(w => w.midi < k.midi).length;
-            const leftPct = (whiteBefore / whiteKeys.length) * 100;
+            const leftPct = ((whiteBefore - 0.5) / whiteKeys.length) * 100;
             const widthPct = (1 / whiteKeys.length) * 100;
             return (
               <div
