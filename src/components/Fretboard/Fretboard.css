@@ -148,7 +148,7 @@
   min-width: 0;
   overflow: visible;
   border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--fb-shadow-board, 0 2px 6px rgba(0, 0, 0, 0.25));
 }
 
 /* Individual fret column — warm rosewood-style wood grain.
@@ -163,9 +163,9 @@
   min-width: 30px;
   background: linear-gradient(
     to bottom,
-    #6b4a2b 0%,
-    #4a2e16 50%,
-    #6b4a2b 100%
+    var(--fb-wood, #6b4a2b) 0%,
+    var(--fb-wood-dark, #4a2e16) 50%,
+    var(--fb-wood, #6b4a2b) 100%
   );
 }
 
@@ -177,7 +177,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to right, #888, #ddd, #888);
+  background: linear-gradient(to right, var(--fb-fret, #888), var(--fb-fret-hi, #ddd), var(--fb-fret, #888));
   z-index: 0;
 }
 
@@ -188,7 +188,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to right, #888, #ddd, #888);
+  background: linear-gradient(to right, var(--fb-fret, #888), var(--fb-fret-hi, #ddd), var(--fb-fret, #888));
   z-index: 0;
 }
 
@@ -207,7 +207,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(to right, #c8b89a, #e8d9b8, #c8b89a);
+  background: linear-gradient(to right, var(--fb-nut, #c8b89a), var(--fb-nut-hi, #e8d9b8), var(--fb-nut, #c8b89a));
   z-index: 0;
 }
 
@@ -265,10 +265,10 @@
 .fretboard-marker-dot {
   width: 14px;
   height: 14px;
-  background: #e8d9b8;   /* ivory — reads on the dark wood grain */
-  border: 1px solid #c8b89a;
+  background: var(--fb-inlay, #e8d9b8);   /* ivory — reads on the dark wood grain */
+  border: 1px solid var(--fb-nut, #c8b89a);
   border-radius: 50%;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 3px var(--fb-shadow, rgba(0, 0, 0, 0.4));
 }
 
 .fretboard-marker-dot.double {
@@ -298,8 +298,8 @@
   left: 0;
   right: 0;
   height: 1.5px;
-  background: linear-gradient(to bottom, #bbb, #888);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(to bottom, var(--fb-string-hi, #bbb), var(--fb-string, #888));
+  box-shadow: 0 1px 1px var(--fb-shadow, rgba(0, 0, 0, 0.4));
   z-index: 2;
 }
 
@@ -515,3 +515,9 @@
     font-size: 7px;
   }
 }
+
+/* Clickable cells (when the host passes onCellClick). */
+.fretboard-cell-hit[role='button'],
+.fretboard-string-label[role='button'] { cursor: pointer; }
+.fretboard-cell-hit[role='button']:focus-visible,
+.fretboard-string-label[role='button']:focus-visible { outline: 2px solid var(--accent, #ff3d7f); outline-offset: -2px; border-radius: 6px; }

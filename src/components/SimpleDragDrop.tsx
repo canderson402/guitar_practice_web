@@ -22,6 +22,7 @@ import { Timer } from './Timer';
 import { NoteSelector } from './NoteSelector';
 import { GuitarNeck } from './GuitarNeck';
 import { PracticeProgress } from './PracticeProgress';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import './SimpleDragDrop.css';
 
@@ -81,7 +82,7 @@ const SortableCard: React.FC<{ card: any }> = ({ card }) => {
 };
 
 export const SimpleDragDrop: React.FC = () => {
-  const { cards, reorderCards } = useStore();
+  const { cards, reorderCards } = useStore(useShallow(s => ({ cards: s.cards, reorderCards: s.reorderCards })));
   
   const sensors = useSensors(
     useSensor(PointerSensor, {

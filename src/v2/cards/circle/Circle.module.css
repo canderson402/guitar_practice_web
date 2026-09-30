@@ -1,0 +1,25 @@
+.face { height: 100%; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding-bottom: var(--space-2); }
+.circleWrap { flex: 1; min-height: 0; width: 100%; display: grid; place-items: center; container-type: size; }
+.circle { position: relative; height: min(100cqh, 100cqw, 240px); aspect-ratio: 1; }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--space-3); font-size: var(--text-11); font-weight: 600; }
+.legend li { display: inline-flex; align-items: center; gap: 5px; }
+.swatch { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.outer, .divider, .inner { position: absolute; border-radius: 50%; border: 1px solid var(--line); pointer-events: none; }
+.outer { inset: 0; background: var(--surface-raised); }
+.inner { background: var(--surface); }
+.key { position: absolute; transform: translate(-50%, -50%); width: 13%; aspect-ratio: 1; border-radius: 50%; border: none; background: transparent; color: var(--text); font-weight: 700; font-size: var(--text-12); cursor: pointer; display: grid; place-items: center; }
+.key:hover { background: var(--fill); }
+.dim { color: var(--text-muted); opacity: .6; }
+.current { background: var(--accent); color: var(--note-label); }
+.current:hover { background: var(--accent); }
+.ringLabel { position: absolute; transform: translate(-50%, -50%); font-size: var(--text-11); font-weight: 700; color: var(--text-muted); pointer-events: none; }
+.major { color: var(--note-scale); }
+.minor { color: var(--note-chord); }
+.diminished, .augmented { color: var(--text-muted); }
+.relCurrent { color: var(--accent); }
+.center { position: absolute; inset: 38%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.centerKey { font-family: var(--font-mono); font-weight: 700; font-size: var(--text-20); line-height: 1; }
+.centerScale { font-size: var(--text-11); color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; }
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.label { font-size: var(--text-12); color: var(--text-muted); }
+.hint { color: var(--text-muted); font-size: var(--text-12); }

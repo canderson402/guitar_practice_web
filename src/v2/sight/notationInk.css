@@ -1,0 +1,17 @@
+/* Notation in the theme's ink, straight on the dark card (no paper).
+   VexFlow's black is inherited from the SVG root, so recoloring the root
+   recolors notes and clefs; staff lines (#999999) and ledger lines (#444)
+   carry their own greys and get the muted ink. Colors set on purpose (e.g. a
+   highlighted note) are explicit attributes and stay. Global because the
+   selectors must match VexFlow's literal attribute values. */
+.gp2 .sight-ink { color: var(--text); }
+/* Notation is drawn at one fixed scale (staff and arpeggio match) and
+   centered; a long arpeggio scrolls sideways rather than shrinking. */
+.gp2 .sight-prompt .melody-staff { overflow-x: auto; max-width: 100%; }
+.gp2 .sight-prompt .grand-staff svg,
+.gp2 .sight-prompt .melody-staff svg { display: block; }
+/* The fretboard (HTML) spans the width, centered vertically. */
+.gp2 .sight-prompt .fretboard-root { width: 100%; }
+.gp2 .sight-ink svg { fill: currentColor; stroke: currentColor; }
+.gp2 .sight-ink svg [fill="#999999"] { fill: var(--text-muted); stroke: var(--text-muted); }
+.gp2 .sight-ink svg [stroke="#444"] { stroke: var(--text-muted); }

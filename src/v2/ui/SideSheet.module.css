@@ -1,0 +1,12 @@
+.sheet { position: fixed; z-index: 30; top: 0; right: 0; bottom: 0; width: 340px; background: var(--surface-raised); border-left: 1px solid var(--line-strong); box-shadow: var(--elev-3); display: flex; flex-direction: column; animation: in var(--dur-base) var(--ease); }
+.head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-4) var(--space-2); }
+.titleRow { display: flex; align-items: center; gap: var(--space-2); }
+.title { font-size: var(--text-16); }
+.body { padding: var(--space-2) var(--space-4) var(--space-6); overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-5); }
+/* Opens on the left when the card being edited sits on the right half. */
+.left { right: auto; left: 0; border-left: none; border-right: 1px solid var(--line-strong); animation-name: inLeft; }
+@keyframes inLeft { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 767px) {
+  .sheet, .left { top: auto; left: 0; right: 0; width: auto; max-height: 70vh; border-left: none; border-top: 1px solid var(--line-strong); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+}

@@ -11,9 +11,19 @@ export {
 
 export { playNote, playChord } from './synth';
 export { playKick, playSnare, playHat, setDrumDestination } from './drums';
-export { createScheduler } from './scheduler';
+export {
+  initTransport,
+  restartTransport,
+  isTransportRunning,
+  onSchedule,
+  onAudibleBeat,
+  useAudibleBeat,
+  atAudibleTime,
+  useTransport,
+} from './transport';
+export type { TickEvent, TransportPosition } from './transport';
 
-export type { SynthOpts, Scheduler, BeatCallback } from './types';
+export type { SynthOpts } from './types';
 export { preloadInstrument } from './soundfont';
 export { preloadDrumKit, isDrumKitReady } from './drumSamples';
 export {
@@ -22,8 +32,8 @@ export {
   scheduleDuck,
 } from './effects';
 export type { PartChannel, PartChannelOpts, ChorusNode } from './effects';
-export { createPadSynth } from './padSynth';
-export type { PadSynth, PadVoiceOpts } from './padSynth';
-export { scheduleClick, loadClickSamples } from './click';
+export { createPadSynth, PATCHES, DEFAULT_PATCH_ID, getPatch } from './padSynth';
+export type { PadSynth, PadVoiceOpts, Patch } from './padSynth';
+export { scheduleClick, loadClickSamples, setClickVolume } from './click';
 export type { ClickOpts } from './click';
 export { playPianoNote } from './piano';

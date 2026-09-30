@@ -1,24 +1,38 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
+import { useAudibleBeat, useTransport } from '../audio';
 import { notes, scales, getScaleNotes, getChromaticScale } from '../data/musicData';
 import { Select, Button } from '../ui';
 import './NoteSelector.css';
 
 export const NoteSelector: React.FC = () => {
+  const note = useStore(s => s.note);
+  const timer = useStore(useShallow(s => ({
+    isRunning: s.timer.isRunning,
+    elapsedSeconds: s.timer.elapsedSeconds,
+  })));
+  const metronomeOn = useStore(s => s.metronome.isPlaying);
   const {
-    note,
-    timer,
-    metronome,
     setSelectedNote,
     setSelectedScale,
     setCurrentNoteIndex,
     setNextNoteIndex
-  } = useStore();
-  
-  const barCountRef = useRef(0);
+  } = useStore(useShallow(s => ({
+    setSelectedNote: s.setSelectedNote,
+    setSelectedScale: s.setSelectedScale,
+    setCurrentNoteIndex: s.setCurrentNoteIndex,
+    setNextNoteIndex: s.setNextNoteIndex,
+  })));
+
   const lastChangeTimeRef = useRef(0);
-  const wasOnFirstBeatRef = useRef(false);
-  const [, forceUpdate] = useState({});
+
+  // Heard transport position — only subscribed while bar-mode auto-advance
+  // is active, so the card doesn't re-render per beat otherwise.
+  const barsActive = note.changeMode === 'bars' && metronomeOn;
+  const pos = useTransport(useShallow(s => barsActive
+    ? { beatCount: s.beatCount, barIndex: s.barIndex, beatInBar: s.beatInBar, beatsPerBar: s.beatsPerBar }
+    : null));
   
   // Validate selected scale and reset if invalid
   useEffect(() => {
@@ -94,18 +108,17 @@ export const NoteSelector: React.FC = () => {
   const getCountdown = () => {
     if (currentNotes.length <= 1) return null;
     
-    if (note.changeMode === 'bars' && metronome.isPlaying) {
-      const currentBar = barCountRef.current;
-      const nextChangeBar = Math.ceil((currentBar + 1) / note.changeInterval) * note.changeInterval;
-      const barsRemaining = nextChangeBar - currentBar;
-      
+    if (barsActive && pos) {
+      // Counted from the transport: bar b of the cycle is b % interval.
+      const barInCycle = pos.beatCount < 0 ? 0 : pos.barIndex % note.changeInterval;
+      const barsRemaining = note.changeInterval - barInCycle;
+
       // If we're on the last bar, show beats remaining instead
-      if (barsRemaining === 1) {
-        const beatsRemaining = metronome.beatsPerMeasure - metronome.currentBeat;
+      if (barsRemaining === 1 && pos.beatCount >= 0) {
         return {
           type: 'beats',
-          value: beatsRemaining,
-          total: metronome.beatsPerMeasure
+          value: pos.beatsPerBar - pos.beatInBar,
+          total: pos.beatsPerBar
         };
       }
       
@@ -152,14 +165,16 @@ export const NoteSelector: React.FC = () => {
     }
   }, [note.currentNoteIndex, note.randomize, currentNotes.length, setNextNoteIndex]);
 
-  // Reset counters when metronome stops or timer resets
-  useEffect(() => {
-    if (!metronome.isPlaying) {
-      barCountRef.current = 0;
-      wasOnFirstBeatRef.current = false;
+  // Bar mode: change note on the downbeat that starts every Nth bar. Driven
+  // by the transport's heard beats (counted, never missed or doubled).
+  useAudibleBeat(ev => {
+    const { note: n } = useStore.getState();
+    if (n.changeMode !== 'bars' || currentNotes.length <= 1) return;
+    if (ev.beatInBar === 0 && ev.barIndex > 0 && ev.barIndex % n.changeInterval === 0) {
+      setCurrentNoteIndex(n.nextNoteIndex);
     }
-  }, [metronome.isPlaying]);
-  
+  });
+
   useEffect(() => {
     if (!timer.isRunning) {
       lastChangeTimeRef.current = 0;
@@ -172,22 +187,7 @@ export const NoteSelector: React.FC = () => {
   useEffect(() => {
     if (currentNotes.length <= 1 || note.changeMode === 'none') return;
     
-    if (note.changeMode === 'bars' && metronome.isPlaying) {
-      const isFirstBeat = metronome.currentBeat === 0;
-      
-      // Detect transition to first beat
-      if (isFirstBeat && !wasOnFirstBeatRef.current) {
-        barCountRef.current += 1;
-        
-        // Change note every X bars
-        if (barCountRef.current % note.changeInterval === 0) {
-          // Move to the pre-determined next note
-          setCurrentNoteIndex(note.nextNoteIndex);
-        }
-      }
-      
-      wasOnFirstBeatRef.current = isFirstBeat;
-    } else if (note.changeMode === 'time' && timer.isRunning) {
+    if (note.changeMode === 'time' && timer.isRunning) {
       const currentTime = timer.elapsedSeconds;
       
       if (currentTime > 0 && currentTime - lastChangeTimeRef.current >= note.changeInterval) {
@@ -199,8 +199,6 @@ export const NoteSelector: React.FC = () => {
   }, [
     timer.isRunning,
     timer.elapsedSeconds,
-    metronome.currentBeat,
-    metronome.isPlaying,
     note.changeMode,
     note.changeInterval,
     note.nextNoteIndex,
@@ -209,19 +207,6 @@ export const NoteSelector: React.FC = () => {
     setCurrentNoteIndex
   ]);
   
-  // Force re-render for countdown updates
-  useEffect(() => {
-    const isActive = (note.changeMode === 'bars' && metronome.isPlaying) || 
-                     (note.changeMode === 'time' && timer.isRunning);
-    
-    if (!isActive || currentNotes.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      forceUpdate({}); // Force re-render to update countdown
-    }, 200); // Update every 200ms for smooth countdown
-    
-    return () => clearInterval(interval);
-  }, [note.changeMode, metronome.isPlaying, timer.isRunning, currentNotes.length]);
   
   const handleNoteChange = (newNote: string | null) => {
     setSelectedNote(newNote);

@@ -4,6 +4,7 @@ import {
   Stave,
   StaveNote,
   Accidental,
+  Annotation,
   Formatter,
   Voice as VFVoice,
   Barline,
@@ -12,6 +13,7 @@ import {
 } from 'vexflow';
 import type { Duration, Spelling } from '../GrandStaff';
 import type { MelodyElement, TimeSignature } from '../../data/famousMelodies';
+import { noteNameWithOctave } from '../../logic/noteReadingLogic';
 import './MelodyStaff.css';
 
 // VexFlow redraws are expensive (SVG layout for N notes across M measures),
@@ -42,7 +44,6 @@ const FLAT_TABLE: Array<[string, '' | 'b']> = [
 ];
 
 const spellingFromLabel = (label: string): Spelling => {
-  if (label === 'B#' || label === 'Cb') return 'natural-C';
   if (label === 'E#' || label === 'Fb') return 'natural-F';
   if (label.includes('b')) return 'flat';
   if (label.includes('#')) return 'sharp';
@@ -56,12 +57,8 @@ const midiToVFKey = (
   const pc = ((midi % 12) + 12) % 12;
   let letter: string;
   let acc: '' | '#' | 'b';
-  let octaveAdjust = 0;
 
-  if (spelling === 'natural-C' && (pc === 11 || pc === 0)) {
-    if (pc === 0) { letter = 'b'; acc = '#'; octaveAdjust = -1; }
-    else { letter = 'c'; acc = 'b'; octaveAdjust = 1; }
-  } else if (spelling === 'natural-F' && (pc === 4 || pc === 5)) {
+  if (spelling === 'natural-F' && (pc === 4 || pc === 5)) {
     if (pc === 5) { letter = 'e'; acc = '#'; }
     else { letter = 'f'; acc = 'b'; }
   } else if (spelling === 'flat') {
@@ -70,7 +67,7 @@ const midiToVFKey = (
     [letter, acc] = SHARP_TABLE[pc];
   }
 
-  const octave = Math.floor(midi / 12) - 1 + octaveAdjust;
+  const octave = Math.floor(midi / 12) - 1;
   return { key: `${letter}/${octave}`, accidental: acc };
 };
 
@@ -94,6 +91,7 @@ const buildStaveNote = (
   el: MelodyElement,
   clef: 'treble' | 'bass',
   keySignature?: string,
+  showLabel = false,
 ): StaveNote => {
   const dur = VF_DURATION[el.duration];
   if (el.kind === 'rest') {
@@ -116,6 +114,13 @@ const buildStaveNote = (
   } else if (keySigAcc) {
     sn.addModifier(new Accidental('n'), 0);
   }
+  if (showLabel) {
+    sn.addModifier(
+      new Annotation(noteNameWithOctave(el.spelling, el.midi))
+        .setVerticalJustification(Annotation.VerticalJustify.BOTTOM),
+      0,
+    );
+  }
   return sn;
 };
 
@@ -128,6 +133,10 @@ export interface MelodyStaffProps {
   width?: number;
   /** 'grand' draws treble + bass joined with a brace; single-clef otherwise. */
   clef?: 'treble' | 'bass' | 'grand';
+  /** Draw each note's name + octave under it. */
+  showLabels?: boolean;
+  /** Draw everything this many times larger. Default 1. */
+  scale?: number;
 }
 
 export const MelodyStaff: React.FC<MelodyStaffProps> = ({
@@ -138,6 +147,8 @@ export const MelodyStaff: React.FC<MelodyStaffProps> = ({
   currentJustCompleted,
   width,
   clef = 'treble',
+  showLabels = false,
+  scale = 1,
 }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
   // playable-note-index → its rendered <g class="vf-stavenote"> element.
@@ -192,7 +203,7 @@ export const MelodyStaff: React.FC<MelodyStaffProps> = ({
     const builds: MeasureBuild[] = measures.map((measure) => {
       if (!isGrand) {
         const notes: StaveNote[] = measure.map((el) =>
-          buildStaveNote(el, singleClef, keySignature),
+          buildStaveNote(el, singleClef, keySignature, showLabels),
         );
         measure.forEach((el, i) =>
           tickablePlan.push({
@@ -231,7 +242,7 @@ export const MelodyStaff: React.FC<MelodyStaffProps> = ({
           return;
         }
         const noteClef: 'treble' | 'bass' = el.midi >= 60 ? 'treble' : 'bass';
-        const realNote = buildStaveNote(el, noteClef, keySignature);
+        const realNote = buildStaveNote(el, noteClef, keySignature, showLabels);
         if (noteClef === 'treble') {
           trebleSlots.push(realNote);
           bassSlots.push(restAt('bass', el.duration));
@@ -296,8 +307,10 @@ export const MelodyStaff: React.FC<MelodyStaffProps> = ({
     const h = isGrand ? 200 : 120;
 
     const renderer = new Renderer(host, Renderer.Backends.SVG);
-    renderer.resize(w, h);
+    renderer.resize(w * scale, h * scale);
     const ctx = renderer.getContext();
+    // Scaling only changes the viewBox: coordinates below stay unscaled.
+    if (scale !== 1) ctx.scale(scale, scale);
 
     const tsString = `${timeSignature.beats}/${timeSignature.beatValue}`;
 
@@ -362,7 +375,7 @@ export const MelodyStaff: React.FC<MelodyStaffProps> = ({
       arr[plan.noteIndex] = svgGroups.item(i) ?? null;
     });
     noteElsRef.current = arr;
-  }, [measures, timeSignature, keySignature, width, clef]);
+  }, [measures, timeSignature, keySignature, width, clef, showLabels, scale]);
 
   // Recolor only — no VexFlow work, just CSS class flips.
   useEffect(() => {

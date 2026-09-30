@@ -1,13 +1,13 @@
 import React, { memo, useMemo } from 'react';
 import { Fretboard } from '../Fretboard/Fretboard';
 import { DotInfo, posKey } from '../Fretboard/types';
-import { FretboardPrompt as FretboardPromptData, Label } from '../../logic/noteReadingLogic';
+import { Answer, FretboardPrompt as FretboardPromptData } from '../../logic/noteReadingLogic';
 import { useStore } from '../../store/useStore';
 
 interface Props {
   prompt: FretboardPromptData;
   answerState: 'waiting' | 'correct';
-  justPressedCorrect: Label | null;
+  justPressedCorrect: Answer | null;
 }
 
 const FretboardPromptImpl: React.FC<Props> = ({ prompt, answerState, justPressedCorrect }) => {
@@ -20,7 +20,10 @@ const FretboardPromptImpl: React.FC<Props> = ({ prompt, answerState, justPressed
     const dot: DotInfo = isCorrect
       ? {
           variant: 'current',
-          label: justPressedCorrect ?? prompt.acceptableAnswers[0],
+          // Show the spelling the user picked (C# vs Db) when it was a name button.
+          label: typeof justPressedCorrect === 'string'
+            ? justPressedCorrect
+            : prompt.acceptableAnswers[0],
           color: 'var(--ds-color-primary)',
         }
       : { variant: 'current', label: '?' };

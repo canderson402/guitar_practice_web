@@ -1,14 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
+import { useAudibleBeat, useTransport } from '../audio';
+import type { TickEvent } from '../audio';
 import { Select, Chip, Checkbox } from '../ui';
 import './NoteTrainer.css';
 
 export const NoteTrainer: React.FC = () => {
-  const { 
-    note, 
-    metronome, 
-    timer, 
-    circleOfFifths, 
+  const selectedNote = useStore(s => s.note.selectedNote);
+  const note = { selectedNote };
+  const metronomeOn = useStore(s => s.metronome.isPlaying);
+  const timer = useStore(useShallow(s => ({
+    isRunning: s.timer.isRunning,
+    elapsedSeconds: s.timer.elapsedSeconds,
+  })));
+  const circleOfFifths = useStore(s => s.circleOfFifths);
+  const {
     setSelectedNote,
     setCircleAutoAdvance,
     setCircleDirection,
@@ -18,17 +25,28 @@ export const NoteTrainer: React.FC = () => {
     setCircleShowNext,
     setCircleNextNote,
     setCircleCountIn
-  } = useStore();
-  
-  // Auto-advance tracking
-  const barCountRef = useRef(0);
-  const beatCountRef = useRef(0);
+  } = useStore(useShallow(s => ({
+    setSelectedNote: s.setSelectedNote,
+    setCircleAutoAdvance: s.setCircleAutoAdvance,
+    setCircleDirection: s.setCircleDirection,
+    setCircleChangeMode: s.setCircleChangeMode,
+    setCircleChangeInterval: s.setCircleChangeInterval,
+    setCircleRandomize: s.setCircleRandomize,
+    setCircleShowNext: s.setCircleShowNext,
+    setCircleNextNote: s.setCircleNextNote,
+    setCircleCountIn: s.setCircleCountIn,
+  })));
+
+  // Time-mode tracking (beat/bar modes count from the transport instead).
   const lastChangeTimeRef = useRef(0);
-  const wasOnFirstBeatRef = useRef(false);
-  const lastBeatRef = useRef(-1);
-  const countInBeatRef = useRef(0);
-  const isCountingInRef = useRef(false);
-  const [, forceUpdate] = useState({});
+
+  // Heard transport position — only subscribed while a beat-driven mode is
+  // active, so the card doesn't re-render per beat otherwise.
+  const beatDriven = circleOfFifths.autoAdvance && metronomeOn &&
+    (circleOfFifths.changeMode === 'bars' || circleOfFifths.changeMode === 'beats');
+  const pos = useTransport(useShallow(s => beatDriven
+    ? { beatCount: s.beatCount, barIndex: s.barIndex, beatInBar: s.beatInBar, beatsPerBar: s.beatsPerBar }
+    : null));
 
   // Circle of Fifths in order (starting from C at 12 o'clock)
   const circleOfFifthsNotes = [
@@ -70,21 +88,20 @@ export const NoteTrainer: React.FC = () => {
   const getCountdown = () => {
     if (!circleOfFifths.autoAdvance) return null;
     
-    if (circleOfFifths.changeMode === 'bars' && metronome.isPlaying) {
-      const currentBar = barCountRef.current;
-      const nextChangeBar = Math.ceil((currentBar + 1) / circleOfFifths.changeInterval) * circleOfFifths.changeInterval;
-      const barsRemaining = nextChangeBar - currentBar;
-      
+    if (circleOfFifths.changeMode === 'bars' && pos) {
+      // Counted from the transport: bar b of the cycle is b % interval.
+      const barInCycle = pos.beatCount < 0 ? 0 : pos.barIndex % circleOfFifths.changeInterval;
+      const barsRemaining = circleOfFifths.changeInterval - barInCycle;
+
       // If we're on the last bar, show beats remaining instead
-      if (barsRemaining === 1) {
-        const beatsRemaining = metronome.beatsPerMeasure - metronome.currentBeat;
+      if (barsRemaining === 1 && pos.beatCount >= 0) {
         return {
           type: 'beats',
-          value: beatsRemaining,
-          total: metronome.beatsPerMeasure
+          value: pos.beatsPerBar - pos.beatInBar,
+          total: pos.beatsPerBar
         };
       }
-      
+
       return {
         type: 'bars',
         value: barsRemaining,
@@ -101,24 +118,21 @@ export const NoteTrainer: React.FC = () => {
         value: Math.max(0, Math.ceil(timeRemaining)),
         total: circleOfFifths.changeInterval
       };
-    } else if (circleOfFifths.changeMode === 'beats' && metronome.isPlaying) {
-      // If still counting in, show count-in countdown
-      if (isCountingInRef.current) {
-        const countInRemaining = circleOfFifths.countIn - countInBeatRef.current;
+    } else if (circleOfFifths.changeMode === 'beats' && pos) {
+      const heard = Math.max(pos.beatCount, 0);
+      // Count-in: the first `countIn` transport beats.
+      if (heard < circleOfFifths.countIn) {
         return {
           type: 'count-in',
-          value: countInRemaining,
+          value: circleOfFifths.countIn - heard,
           total: circleOfFifths.countIn
         };
       }
-      
-      const currentBeat = beatCountRef.current;
-      const nextChangeBeat = Math.ceil((currentBeat + 1) / circleOfFifths.changeInterval) * circleOfFifths.changeInterval;
-      const beatsRemaining = nextChangeBeat - currentBeat;
-      
+
+      const musicBeat = heard - circleOfFifths.countIn;
       return {
         type: 'beats',
-        value: beatsRemaining,
+        value: circleOfFifths.changeInterval - (musicBeat % circleOfFifths.changeInterval),
         total: circleOfFifths.changeInterval
       };
     }
@@ -130,31 +144,28 @@ export const NoteTrainer: React.FC = () => {
   
   // No longer need this effect since autoAdvance is controlled manually
   
-  // Reset counters when metronome stops
-  useEffect(() => {
-    if (!metronome.isPlaying) {
-      barCountRef.current = 0;
-      beatCountRef.current = 0;
-      wasOnFirstBeatRef.current = false;
-      lastBeatRef.current = -1;
-      countInBeatRef.current = 0;
-      isCountingInRef.current = false;
-    }
-  }, [metronome.isPlaying]);
+  const advance = () => {
+    const next = useStore.getState().circleOfFifths.nextNote;
+    if (!next) return;
+    setSelectedNote(next);
+    setCircleNextNote(generateNextNote(next));
+  };
 
-  // Initialize beat tracking when metronome starts
-  useEffect(() => {
-    if (metronome.isPlaying && lastBeatRef.current === -1) {
-      // First time starting - set to current beat to avoid immediate increment
-      lastBeatRef.current = metronome.currentBeat;
-      // Start count-in if enabled
-      if (circleOfFifths.countIn > 0 && circleOfFifths.autoAdvance) {
-        isCountingInRef.current = true;
-        countInBeatRef.current = 0;
-      }
+  // Bar / beat modes: driven by the transport's heard beats, counted from
+  // its start — never missed or doubled.
+  //   bars:  change on the downbeat starting every Nth bar
+  //   beats: after `countIn` beats, change every N beats
+  useAudibleBeat((ev: TickEvent) => {
+    const c = useStore.getState().circleOfFifths;
+    if (!c.autoAdvance) return;
+    if (c.changeMode === 'bars') {
+      if (ev.beatInBar === 0 && ev.barIndex > 0 && ev.barIndex % c.changeInterval === 0) advance();
+    } else if (c.changeMode === 'beats') {
+      const musicBeat = ev.beatCount - c.countIn;
+      if (musicBeat > 0 && musicBeat % c.changeInterval === 0) advance();
     }
-  }, [metronome.isPlaying, metronome.currentBeat, circleOfFifths.countIn, circleOfFifths.autoAdvance]);
-  
+  });
+
   useEffect(() => {
     if (!timer.isRunning) {
       lastChangeTimeRef.current = 0;
@@ -163,101 +174,26 @@ export const NoteTrainer: React.FC = () => {
       lastChangeTimeRef.current = 0;
     }
   }, [timer.isRunning, timer.elapsedSeconds]);
-  
-  // Auto-advance logic
+
+  // Time mode: change every N seconds of the practice timer.
   useEffect(() => {
     if (!circleOfFifths.autoAdvance || !note.selectedNote) return;
-    
-    if (circleOfFifths.changeMode === 'bars' && metronome.isPlaying) {
-      const isFirstBeat = metronome.currentBeat === 0;
-      
-      // Detect transition to first beat
-      if (isFirstBeat && !wasOnFirstBeatRef.current) {
-        barCountRef.current += 1;
-        
-        // Change note every X bars
-        if (barCountRef.current % circleOfFifths.changeInterval === 0) {
-          if (circleOfFifths.nextNote) {
-            setSelectedNote(circleOfFifths.nextNote);
-            // Generate new next note
-            const newNextNote = generateNextNote(circleOfFifths.nextNote);
-            setCircleNextNote(newNextNote);
-          }
-        }
-      }
-      
-      wasOnFirstBeatRef.current = isFirstBeat;
-    } else if (circleOfFifths.changeMode === 'time' && timer.isRunning) {
-      const currentTime = timer.elapsedSeconds;
-      
-      if (currentTime > 0 && currentTime - lastChangeTimeRef.current >= circleOfFifths.changeInterval) {
-        if (circleOfFifths.nextNote) {
-          setSelectedNote(circleOfFifths.nextNote);
-          // Generate new next note
-          const newNextNote = generateNextNote(circleOfFifths.nextNote);
-          setCircleNextNote(newNextNote);
-        }
-        lastChangeTimeRef.current = currentTime;
-      }
-    } else if (circleOfFifths.changeMode === 'beats' && metronome.isPlaying) {
-      // Simple beat counting - increment on any beat change
-      if (metronome.currentBeat !== lastBeatRef.current) {
-        lastBeatRef.current = metronome.currentBeat;
-        
-        // Handle count-in first
-        if (isCountingInRef.current) {
-          countInBeatRef.current += 1;
-          if (countInBeatRef.current >= circleOfFifths.countIn) {
-            // Count-in finished, start actual counting
-            isCountingInRef.current = false;
-            beatCountRef.current = 0;
-          }
-        } else {
-          // Normal beat counting
-          beatCountRef.current += 1;
-          
-          // Change note when we reach the target beat count
-          if (beatCountRef.current >= circleOfFifths.changeInterval) {
-            if (circleOfFifths.nextNote) {
-              setSelectedNote(circleOfFifths.nextNote);
-              // Generate new next note
-              const newNextNote = generateNextNote(circleOfFifths.nextNote);
-              setCircleNextNote(newNextNote);
-            }
-            beatCountRef.current = 0; // Reset counter
-          }
-        }
-      }
+    if (circleOfFifths.changeMode !== 'time' || !timer.isRunning) return;
+    const currentTime = timer.elapsedSeconds;
+    if (currentTime > 0 && currentTime - lastChangeTimeRef.current >= circleOfFifths.changeInterval) {
+      advance();
+      lastChangeTimeRef.current = currentTime;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     circleOfFifths.autoAdvance,
     circleOfFifths.changeMode,
     circleOfFifths.changeInterval,
-    circleOfFifths.direction,
-    metronome.currentBeat,
-    metronome.isPlaying,
     timer.isRunning,
     timer.elapsedSeconds,
     note.selectedNote,
-    setSelectedNote
   ]);
-  
-  // Force re-render for countdown updates
-  useEffect(() => {
-    const isActive = circleOfFifths.autoAdvance && (
-      (circleOfFifths.changeMode === 'bars' && metronome.isPlaying) || 
-      (circleOfFifths.changeMode === 'time' && timer.isRunning) ||
-      (circleOfFifths.changeMode === 'beats' && metronome.isPlaying)
-    );
-    
-    if (!isActive) return;
-    
-    const interval = setInterval(() => {
-      forceUpdate({}); // Force re-render to update countdown
-    }, 200); // Update every 200ms for smooth countdown
-    
-    return () => clearInterval(interval);
-  }, [circleOfFifths.autoAdvance, circleOfFifths.changeMode, metronome.isPlaying, timer.isRunning]);
+
 
   return (
     <div className={`note-trainer ${!circleOfFifths.autoAdvance ? 'disabled' : ''}`}>

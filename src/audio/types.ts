@@ -39,18 +39,3 @@ export interface SynthOpts {
    *  master gain. */
   destination?: AudioNode;
 }
-
-/** A running scheduler. Call start to begin, stop to cancel, setBpm to retune
- *  mid-playback (existing scheduled events keep their times; new ones follow
- *  the new tempo). */
-export interface Scheduler {
-  start: () => void;
-  stop: () => void;
-  isRunning: () => boolean;
-  setBpm: (bpm: number) => void;
-}
-
-/** Callback fired on each scheduled beat. `beatIndex` counts from 0 at the
- *  last start(). `audioTime` is the AudioContext time when the beat hits —
- *  use it to schedule sample-accurate events (e.g. `osc.start(audioTime)`). */
-export type BeatCallback = (beatIndex: number, audioTime: number) => void;

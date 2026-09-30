@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import { Button, ToggleButtonGroup } from '../ui';
 import './CircleOfFifths.css';
 
 export const CircleOfFifths: React.FC = () => {
-  const { 
-    note, 
-    setSelectedNote
-  } = useStore();
+  const { note, setSelectedNote } = useStore(useShallow(s => ({ note: s.note, setSelectedNote: s.setSelectedNote })));
   const [mode, setMode] = useState<'major' | 'minor'>('major');
   const [displayMode, setDisplayMode] = useState<'chords' | 'relatives'>('chords');
   

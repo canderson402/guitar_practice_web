@@ -1,35 +1,35 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import { Button, ToggleButtonGroup } from '../ui';
 import './Timer.css';
 
 export const Timer: React.FC = () => {
-  const { timer, setTimerRunning, setElapsedSeconds, setTimerMode, setTargetSeconds } = useStore();
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+  const timer = useStore(s => s.timer);
+  const { setTimerRunning, setElapsedSeconds, setTimerMode, setTargetSeconds } = useStore(useShallow(s => ({
+    setTimerRunning: s.setTimerRunning,
+    setElapsedSeconds: s.setElapsedSeconds,
+    setTimerMode: s.setTimerMode,
+    setTargetSeconds: s.setTargetSeconds,
+  })));
+
+  // Elapsed time is computed from a performance.now() anchor taken at start,
+  // not by adding 1 per interval — so it can't drift, and it catches up
+  // correctly after background-tab throttling. The interval only decides
+  // how often we check; it re-anchors only on start/stop/mode change.
   useEffect(() => {
-    if (timer.isRunning) {
-      intervalRef.current = setInterval(() => {
-        setElapsedSeconds(
-          timer.mode === 'countUp' 
-            ? timer.elapsedSeconds + 1
-            : Math.max(0, timer.elapsedSeconds - 1)
-        );
-      }, 1000);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    }
-    
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [timer.isRunning, timer.mode, timer.elapsedSeconds, setElapsedSeconds]);
-  
+    if (!timer.isRunning) return;
+    const anchorMs = performance.now();
+    const anchorSeconds = useStore.getState().timer.elapsedSeconds;
+    const countUp = timer.mode === 'countUp';
+    const id = setInterval(() => {
+      const passed = Math.floor((performance.now() - anchorMs) / 1000);
+      const next = countUp ? anchorSeconds + passed : Math.max(0, anchorSeconds - passed);
+      if (next !== useStore.getState().timer.elapsedSeconds) setElapsedSeconds(next);
+    }, 200);
+    return () => clearInterval(id);
+  }, [timer.isRunning, timer.mode, setElapsedSeconds]);
+
   useEffect(() => {
     if (timer.mode === 'countDown' && timer.elapsedSeconds === 0 && timer.isRunning) {
       setTimerRunning(false);

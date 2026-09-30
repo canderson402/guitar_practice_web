@@ -59,12 +59,10 @@ describe('GrandStaff', () => {
   it('renders every accidental case without throwing', () => {
     const cases: Array<{
       midi: number;
-      spelling: 'sharp' | 'flat' | 'natural-C' | 'natural-F';
+      spelling: 'sharp' | 'flat' | 'natural-F';
     }> = [
       { midi: 61, spelling: 'sharp' },     // C#
       { midi: 61, spelling: 'flat' },      // Db
-      { midi: 60, spelling: 'natural-C' }, // B# (respelled from C)
-      { midi: 59, spelling: 'natural-C' }, // Cb (respelled from B)
       { midi: 65, spelling: 'natural-F' }, // E# (respelled from F)
       { midi: 64, spelling: 'natural-F' }, // Fb (respelled from E)
     ];
@@ -85,5 +83,18 @@ describe('GrandStaff', () => {
       expect(container.querySelector('svg')).not.toBeNull();
       unmount();
     });
+  });
+
+  /* eslint-disable testing-library/no-container, testing-library/no-node-access -- VexFlow's SVG has no role to query by */
+  it('can add headroom for ledger-line notes and draw larger (opt-in; defaults unchanged)', () => {
+    const { container } = render(
+      <GrandStaff notes={[{ midi: 91 }]} clef="treble" width={300} padding={{ top: 50, bottom: 40 }} scale={1.5} />
+    );
+    const svg = container.querySelector('svg')!;
+    expect(svg.getAttribute('width')).toBe('450');
+    expect(svg.getAttribute('height')).toBe(String((140 + 50 + 40) * 1.5));
+    expect(svg.getAttribute('viewBox')).toBe('0 0 300 230');
+    const plain = render(<GrandStaff notes={[{ midi: 60 }]} clef="treble" width={300} />).container.querySelector('svg')!;
+    expect(plain.getAttribute('height')).toBe('140');
   });
 });

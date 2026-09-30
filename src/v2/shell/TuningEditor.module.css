@@ -1,0 +1,7 @@
+.strings { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-1); }
+.string { display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--fill); border-radius: var(--radius-md); padding: var(--space-1) 0; }
+.note { font-family: var(--font-mono); font-weight: 700; font-size: var(--text-14); min-height: 20px; }
+.num { font-size: var(--text-11); color: var(--text-muted); }
+.shift { display: flex; gap: var(--space-2); }
+.editor { display: flex; flex-direction: column; gap: var(--space-2); }
+.label { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-12); color: var(--text-muted); }

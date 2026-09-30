@@ -1,0 +1,32 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+
+/* Everything is scoped under .gp2 so v1's global CSS can't collide.
+   Element rules use :where(.gp2) (zero specificity) so any component class —
+   e.g. a selected segment's text color — always wins over these defaults. */
+.gp2 {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--text-14);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+:where(.gp2) *, :where(.gp2) *::before, :where(.gp2) *::after { box-sizing: border-box; }
+:where(.gp2) h1, :where(.gp2) h2, :where(.gp2) h3, :where(.gp2) h4, :where(.gp2) p { margin: 0; }
+:where(.gp2) h1, :where(.gp2) h2, :where(.gp2) h3 { font-family: var(--font-display); font-weight: 700; }
+:where(.gp2) button { font: inherit; color: inherit; }
+:where(.gp2) a { color: inherit; }
+/* Focus: an outline follows each control's own border-radius (pills stay pills)
+   and never paints a background past the control's edge. */
+:where(.gp2) :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  :where(.gp2) *, :where(.gp2) *::before, :where(.gp2) *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+}

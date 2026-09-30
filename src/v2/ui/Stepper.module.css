@@ -1,0 +1,4 @@
+.stepper { display: inline-flex; align-items: center; gap: var(--space-1); }
+.btn { min-width: 34px; height: 28px; border: none; border-radius: var(--radius-sm); background: var(--fill); color: var(--text); font-weight: 600; font-size: var(--text-12); cursor: pointer; }
+.btn:hover { background: var(--line-strong); }
+.value { min-width: 48px; text-align: center; font-family: var(--font-mono); font-weight: 700; font-size: var(--text-16); font-variant-numeric: tabular-nums; }

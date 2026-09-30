@@ -3,6 +3,10 @@ import {
   labelToPitchClass,
   pitchClassToLabels,
   pickStaffPrompt,
+  foldIntoRange,
+  noteNameWithOctave,
+  RANGE_MIN,
+  RANGE_MAX,
   pickFretboardPrompt,
   validateAnswer,
   nextPromptAvoidingRepeat,
@@ -14,20 +18,18 @@ describe('labelToPitchClass', () => {
     expect(labelToPitchClass('C')).toBe(0);
     expect(labelToPitchClass('C#')).toBe(1);
     expect(labelToPitchClass('Db')).toBe(1);
-    expect(labelToPitchClass('B#')).toBe(0);
-    expect(labelToPitchClass('Cb')).toBe(11);
     expect(labelToPitchClass('E#')).toBe(5);
     expect(labelToPitchClass('Fb')).toBe(4);
   });
 });
 
 describe('pitchClassToLabels', () => {
-  it('returns all 21-label-set spellings for each pitch class', () => {
-    expect(pitchClassToLabels(0).sort()).toEqual(['B#', 'C'].sort());
+  it('returns all spellings for each pitch class', () => {
+    expect(pitchClassToLabels(0)).toEqual(['C']);
     expect(pitchClassToLabels(1).sort()).toEqual(['C#', 'Db'].sort());
     expect(pitchClassToLabels(4).sort()).toEqual(['E', 'Fb'].sort());
     expect(pitchClassToLabels(5).sort()).toEqual(['E#', 'F'].sort());
-    expect(pitchClassToLabels(11).sort()).toEqual(['B', 'Cb'].sort());
+    expect(pitchClassToLabels(11)).toEqual(['B']);
     expect(pitchClassToLabels(2)).toEqual(['D']);
   });
 });
@@ -50,20 +52,34 @@ describe('pickStaffPrompt', () => {
     for (let i = 0; i < 200; i++) {
       const p = pickStaffPrompt();
       expect(p.kind).toBe('staff');
-      if (p.clef === 'treble') {
-        expect(p.midi).toBeGreaterThanOrEqual(60);
-        expect(p.midi).toBeLessThanOrEqual(84);
-      } else {
-        expect(p.midi).toBeGreaterThanOrEqual(40);
-        expect(p.midi).toBeLessThanOrEqual(60);
-      }
+      const [lo, hi] = p.clef === 'treble' ? [60, RANGE_MAX] : [RANGE_MIN, 60];
+      expect(p.midi).toBeGreaterThanOrEqual(lo);
+      expect(p.midi).toBeLessThanOrEqual(hi);
       expect(labelToPitchClass(p.spelling)).toBe(((p.midi % 12) + 12) % 12);
     }
+  });
+
+  it('always spells C and B as naturals', () => {
+    const spellings = new Set<Label>();
+    for (let i = 0; i < 2000; i++) {
+      const p = pickStaffPrompt();
+      const pc = ((p.midi % 12) + 12) % 12;
+      if (pc === 0 || pc === 11) spellings.add(p.spelling);
+    }
+    expect(Array.from(spellings).sort()).toEqual(['B', 'C']);
   });
 });
 
 describe('pickFretboardPrompt', () => {
   const tuning = ['E', 'B', 'G', 'D', 'A', 'E'];
+  it('only picks positions within A1..G6, even on 24 frets', () => {
+    for (let i = 0; i < 500; i++) {
+      const p = pickFretboardPrompt(tuning, 24);
+      expect(p.midi).toBeGreaterThanOrEqual(RANGE_MIN);
+      expect(p.midi).toBeLessThanOrEqual(RANGE_MAX);
+    }
+  });
+
   it('returns string 0..5, fret 0..12, with at least one acceptable answer', () => {
     for (let i = 0; i < 200; i++) {
       const p = pickFretboardPrompt(tuning);
@@ -80,16 +96,26 @@ describe('pickFretboardPrompt', () => {
 });
 
 describe('validateAnswer', () => {
-  it('staff: only the exact spelling counts', () => {
+  it('staff: only the exact key (right octave) counts', () => {
     const prompt = {
-      kind: 'staff' as const, midi: 61, clef: 'treble' as const, spelling: 'C#' as Label,
+      kind: 'staff' as const, midi: 60, clef: 'treble' as const, spelling: 'C' as Label,
     };
-    expect(validateAnswer(prompt, 'C#')).toBe('correct');
-    expect(validateAnswer(prompt, 'Db')).toBe('wrong');
-    expect(validateAnswer(prompt, 'C')).toBe('wrong');
+    expect(validateAnswer(prompt, 60)).toBe('correct');
+    expect(validateAnswer(prompt, 72)).toBe('wrong');
+    expect(validateAnswer(prompt, 48)).toBe('wrong');
   });
 
-  it('fretboard: any enharmonic counts', () => {
+  it('fretboard: only the exact key (right octave) counts', () => {
+    const prompt = {
+      kind: 'fretboard' as const,
+      midi: 61, stringIndex: 5, fret: 9,
+      acceptableAnswers: ['C#', 'Db'] as Label[],
+    };
+    expect(validateAnswer(prompt, 61)).toBe('correct');
+    expect(validateAnswer(prompt, 73)).toBe('wrong');
+  });
+
+  it('note-name buttons match any octave and either enharmonic', () => {
     const prompt = {
       kind: 'fretboard' as const,
       midi: 61, stringIndex: 5, fret: 9,
@@ -118,5 +144,24 @@ describe('nextPromptAvoidingRepeat', () => {
       expect(next).toBeTruthy();
       prev = next as any;
     }
+  });
+});
+
+describe('foldIntoRange', () => {
+  it('moves pitches by octaves into A1..G6', () => {
+    expect(foldIntoRange(20)).toBe(44);
+    expect(foldIntoRange(100)).toBe(88);
+    expect(foldIntoRange(33)).toBe(33);
+    expect(foldIntoRange(91)).toBe(91);
+  });
+});
+
+describe('noteNameWithOctave', () => {
+  it('appends the octave to the spelled label', () => {
+    expect(noteNameWithOctave('C', 60)).toBe('C4');
+    expect(noteNameWithOctave('Db', 61)).toBe('Db4');
+    expect(noteNameWithOctave('A', 33)).toBe('A1');
+    expect(noteNameWithOctave('G', 91)).toBe('G6');
+    expect(noteNameWithOctave('E#', 65)).toBe('E#4');
   });
 });

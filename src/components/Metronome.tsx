@@ -1,124 +1,51 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
-import { scheduleClick, loadClickSamples, getAudioContext } from '../audio';
+import { loadClickSamples, setClickVolume, useTransport } from '../audio';
 import { Button, Select, Checkbox, ToggleButtonGroup } from '../ui';
 import './Metronome.css';
 
+// The Metronome card is a view onto the app-wide transport (src/audio/
+// transport.ts): Start/Stop flips `metronome.isPlaying`, the transport owns
+// the clock and the clicks, and the beat dots read the heard position.
+
+/** Beat dots — the only part of the card that re-renders per beat. */
+const BeatDots: React.FC<{ beatsPerMeasure: number }> = ({ beatsPerMeasure }) => {
+  const running = useTransport(s => s.running);
+  const beatInBar = useTransport(s => s.beatInBar);
+  const heard = useTransport(s => s.beatCount >= 0);
+  const active = running && heard ? beatInBar : -1;
+  return (
+    <div className="beat-indicators">
+      {Array.from({ length: beatsPerMeasure }, (_, i) => (
+        <div
+          key={i}
+          className={`beat-dot ${i === active ? 'active' : ''} ${i === 0 ? 'accent' : ''}`}
+        />
+      ))}
+    </div>
+  );
+};
+
 export const Metronome: React.FC = () => {
-  const { metronome, jam, setMetronomePlaying, setBpm, setCurrentBeat, setBeatsPerMeasure, setSubdivision, setEmphasizeFirstBeat, setMetronomeSoundType } = useStore();
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const metronome = useStore(s => s.metronome);
+  const {
+    setMetronomePlaying, setBpm, setBeatsPerMeasure, setSubdivision,
+    setEmphasizeFirstBeat, setMetronomeSoundType,
+  } = useStore(useShallow(s => ({
+    setMetronomePlaying: s.setMetronomePlaying,
+    setBpm: s.setBpm,
+    setBeatsPerMeasure: s.setBeatsPerMeasure,
+    setSubdivision: s.setSubdivision,
+    setEmphasizeFirstBeat: s.setEmphasizeFirstBeat,
+    setMetronomeSoundType: s.setMetronomeSoundType,
+  })));
 
   // Kick off sample loading on mount — shared with jam. Idempotent.
   useEffect(() => { loadClickSamples(); }, []);
 
-  const playClick = (isAccent: boolean, isFirstBeat: boolean) => {
-    scheduleClick(getAudioContext().currentTime, {
-      soundType: metronome.soundType,
-      muted: metronome.muted,
-      isAccent,
-      isFirstBeat,
-      emphasizeFirstBeat: metronome.emphasizeFirstBeat,
-    });
-  };
-  
-  useEffect(() => {
-    // When jam is playing, its audio-time scheduler is the single source of
-    // truth for both chord changes AND clicks (via scheduleClick). The
-    // metronome's setInterval loop would drift against it — so we shut it
-    // down entirely and let jam drive both clicks and beat display.
-    const jamDriving = jam.isPlaying;
-    if (jamDriving) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
+  useEffect(() => { setClickVolume(metronome.volume / 100); }, [metronome.volume]);
 
-    if (metronome.isPlaying) {
-      // Calculate timing based on subdivision
-      const getTimingInfo = () => {
-        let notesPerBeat: number;
-        let noteValue: string;
-        
-        switch (metronome.subdivision) {
-          case 'quarter':
-            notesPerBeat = 1;
-            noteValue = 'quarter notes';
-            break;
-          case 'eighth':
-            notesPerBeat = 2;
-            noteValue = 'eighth notes';
-            break;
-          case 'sixteenth':
-            notesPerBeat = 4;
-            noteValue = 'sixteenth notes';
-            break;
-          case 'eighthTriplet':
-            // 3 eighth notes in space of 2 eighth notes (1 beat)
-            notesPerBeat = 3;
-            noteValue = 'eighth note triplets';
-            break;
-          case 'sixteenthTriplet':
-            // 3 sixteenth notes in space of 2 sixteenth notes (1/2 beat)
-            // So per beat: 3 × 2 = 6 notes per beat
-            notesPerBeat = 6;
-            noteValue = 'sixteenth note triplets';
-            break;
-          default:
-            notesPerBeat = 1;
-            noteValue = 'quarter notes';
-        }
-        
-        // Calculate interval between clicks
-        const beatsPerMinute = metronome.bpm;
-        const millisecondsPerBeat = 60000 / beatsPerMinute;
-        const intervalBetweenClicks = millisecondsPerBeat / notesPerBeat;
-        
-        return {
-          notesPerBeat,
-          intervalBetweenClicks,
-          noteValue
-        };
-      };
-      
-      const { notesPerBeat, intervalBetweenClicks } = getTimingInfo();
-      let beat = 0;
-      let subdivisionCount = 0;
-      
-      const tick = () => {
-        // Accent on downbeats (first subdivision of each beat)
-        const isAccent = subdivisionCount === 0;
-        // First beat of the measure (beat 0)
-        const isFirstBeat = beat === 0 && subdivisionCount === 0;
-        playClick(isAccent, isFirstBeat);
-        
-        // Update beat display on quarter notes.
-        if (subdivisionCount === 0) setCurrentBeat(beat);
-        
-        subdivisionCount = (subdivisionCount + 1) % notesPerBeat;
-        if (subdivisionCount === 0) {
-          beat = (beat + 1) % metronome.beatsPerMeasure;
-        }
-      };
-      
-      tick();
-      intervalRef.current = setInterval(tick, intervalBetweenClicks);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      setCurrentBeat(0);
-    }
-    
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [metronome.isPlaying, metronome.bpm, metronome.beatsPerMeasure, metronome.subdivision, metronome.emphasizeFirstBeat, metronome.soundType, metronome.muted, jam.isPlaying, setCurrentBeat]);
-  
   const handleBpmChange = (delta: number) => {
     const newBpm = Math.max(40, Math.min(300, metronome.bpm + delta));
     setBpm(newBpm);
@@ -147,14 +74,7 @@ export const Metronome: React.FC = () => {
         />
       </div>
 
-      <div className="beat-indicators">
-        {Array.from({ length: metronome.beatsPerMeasure }, (_, i) => (
-          <div
-            key={i}
-            className={`beat-dot ${i === metronome.currentBeat ? 'active' : ''} ${i === 0 ? 'accent' : ''}`}
-          />
-        ))}
-      </div>
+      <BeatDots beatsPerMeasure={metronome.beatsPerMeasure} />
 
       <div className="bpm-control">
         <Button variant="outline" size="sm" onClick={() => handleBpmChange(-5)} aria-label="-5 BPM">−5</Button>

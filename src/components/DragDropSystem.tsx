@@ -27,6 +27,7 @@ import { Timer } from './Timer';
 import { NoteSelector } from './NoteSelector';
 import { GuitarNeck } from './GuitarNeck';
 import { PracticeProgress } from './PracticeProgress';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import './DragDropSystem.css';
 
@@ -128,7 +129,7 @@ const DropZone: React.FC<{
 };
 
 export const DragDropSystem: React.FC<DragDropSystemProps> = () => {
-  const { cards, toggleCard, reorderCards } = useStore();
+  const { cards, toggleCard, reorderCards } = useStore(useShallow(s => ({ cards: s.cards, toggleCard: s.toggleCard, reorderCards: s.reorderCards })));
   
   const [dragState, setDragState] = useState<DragState>({
     activeId: null,

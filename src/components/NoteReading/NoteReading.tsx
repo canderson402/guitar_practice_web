@@ -1,16 +1,17 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../../store/useStore';
 import { Button, ToggleButtonGroup, Select } from '../../ui';
 import { KEY_NAMES } from '../../data/generatePhrase';
 import { StaffPrompt } from './StaffPrompt';
 import { FretboardPrompt } from './FretboardPrompt';
 import { PhrasePrompt } from './PhrasePrompt';
+import { AnswerPiano } from './AnswerPiano';
 import { AnswerButtons } from './AnswerButtons';
 import { playPianoNote, preloadPiano } from '../../audio/piano';
 import { playGuitarNote, preloadGuitar } from '../../audio/guitar';
 import { resumeAudio } from '../../audio';
 import { getAudioContext } from '../../audio/engine';
-import { validateAnswer, Label } from '../../logic/noteReadingLogic';
+import { validateAnswer, Answer } from '../../logic/noteReadingLogic';
 import {
   countPlayableNotes,
   durationToSeconds,
@@ -28,6 +29,7 @@ export const NoteReading: React.FC = () => {
   const nextNoteReadingPrompt = useStore(s => s.nextNoteReadingPrompt);
   const pressNoteReadingAnswer = useStore(s => s.pressNoteReadingAnswer);
   const resetNoteReadingScore = useStore(s => s.resetNoteReadingScore);
+  const [showLabels, setShowLabels] = useState(false);
 
   const {
     mode, fretCount,
@@ -55,9 +57,9 @@ export const NoteReading: React.FC = () => {
   }, []);
 
   const handlePress = useCallback(
-    (label: Label) => {
+    (answer: Answer) => {
       if (!prompt || answerState === 'correct') return;
-      const result = validateAnswer(prompt, label);
+      const result = validateAnswer(prompt, answer);
 
       if (result === 'correct') {
         void resumeAudio();
@@ -94,7 +96,7 @@ export const NoteReading: React.FC = () => {
         }
       }
 
-      pressNoteReadingAnswer(label);
+      pressNoteReadingAnswer(answer);
     },
     [prompt, answerState, mode, pressNoteReadingAnswer, nextNoteReadingPrompt],
   );
@@ -184,6 +186,16 @@ export const NoteReading: React.FC = () => {
               >Bass</Button>
             </ToggleButtonGroup>
           )}
+          {mode !== 'fretboard' && (
+            <ToggleButtonGroup label="Names" layout="segmented">
+              <Button
+                variant="ghost"
+                size="sm"
+                active={showLabels}
+                onClick={() => setShowLabels(v => !v)}
+              >Names</Button>
+            </ToggleButtonGroup>
+          )}
           <ToggleButtonGroup label="Mode" layout="segmented">
             <Button
               variant="ghost"
@@ -213,6 +225,7 @@ export const NoteReading: React.FC = () => {
             prompt={prompt}
             trebleEnabled={trebleEnabled}
             bassEnabled={bassEnabled}
+            showLabels={showLabels}
           />
         )}
         {prompt?.kind === 'fretboard' && (
@@ -228,16 +241,27 @@ export const NoteReading: React.FC = () => {
             answerState={answerState}
             trebleEnabled={trebleEnabled}
             bassEnabled={bassEnabled}
+            showLabels={showLabels}
           />
         )}
       </div>
 
-      <AnswerButtons
-        wrongPresses={wrongPresses}
-        answerState={answerState}
-        justPressedCorrect={justPressedCorrect}
-        onPress={handlePress}
-      />
+      {mode === 'fretboard' ? (
+        <AnswerButtons
+          wrongPresses={wrongPresses}
+          answerState={answerState}
+          justPressedCorrect={justPressedCorrect}
+          onPress={handlePress}
+        />
+      ) : (
+        <AnswerPiano
+          wrongPresses={wrongPresses}
+          answerState={answerState}
+          justPressedCorrect={justPressedCorrect}
+          showLabels={showLabels}
+          onPress={handlePress}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,5 @@
+.bar { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.list { display: flex; gap: var(--space-1); overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.tab { border: 1px solid transparent; background: transparent; color: var(--text-muted); border-radius: var(--radius-pill); padding: 5px 12px; font-size: var(--text-12); font-weight: 500; cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--text); }
+.on { background: var(--fill); color: var(--text); font-weight: 600; }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import { Button, Select } from '../ui';
 import './TuningPicker.css';
@@ -45,7 +46,7 @@ const tuningsMatch = (a: string[], b: string[]): boolean =>
   a.length === b.length && a.every((n, i) => CHROMATIC[n] === CHROMATIC[b[i]]);
 
 export const TuningPicker: React.FC = () => {
-  const { note, setTuning } = useStore();
+  const { note, setTuning } = useStore(useShallow(s => ({ note: s.note, setTuning: s.setTuning })));
   const [open, setOpen] = React.useState(false);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);

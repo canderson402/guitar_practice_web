@@ -9,6 +9,7 @@ import { CircleOfFifths } from '../components/CircleOfFifths';
 import { NoteTrainer } from '../components/NoteTrainer';
 import { HarmonyMaker } from '../components/HarmonyMaker';
 import { JamCard } from '../components/JamCard';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import {
   DndContext,
@@ -50,7 +51,7 @@ const DraggableToggle: React.FC<{ card: any }> = ({ card }) => {
     opacity: isDragging ? 0.7 : 1,
   };
 
-  const { toggleCard, viewMode } = useStore();
+  const { toggleCard, viewMode } = useStore(useShallow(s => ({ toggleCard: s.toggleCard, viewMode: s.viewMode })));
 
   return (
     <div
@@ -179,7 +180,7 @@ const distributeCards = (cards: any[]) => {
 };
 
 const PracticePage: React.FC = () => {
-  const { cards, reorderCards, viewMode } = useStore();
+  const { cards, reorderCards, viewMode } = useStore(useShallow(s => ({ cards: s.cards, reorderCards: s.reorderCards, viewMode: s.viewMode })));
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

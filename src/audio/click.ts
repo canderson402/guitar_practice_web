@@ -15,6 +15,27 @@ let asrxUpBuffer: AudioBuffer | null = null;
 let asrxDownBuffer: AudioBuffer | null = null;
 let sampleLoadStarted = false;
 
+// Every click routes through one bus so volume changes apply instantly —
+// even to clicks already scheduled inside the lookahead window.
+let clickBus: GainNode | null = null;
+let clickVolume = 1;
+
+const getClickBus = (): GainNode => {
+  if (clickBus) return clickBus;
+  const ctx = getAudioContext();
+  clickBus = ctx.createGain();
+  clickBus.gain.value = clickVolume;
+  clickBus.connect(getMasterGain());
+  return clickBus;
+};
+
+/** Metronome click volume, 0–1. Applies immediately. */
+export const setClickVolume = (value: number): void => {
+  clickVolume = Math.max(0, Math.min(1, value));
+  const bus = getClickBus();
+  bus.gain.setTargetAtTime(clickVolume, bus.context.currentTime, 0.01);
+};
+
 /** Kick off async ASRX sample loads. Safe to call repeatedly — only the
  *  first call does work. Samples resolve into module state when ready; the
  *  synth click path doesn't need them so calls made before loading complete
@@ -41,6 +62,29 @@ export const loadClickSamples = (): void => {
     .catch(err => console.error('Failed to load ASRX_Down.wav:', err));
 };
 
+// Clicks scheduled but not yet sounded. The transport schedules ~100 ms
+// ahead, so on Stop these would otherwise still play one extra click.
+const pendingClicks = new Map<AudioScheduledSourceNode, number>();
+
+const track = (source: AudioScheduledSourceNode, startAt: number): void => {
+  pendingClicks.set(source, startAt);
+  source.onended = () => { pendingClicks.delete(source); };
+};
+
+/** Cancel every click scheduled to start in the future. Clicks already
+ *  sounding are left to finish (cutting them mid-sample would pop). */
+export const cancelScheduledClicks = (): void => {
+  const now = getAudioContext().currentTime;
+  pendingClicks.forEach((startAt, source) => {
+    if (startAt <= now) return;
+    try {
+      source.stop();          // stop before start time → never plays
+      source.disconnect();
+    } catch { /* already stopped */ }
+    pendingClicks.delete(source);
+  });
+};
+
 export interface ClickOpts {
   /** 'synth' = oscillator beep, 'asrx' = sampled block hits. */
   soundType: 'synth' | 'asrx';
@@ -64,7 +108,7 @@ export const scheduleClick = (time: number, opts: ClickOpts): void => {
   if (opts.muted) return;
 
   const ctx = getAudioContext();
-  const dest = getMasterGain();
+  const dest = getClickBus();
   const firstBeatEmphasized = opts.emphasizeFirstBeat && opts.isFirstBeat;
 
   if (opts.soundType === 'asrx') {
@@ -77,6 +121,7 @@ export const scheduleClick = (time: number, opts: ClickOpts): void => {
     gain.connect(dest);
     gain.gain.value = firstBeatEmphasized ? 0.6 : 0.4;
     source.start(time);
+    track(source, time);
     return;
   }
 
@@ -94,4 +139,5 @@ export const scheduleClick = (time: number, opts: ClickOpts): void => {
   osc.start(time);
   gain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
   osc.stop(time + 0.02);
+  track(osc, time);
 };

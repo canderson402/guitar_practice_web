@@ -1,3 +1,4 @@
+import { foldIntoRange } from '../logic/noteReadingLogic';
 import type { Label } from '../logic/noteReadingLogic';
 import type { Duration } from '../components/GrandStaff';
 import type { Melody, MelodyElement } from './famousMelodies';
@@ -137,7 +138,10 @@ export const generatePhrase = (config: PhraseConfig): Melody => {
         duration,
       };
     });
-    return centerOctave(notes, targetForClef(clefTarget));
+    // Keep every note on the answer piano (A1..G6).
+    return centerOctave(notes, targetForClef(clefTarget)).map((el) =>
+      el.kind === 'note' ? { ...el, midi: foldIntoRange(el.midi) } : el,
+    );
   });
 
   return {

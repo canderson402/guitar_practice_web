@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import './PracticeProgress.css';
 
 export const PracticeProgress: React.FC = () => {
-  const { 
-    timer,
-    metronome,
-    note,
-  } = useStore();
+  const timer = useStore(useShallow(s => ({ isRunning: s.timer.isRunning })));
+  const metronome = useStore(useShallow(s => ({
+    isPlaying: s.metronome.isPlaying,
+    bpm: s.metronome.bpm,
+    beatsPerMeasure: s.metronome.beatsPerMeasure,
+  })));
+  const note = useStore(useShallow(s => ({ currentNoteIndex: s.note.currentNoteIndex })));
   
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [totalSessionTime, setTotalSessionTime] = useState(0);
   const [totalNoteChanges, setTotalNoteChanges] = useState(0);
   const [lastNoteIndex, setLastNoteIndex] = useState(note.currentNoteIndex);
-  const [barsCompleted, setBarsCompleted] = useState(0);
-  const [lastBeat, setLastBeat] = useState(metronome.currentBeat);
+  const [, setNow] = useState(0);
   
   // Track session start/stop and accumulate time
   useEffect(() => {
@@ -39,13 +41,13 @@ export const PracticeProgress: React.FC = () => {
     }
   }, [note.currentNoteIndex, lastNoteIndex]);
   
-  // Track bars completed
+  // Refresh the session clock once a second while active. Duration is
+  // computed from Date.now() deltas, so this is display-only and can't drift.
   useEffect(() => {
-    if (metronome.isPlaying && metronome.currentBeat === 0 && lastBeat !== 0) {
-      setBarsCompleted(prev => prev + 1);
-    }
-    setLastBeat(metronome.currentBeat);
-  }, [metronome.currentBeat, metronome.isPlaying, lastBeat]);
+    if (!sessionStartTime) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [sessionStartTime]);
   
   // Calculate session duration
   const getSessionDuration = () => {

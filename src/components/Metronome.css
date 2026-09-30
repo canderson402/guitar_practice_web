@@ -22,13 +22,16 @@
   height: 20px;
   border-radius: 50%;
   background-color: var(--ds-color-neutral-200);
-  transition: all 0.1s ease;
+  /* Fade *out* only — the next rule turns transitions off for the active
+     state so a dot lights on the exact frame its beat is heard. */
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .beat-dot.active {
   background-color: var(--ds-color-primary);
   transform: scale(1.3);
   box-shadow: 0 0 10px var(--ds-color-primary-light);
+  transition: none;
 }
 
 .beat-dot.accent.active {

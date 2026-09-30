@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Select, Button, ToggleButtonGroup } from '../ui';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore, configurationPresets } from '../store/useStore';
 import { themes } from '../utils/themeGenerator';
 
@@ -13,14 +14,7 @@ const AppShell: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const {
-    theme,
-    setTheme,
-    applyConfiguration,
-    currentConfiguration,
-    viewMode,
-    setViewMode,
-  } = useStore();
+  const { theme, setTheme, applyConfiguration, currentConfiguration, viewMode, setViewMode } = useStore(useShallow(s => ({ theme: s.theme, setTheme: s.setTheme, applyConfiguration: s.applyConfiguration, currentConfiguration: s.currentConfiguration, viewMode: s.viewMode, setViewMode: s.setViewMode })));
 
   const section = SECTIONS.find(s => s.value === location.pathname)?.value ?? '/';
   const isPractice = section === '/';

@@ -10,6 +10,10 @@ import { DesignSystemPreview } from './ui/DesignSystemPreview';
 import { useStore } from './store/useStore';
 import { injectThemeStyles } from './utils/themeGenerator';
 
+import { ChunkErrorBoundary } from './v2/ChunkErrorBoundary';
+
+const V2App = React.lazy(() => import('./v2/V2App'));
+
 function App() {
   const theme = useStore(s => s.theme);
 
@@ -23,6 +27,7 @@ function App() {
 
   return (
     <Routes>
+      <Route path="/v2/*" element={<ChunkErrorBoundary><React.Suspense fallback={null}><V2App /></React.Suspense></ChunkErrorBoundary>} />
       <Route path="/design" element={<DesignSystemPreview />} />
       <Route element={<AppShell />}>
         <Route index element={<PracticePage />} />

@@ -8,7 +8,7 @@
 
 export type Duration = 'whole' | 'half' | 'quarter' | 'eighth' | 'sixteenth';
 
-export type Spelling = 'sharp' | 'flat' | 'natural-C' | 'natural-F';
+export type Spelling = 'sharp' | 'flat' | 'natural-F';
 
 export interface Note {
   /** MIDI pitch number. A4 = 69. Ignored when `isRest` is true. */
@@ -16,7 +16,7 @@ export interface Note {
   /** When true, renders a rest of `duration`. Other pitch fields are ignored. */
   isRest?: boolean;
   /** Force enharmonic spelling. Default 'sharp' (black keys spell as sharp).
-   *  'natural-C' renders C / B# / Cb family, 'natural-F' renders F / E# / Fb. */
+   *  'natural-F' renders F / E# / Fb. */
   spelling?: Spelling;
   /** 'show' always renders the accidental glyph even for naturals; 'auto'
    *  (default) only renders when the spelling requires one. */
@@ -26,6 +26,8 @@ export interface Note {
   /** CSS color applied to the notehead + stem. Used for highlighting the
    *  current target note in phrase-style exercises. */
   color?: string;
+  /** Text drawn under the note (e.g. 'C4'). */
+  label?: string;
 }
 
 export interface Voice {
@@ -45,5 +47,10 @@ export interface GrandStaffProps {
   clef?: 'treble' | 'bass' | 'grand';
   /** Pixel width. If omitted the component fills its container. */
   width?: number;
+  /** Extra room above/below the staves (in unscaled px) so notes with many
+   *  ledger lines aren't clipped. Default none. */
+  padding?: { top?: number; bottom?: number };
+  /** Draw everything this many times larger. Default 1. */
+  scale?: number;
   className?: string;
 }

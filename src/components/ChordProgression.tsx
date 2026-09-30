@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import { scales, getScaleChords } from '../data/musicData';
 import { IconButton } from '../ui';
@@ -20,11 +21,7 @@ const CHORD_LEGEND: { label: string; example: string; intervals: string }[] = [
 ];
 
 export const ChordProgression: React.FC = () => {
-  const {
-    note,
-    setSelectedScale,
-    setSelectedChord,
-  } = useStore();
+  const { note, setSelectedScale, setSelectedChord } = useStore(useShallow(s => ({ note: s.note, setSelectedScale: s.setSelectedScale, setSelectedChord: s.setSelectedChord })));
 
   const [showLegend, setShowLegend] = useState(false);
 

@@ -14,6 +14,7 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore, HarmonyNote } from '../store/useStore';
 import {
   scales,
@@ -42,19 +43,7 @@ interface ResolvedNote {
 }
 
 export const HarmonyMaker: React.FC = () => {
-  const {
-    note,
-    harmonyMaker,
-    addBaseNote,
-    reorderNotes,
-    setNoteInterval,
-    cycleNoteVoicing,
-    setNoteVoicingIdx,
-    setDefaultInterval,
-    applyDefaultToAll,
-    clearHarmonyMaker,
-    viewMode,
-  } = useStore();
+  const { note, harmonyMaker, addBaseNote, reorderNotes, setNoteInterval, cycleNoteVoicing, setNoteVoicingIdx, setDefaultInterval, applyDefaultToAll, clearHarmonyMaker, viewMode } = useStore(useShallow(s => ({ note: s.note, harmonyMaker: s.harmonyMaker, addBaseNote: s.addBaseNote, reorderNotes: s.reorderNotes, setNoteInterval: s.setNoteInterval, cycleNoteVoicing: s.cycleNoteVoicing, setNoteVoicingIdx: s.setNoteVoicingIdx, setDefaultInterval: s.setDefaultInterval, applyDefaultToAll: s.applyDefaultToAll, clearHarmonyMaker: s.clearHarmonyMaker, viewMode: s.viewMode })));
 
   // Display toggles — local, no need to persist. Alternate voicings reveal
   // during drag only, so no separate toggle is needed for them.

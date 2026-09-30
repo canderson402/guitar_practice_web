@@ -1,18 +1,18 @@
 import React, { memo } from 'react';
 import { Button } from '../../ui';
-import { Label } from '../../logic/noteReadingLogic';
+import { Answer, Label } from '../../logic/noteReadingLogic';
 
 interface AnswerButtonsProps {
-  wrongPresses: Label[];
+  wrongPresses: Answer[];
   answerState: 'waiting' | 'correct';
-  justPressedCorrect: Label | null;
+  justPressedCorrect: Answer | null;
   onPress: (label: Label) => void;
 }
 
 const ROWS: Label[][] = [
-  ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
+  ['C#', 'D#', 'E#', 'F#', 'G#', 'A#'],
   ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-  ['Cb', 'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb'],
+  ['Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb'],
 ];
 
 const AnswerButtonsImpl: React.FC<AnswerButtonsProps> = ({

@@ -29,7 +29,7 @@
   height: 160px;
   border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--pk-shadow, 0 2px 6px rgba(0, 0, 0, 0.25));
   background: var(--ds-color-neutral-900);
 }
 
@@ -74,8 +74,8 @@
 .piano-key.white {
   flex: 1;
   height: 100%;
-  background: linear-gradient(to bottom, #fdfdfd 0%, #f2f0eb 100%);
-  border-right: 1px solid #c7c2b8;
+  background: linear-gradient(to bottom, var(--pk-white-top, #fdfdfd) 0%, var(--pk-white-bottom, #f2f0eb) 100%);
+  border-right: 1px solid var(--pk-white-border, #c7c2b8);
   padding-bottom: 6px;
   color: var(--ds-color-neutral-700);
 }
@@ -85,7 +85,7 @@
 }
 
 .piano-key.white:hover {
-  background: linear-gradient(to bottom, #fffcec 0%, #ece7d1 100%);
+  background: linear-gradient(to bottom, var(--pk-white-hover-top, #fffcec) 0%, var(--pk-white-hover-bottom, #ece7d1) 100%);
 }
 
 /* Black key: sized by its .piano-black-position wrapper. Narrower than a
@@ -97,7 +97,7 @@
   transform: translateX(-50%);
   width: 66%;
   height: 100%;
-  background: linear-gradient(to bottom, #2a2a2a 0%, #0f0f0f 100%);
+  background: linear-gradient(to bottom, var(--pk-black-top, #2a2a2a) 0%, var(--pk-black-bottom, #0f0f0f) 100%);
   border-radius: 0 0 3px 3px;
   pointer-events: auto;
   color: var(--ds-color-white);
@@ -106,7 +106,7 @@
 }
 
 .piano-key.black:hover {
-  background: linear-gradient(to bottom, #3a3a3a 0%, #1a1a1a 100%);
+  background: linear-gradient(to bottom, var(--pk-black-hover-top, #3a3a3a) 0%, var(--pk-black-hover-bottom, #1a1a1a) 100%);
 }
 
 /* Name label at the bottom of each white key (C, D, E, …). Rendered only

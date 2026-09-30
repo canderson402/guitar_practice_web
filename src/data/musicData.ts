@@ -28,6 +28,12 @@ export const getChromaticScale = (rootNote: string): string[] => {
 };
 
 export const scales = {
+  // All twelve notes — spelled by getChromaticScale (sharps, or flats for flat roots).
+  'Chromatic': {
+    intervals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    description: '1 - ♭2 - 2 - ♭3 - 3 - 4 - ♯4 - 5 - ♭6 - 6 - ♭7 - 7'
+  },
+
   // Pentatonic Scales
   'Major Pentatonic': {
     intervals: [0, 2, 4, 7, 9],
@@ -100,6 +106,7 @@ const getNoteLetter = (note: string): string => {
 export const getScaleNotes = (rootNote: string, scaleType: keyof typeof scales): string[] => {
   const scale = scales[scaleType];
   if (!scale || !scale.intervals) return [];
+  if (scaleType === 'Chromatic') return getChromaticScale(rootNote);
   
   const accidentalType = getAccidentalType(rootNote);
   
@@ -466,12 +473,15 @@ export const resolveInterval = (
 };
 
 // Chromatic position map (exported for use by other modules)
+/** Pitch class (0–11) of any spelling: a letter plus any number of
+ *  accidentals (# / b, and x for a double sharp), e.g. Fb → 4, Ebb → 2, B# → 0.
+ *  Unparseable names fall back to 0. */
 export const getChromaticPosition = (noteName: string): number => {
-  const chromaticMap: { [key: string]: number } = {
-    'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
-    'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
-  };
-  return chromaticMap[noteName] ?? 0;
+  const m = /^([A-G])([#bx]*)$/.exec(noteName);
+  if (!m) return 0;
+  const letter: { [key: string]: number } = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+  const shift = m[2].split('').reduce((n, a) => n + (a === '#' ? 1 : a === 'x' ? 2 : -1), 0);
+  return (((letter[m[1]] + shift) % 12) + 12) % 12;
 };
 
 // Full interval names by semitone distance

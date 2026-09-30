@@ -1,0 +1,24 @@
+.face { height: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-6); padding: 0 var(--space-4) var(--space-3); }
+.transport { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); min-width: 120px; }
+.play { width: 64px; height: 64px; border-radius: 50%; border: none; background: var(--gradient-signature); background-origin: border-box; color: var(--note-label); display: grid; place-items: center; cursor: pointer; }
+.play:disabled { opacity: .4; cursor: default; }
+.playing { background: var(--fill); color: var(--text); }
+.countdown { min-height: 18px; font-size: var(--text-11); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.final { color: var(--accent); }
+.chords { display: flex; align-items: center; justify-content: center; gap: var(--space-4); min-width: 0; }
+.current, .next { display: flex; flex-direction: column; align-items: center; }
+.chordName { font-family: var(--font-mono); font-weight: 700; font-size: var(--text-48); line-height: 1; }
+.nextName { font-family: var(--font-mono); font-weight: 700; font-size: var(--text-24); line-height: 1; opacity: .7; }
+.roman { font-size: var(--text-12); color: var(--text-muted); margin-top: var(--space-1); }
+.arrow { color: var(--text-muted); font-size: var(--text-24); }
+.upcoming { list-style: none; margin: 0 0 0 var(--space-2); padding: 0; display: flex; gap: var(--space-2); font-family: var(--font-mono); font-weight: 700; font-size: var(--text-14); color: var(--text-muted); }
+.source { display: flex; flex-direction: column; gap: var(--space-2); }
+.sourceCompact { align-items: stretch; min-width: 200px; }
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.label { font-size: var(--text-12); color: var(--text-muted); }
+.level { display: grid; grid-template-columns: auto 44px 1fr; align-items: center; gap: var(--space-2); font-size: var(--text-12); }
+.knob { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: var(--space-2); font-size: var(--text-12); color: var(--text-muted); }
+@media (max-width: 767px) {
+  .face { grid-template-columns: 1fr; justify-items: center; gap: var(--space-3); padding-top: var(--space-2); }
+  .upcoming { display: none; }
+}

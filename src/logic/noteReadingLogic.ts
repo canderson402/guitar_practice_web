@@ -5,21 +5,21 @@
 
 export type Label =
   | 'C'  | 'D'  | 'E'  | 'F'  | 'G'  | 'A'  | 'B'
-  | 'C#' | 'D#' | 'E#' | 'F#' | 'G#' | 'A#' | 'B#'
-  | 'Cb' | 'Db' | 'Eb' | 'Fb' | 'Gb' | 'Ab' | 'Bb';
+  | 'C#' | 'D#' | 'E#' | 'F#' | 'G#' | 'A#'
+  | 'Db' | 'Eb' | 'Fb' | 'Gb' | 'Ab' | 'Bb';
 
-/** The 21 labels rendered by the answer button grid. Order matches spec §4.1:
+/** The 19 labels rendered by the answer button grid. Order matches spec §4.1:
  *  row 1 sharps, row 2 naturals, row 3 flats. */
 export const ALL_LABELS: Label[] = [
-  'C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#',
+  'C#', 'D#', 'E#', 'F#', 'G#', 'A#',
   'C',  'D',  'E',  'F',  'G',  'A',  'B',
-  'Cb', 'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb',
+  'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb',
 ];
 
 const LABEL_PC: Record<Label, number> = {
   C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, Fb: 4,
   'E#': 5, F: 5, 'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8,
-  A: 9, 'A#': 10, Bb: 10, B: 11, 'B#': 0, Cb: 11,
+  A: 9, 'A#': 10, Bb: 10, B: 11,
 };
 
 export const labelToPitchClass = (l: Label): number => LABEL_PC[l];
@@ -87,16 +87,37 @@ export const midiFromTuningAndFret = (
   return 12 * (octave + 1) + pc + fret;
 };
 
+/** Spelled note name with octave, e.g. 'Db4'. Every remaining label (no
+ *  B#/Cb) shares its octave number with the MIDI pitch. */
+export const noteNameWithOctave = (label: Label, midi: number): string =>
+  `${label}${Math.floor(midi / 12) - 1}`;
+
+// ---- Tested range ----
+
+/** Every prompt in every mode lands in A1..G6, which is exactly what the
+ *  answer piano shows. */
+export const MIDDLE_C = 60;
+export const RANGE_MIN = 33; // A1
+export const RANGE_MAX = 91; // G6
+
+/** Move a pitch by whole octaves until it sits inside A1..G6. */
+export const foldIntoRange = (midi: number): number => {
+  let m = midi;
+  while (m < RANGE_MIN) m += 12;
+  while (m > RANGE_MAX) m -= 12;
+  return m;
+};
+
 // ---- Spelling selection for staff prompts ----
 
-const NATURAL_PCS = new Set([0, 4, 5, 11]); // C, E, F, B
-const NATURAL_LETTERS = new Set<Label>(['C', 'E', 'F', 'B']);
+const NATURAL_PCS = new Set([4, 5]); // E, F
+const NATURAL_LETTERS = new Set<Label>(['E', 'F']);
 
 /** Pick a Label spelling for a MIDI pitch, using the spec §7.1 weighting:
  *  - Pitch classes with only one valid Label always use it (D, D#, etc.).
  *  - Black-key pitch classes with two spellings: 50/50 sharp vs flat.
- *  - Natural-natural pitch classes (0,4,5,11) pick the enharmonic 10% of the
- *    time (B#/Cb/E#/Fb) to keep the full 21-button grid exercised. */
+ *  - E and F pick the enharmonic 10% of the time (Fb/E#) to keep the answer
+ *    grid exercised. */
 const pickSpellingForMidi = (midi: number): Label => {
   const pc = ((midi % 12) + 12) % 12;
   const options = pitchClassToLabels(pc);
@@ -118,7 +139,7 @@ export const pickStaffPrompt = (
   const clef: 'treble' | 'bass' = both
     ? (Math.random() < 0.5 ? 'treble' : 'bass')
     : (clefs.treble ? 'treble' : 'bass');
-  const midi = clef === 'treble' ? randInt(60, 84) : randInt(40, 60);
+  const midi = clef === 'treble' ? randInt(MIDDLE_C, RANGE_MAX) : randInt(RANGE_MIN, MIDDLE_C);
   const spelling = pickSpellingForMidi(midi);
   return { kind: 'staff', midi, clef, spelling };
 };
@@ -127,21 +148,33 @@ export const pickFretboardPrompt = (
   tuning: string[],
   fretCount: number = 12,
 ): FretboardPrompt => {
-  const stringIndex = randInt(0, 5);
-  const fret = randInt(0, fretCount);
-  const midi = midiFromTuningAndFret(tuning, stringIndex, fret);
+  // Only positions whose pitch falls in the tested range.
+  const positions: Array<{ stringIndex: number; fret: number; midi: number }> = [];
+  tuning.forEach((_, si) => {
+    for (let f = 0; f <= fretCount; f++) {
+      const m = midiFromTuningAndFret(tuning, si, f);
+      if (m >= RANGE_MIN && m <= RANGE_MAX) positions.push({ stringIndex: si, fret: f, midi: m });
+    }
+  });
+  const { stringIndex, fret, midi } = positions[randInt(0, positions.length - 1)];
   const acceptableAnswers = pitchClassToLabels(((midi % 12) + 12) % 12);
   return { kind: 'fretboard', midi, stringIndex, fret, acceptableAnswers };
 };
 
 // ---- Validation ----
 
-export const validateAnswer = (prompt: Prompt, label: Label): 'correct' | 'wrong' => {
-  if (prompt.kind === 'staff' || prompt.kind === 'phrase') {
-    return label === prompt.spelling ? 'correct' : 'wrong';
-  }
-  return prompt.acceptableAnswers.includes(label) ? 'correct' : 'wrong';
+/** A piano key (MIDI number) or a note-name button (Label). */
+export type Answer = number | Label;
+
+/** Piano keys must match exactly — right octave included; any spelling works
+ *  (the C#/Db key answers both). Note-name buttons (fretboard mode) match on
+ *  pitch class, so either enharmonic counts. */
+export const validateAnswer = (prompt: Prompt, answer: Answer): 'correct' | 'wrong' => {
+  if (typeof answer === 'number') return answer === prompt.midi ? 'correct' : 'wrong';
+  const pc = ((prompt.midi % 12) + 12) % 12;
+  return labelToPitchClass(answer) === pc ? 'correct' : 'wrong';
 };
+
 
 // ---- No-immediate-repeat guard ----
 

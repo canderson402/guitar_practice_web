@@ -1,16 +1,15 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import { majorProgressions, minorProgressions } from '../data/musicData';
-import type { JamAlgorithm, JamChord } from '../data/jamAlgorithms';
+import type { JamAlgorithm } from '../data/jamAlgorithms';
+import { setMasterVolume, loadClickSamples, setClickVolume, useTransport } from '../audio';
 import {
-  createScheduler,
-  setMasterVolume,
-  getAudioContext, getMasterGain, getReverbSend,
-  createPartChannel, createChorus,
-  createPadSynth,
-  scheduleClick, loadClickSamples,
-} from '../audio';
-import type { Scheduler, PartChannel, PadSynth } from '../audio';
+  initJam, startJam, stopJam, jamCountdownText, getPadSettings, setPadSettings, setPadPatch, setPadVolume,
+  padDefaultsFor, PATCH_OPTIONS, DEFAULT_PATCH_ID,
+} from '../audio/jamEngine';
+import type { PadSettings } from '../audio/jamEngine';
+import { getPatch } from '../audio/padSynth';
 import { Button, Select, Checkbox, ToggleButtonGroup } from '../ui';
 import './JamCard.css';
 
@@ -49,94 +48,15 @@ const ALGORITHM_GROUPS = (() => {
 const MAJOR_PRESET_OPTIONS = Object.keys(majorProgressions).map(n => ({ value: n, label: n }));
 const MINOR_PRESET_OPTIONS = Object.keys(minorProgressions).map(n => ({ value: n, label: n }));
 
-// Stop fade-out: how fast the pad channel drops to silence when you press
-// Stop. Short enough to feel responsive, long enough to avoid a click.
-const STOP_FADE_SEC = 0.15;
-
-/**
- * Simple close-position voicing: root, 3rd, 5th (and any extra chord tones
- * already in chord.midi) all in their base octave, plus a bass note one
- * octave below the root. Predictable and consonant — no voice-leading
- * octave shuffling that can produce harsh clusters, no drop-2 spread, no
- * added 7ths or spice notes.
- */
-const buildSimpleVoicing = (chord: JamChord): number[] => {
-  const [root] = chord.midi;
-  if (root == null) return [];
-  return [root - 12, ...chord.midi];
-};
-
-// ---- Live-adjustable pad settings ----
-// Exposed in the UI. Kept in a React ref so the (module-level) scheduler
-// callback always reads the latest values without re-subscribing.
-interface PadSettings {
-  /** Seconds for each voice to fade silence → peak (gentle bloom). */
-  attack: number;
-  /** Seconds for the envelope to slump from peak → sustain level. */
-  decay: number;
-  /** Held level (0–1) relative to peak after decay — note body volume. */
-  sustain: number;
-  /** Seconds for a voice to fade out when the chord changes (noteOff). */
-  release: number;
-  /** Seconds between successive notes in the voicing "strum". */
-  stagger: number;
-  /** Detune in cents applied ±det to the two saw oscillators. 0 = unison,
-   *  10–20 = classic chorus/pad width. */
-  detune: number;
-  /** Lowpass filter cutoff in Hz — shapes the pad's brightness. */
-  cutoff: number;
-  /** Reverb wet amount, 0 = dry, 1 = full wet send. */
-  reverbAmount: number;
-}
-
-const DEFAULT_PAD: PadSettings = {
-  // Fast attack so the chord lands AT the downbeat, not smeared after it.
-  // Crank higher for slow-bloom pads, but anything over ~0.15s will make
-  // chord changes feel late relative to the click.
-  attack:       0.05,
-  decay:        1.50,
-  sustain:      0.80,
-  // Long-ish release so the old chord tail overlaps the new chord's body —
-  // smooth crossfade without a perceptible gap.
-  release:      1.80,
-  // Zero stagger so all voices hit together on the downbeat. Positive
-  // stagger creates a 'strum' feel but smears the beat.
-  stagger:      0.000,
-  detune:       12,
-  cutoff:       2000,
-  reverbAmount: 0.65,
-};
-
-// ---------------------------------------------------------------------------
-// Module-level refs — survive card mount/unmount
-// ---------------------------------------------------------------------------
-
-let moduleScheduler: Scheduler | null = null;
-let padChannel: PartChannel | null = null;
-let padSynth: PadSynth | null = null;
-
-const ensurePad = (): { channel: PartChannel; synth: PadSynth } => {
-  if (padChannel && padSynth) return { channel: padChannel, synth: padSynth };
-  const ctx = getAudioContext();
-  const master = getMasterGain();
-  const reverb = getReverbSend();
-
-  // Chorus insert for width, HPF @120 to cut rumble, gentle 400 Hz dip to
-  // open up the midrange, reverb send exposed so we can dial it live.
-  padChannel = createPartChannel(ctx, master, reverb, {
-    pan: 0,
-    hpfHz: 120,
-    peakHz: 400,
-    peakGainDb: -2,
-    peakQ: 1.0,
-    reverbAmount: DEFAULT_PAD.reverbAmount,
-    insertEffect: createChorus(ctx),
-  });
-
-  // The synth dumps every voice into the pad channel's input.
-  padSynth = createPadSynth(ctx, padChannel.input);
-
-  return { channel: padChannel, synth: padSynth };
+/** Countdown from the shared engine; the only part of the card that
+ *  re-renders per beat. */
+const JamCountdown: React.FC = () => {
+  const jam = useStore(useShallow(s => ({ isPlaying: s.jam.isPlaying, countIn: s.jam.countIn, barsPerChord: s.jam.barsPerChord })));
+  const pos = useTransport(useShallow(s => ({ beatCount: s.beatCount, barIndex: s.barIndex, beatInBar: s.beatInBar, beatsPerBar: s.beatsPerBar })));
+  const text = jamCountdownText(jam, pos);
+  if (!text) return null;
+  const className = `jam-countdown${text.startsWith('Count-in') ? ' jam-countdown--countin' : text.startsWith('Next') ? ' jam-countdown--final' : ''}`;
+  return <div className={className}><span>{text}</span></div>;
 };
 
 // ---------------------------------------------------------------------------
@@ -144,32 +64,49 @@ const ensurePad = (): { channel: PartChannel; synth: PadSynth } => {
 // ---------------------------------------------------------------------------
 
 export const JamCard: React.FC = () => {
+  const jam = useStore(s => s.jam);
+  const note = useStore(useShallow(s => ({
+    selectedNote: s.note.selectedNote,
+    selectedScale: s.note.selectedScale,
+  })));
+  const metronome = useStore(useShallow(s => ({
+    bpm: s.metronome.bpm,
+    muted: s.metronome.muted,
+    volume: s.metronome.volume,
+    isPlaying: s.metronome.isPlaying,
+  })));
   const {
-    jam, note, metronome,
-    setJamMode, setJamPlaying, setJamPreset, setJamAlgorithm,
+    setJamMode, setJamPreset, setJamAlgorithm,
     setJamBarsPerChord, setJamCountIn,
     setJamMixerVolume, setJamMixerMuted,
-    rebuildJamQueue, setMetronomePlaying, setMetronomeMuted,
-    setBpm, setCurrentBeat,
-  } = useStore();
+    setMetronomeMuted, setMetronomeVolume,
+    setBpm,
+  } = useStore(useShallow(s => ({
+    setJamMode: s.setJamMode,
+    setJamPreset: s.setJamPreset,
+    setJamAlgorithm: s.setJamAlgorithm,
+    setJamBarsPerChord: s.setJamBarsPerChord,
+    setJamCountIn: s.setJamCountIn,
+    setJamMixerVolume: s.setJamMixerVolume,
+    setJamMixerMuted: s.setJamMixerMuted,
+    setMetronomeMuted: s.setMetronomeMuted,
+    setMetronomeVolume: s.setMetronomeVolume,
+    setBpm: s.setBpm,
+  })));
 
-  // Pad settings — source of truth for UI lives in React state. The
-  // scheduler (module-level, long-lived closure) reads from the ref to
-  // always see the latest values without having to be re-created.
-  const [pad, setPad] = useState<PadSettings>(DEFAULT_PAD);
-  const padRef = useRef<PadSettings>(pad);
-  useEffect(() => { padRef.current = pad; }, [pad]);
+  // Pad settings — the UI's copy lives in React state and is pushed to the
+  // shared engine (which retunes the sounding chord live).
+  const [patchId, setPatchId] = useState<string>(DEFAULT_PATCH_ID);
+  const [pad, setPad] = useState<PadSettings>(() => getPadSettings());
+  useEffect(() => { setPadSettings(pad); }, [pad]);
 
   // Show/hide the pad settings panel.
   const [showPadSettings, setShowPadSettings] = useState(false);
 
-  // Live bar/beat countdown state
-  const [barCountdown, setBarCountdown] = useState<{ bar: number; total: number; beat?: number; beatTotal?: number; countIn?: number } | null>(null);
-
   // Wire up the pad channel + synth on mount, and kick off click-sample
-  // loading so the scheduler can fire them in sync from the first beat.
+  // loading so the transport can fire them from the first beat.
   useEffect(() => {
-    ensurePad();
+    initJam();
     loadClickSamples();
   }, []);
 
@@ -178,171 +115,25 @@ export const JamCard: React.FC = () => {
     setMasterVolume(jam.mixer.master.volume / 100);
   }, [jam.mixer.master.volume]);
 
-  // Live-update reverb send when the slider moves.
+  // Pad volume + mute — applied to the chord already sounding.
   useEffect(() => {
-    const ch = padChannel;
-    if (!ch?.sendGain) return;
-    const ctx = getAudioContext();
-    ch.sendGain.gain.setTargetAtTime(pad.reverbAmount, ctx.currentTime, 0.02);
-  }, [pad.reverbAmount]);
+    setPadVolume(jam.mixer.chords.volume, jam.mixer.chords.muted);
+  }, [jam.mixer.chords.volume, jam.mixer.chords.muted]);
 
-  // Rebuild queue on config changes
-  const rebuildDepsKey = `${jam.mode}|${jam.selectedPreset}|${jam.algorithm}|${note.selectedNote}|${note.selectedScale}`;
+  // Metronome click volume — applies instantly via the shared click bus.
   useEffect(() => {
-    rebuildJamQueue();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rebuildDepsKey]);
+    setClickVolume(metronome.volume / 100);
+  }, [metronome.volume]);
 
-  // Keep scheduler BPM in sync
-  useEffect(() => {
-    if (moduleScheduler?.isRunning()) {
-      moduleScheduler.setBpm(metronome.bpm);
-    }
-  }, [metronome.bpm]);
+  const handlePatchChange = (id: string) => {
+    setPatchId(id);
+    setPad(setPadPatch(id));
+  };
 
-  // If the metronome gets stopped from outside (e.g. its own Stop button),
-  // stop the jam too — the user wants them linked: "if one is running
-  // the other one is running". Handled via a ref so we don't need to put
-  // stopPlayback in the dep array (which would re-run on every render).
-  const stopRef = useRef<() => void>(() => {});
-  useEffect(() => {
-    if (!metronome.isPlaying && jam.isPlaying) {
-      stopRef.current();
-    }
-  }, [metronome.isPlaying, jam.isPlaying]);
-
-  // ---- Playback ----
-
-  const startPlayback = useCallback(() => {
-    if (moduleScheduler?.isRunning()) return;
-
-    // Reset chord position so we always start from the top
-    rebuildJamQueue();
-
-    // Fresh pad + restore channel gain (stopPlayback ducks it to silence).
-    const { channel, synth } = ensurePad();
-    const ctx = getAudioContext();
-    channel.duckGain.gain.cancelScheduledValues(ctx.currentTime);
-    channel.duckGain.gain.setValueAtTime(1, ctx.currentTime);
-
-    // Snapshot the count-in length at start so changing it mid-play is safe
-    const countInBeats = useStore.getState().jam.countIn;
-
-    const scheduler = createScheduler(metronome.bpm, (beatIndex, audioTime) => {
-      const state = useStore.getState();
-      const j = state.jam;
-      const m = state.metronome;
-      const mx = j.mixer;
-      const beatsPerBar = m.beatsPerMeasure;
-      const p = padRef.current;
-
-      // Count-in phase: click only, no chords, no chord advance
-      const isCountingIn = beatIndex < countInBeats;
-      const musicBeat = beatIndex - countInBeats; // negative during count-in
-      const beatInBar = isCountingIn
-        ? beatIndex % beatsPerBar
-        : musicBeat % beatsPerBar;
-
-      // Drive the metronome click — fires during count-in too
-      scheduleClick(audioTime, {
-        soundType: m.soundType,
-        muted: m.muted,
-        isAccent: true,
-        isFirstBeat: beatInBar === 0,
-        emphasizeFirstBeat: m.emphasizeFirstBeat,
-      });
-
-      const s = useStore.getState();
-      s.setCurrentBeat(beatInBar);
-
-      if (isCountingIn) {
-        const countInRemaining = countInBeats - beatIndex;
-        setBarCountdown({ bar: 0, total: 0, countIn: countInRemaining });
-        return; // nothing else during count-in
-      }
-
-      // Normal music phase
-      const beatsPerChord = j.barsPerChord * beatsPerBar;
-      const beatInChord = musicBeat % beatsPerChord;
-
-      const isChordChange = beatInChord === 0 && musicBeat > 0;
-      if (isChordChange) s.advanceJamChord();
-
-      // Live bar/beat countdown for the UI
-      const currentBarInChord = Math.floor(beatInChord / beatsPerBar) + 1;
-      const barsRemaining = j.barsPerChord - currentBarInChord + 1;
-      if (barsRemaining === 1) {
-        const beatsRemaining = beatsPerBar - beatInBar;
-        setBarCountdown({ bar: currentBarInChord, total: j.barsPerChord, beat: beatsRemaining, beatTotal: beatsPerBar });
-      } else {
-        setBarCountdown({ bar: currentBarInChord, total: j.barsPerChord });
-      }
-
-      // Pad only triggers on chord boundaries
-      const isFirstMusicBeat = musicBeat === 0;
-      if (!isFirstMusicBeat && !isChordChange) return;
-      if (mx.chords.muted) return;
-
-      const queue = j.chordQueue;
-      if (queue.length === 0) return;
-      const voicingIndex = isChordChange
-        ? (j.currentChordIndex + 1) % queue.length
-        : j.currentChordIndex;
-      const currentChord = queue[voicingIndex];
-      if (!currentChord) return;
-
-      const voicing = buildSimpleVoicing(currentChord);
-      if (voicing.length === 0) return;
-
-      const vol = mx.chords.volume / 100;
-      const perVoiceGain = (vol * 0.45) / Math.sqrt(Math.max(voicing.length, 1));
-
-      synth.noteOff(audioTime, p.release);
-      voicing.forEach((midi, i) => {
-        synth.noteOn([midi], audioTime + i * p.stagger, {
-          attack: p.attack,
-          decay: p.decay,
-          sustain: p.sustain,
-          release: p.release,
-          detune: p.detune,
-          cutoff: p.cutoff,
-          gain: perVoiceGain,
-        });
-      });
-    });
-
-    moduleScheduler = scheduler;
-    scheduler.start();
-    setJamPlaying(true);
-    setMetronomePlaying(true);
-  }, [metronome.bpm, setJamPlaying, setMetronomePlaying, rebuildJamQueue]);
-
-  const stopPlayback = useCallback(() => {
-    // Cut pad audio immediately: duck the whole channel to silence over
-    // STOP_FADE_SEC (anti-click), then panic the synth to kill oscillators.
-    const ch = padChannel;
-    if (ch) {
-      const ctx = getAudioContext();
-      const t0 = ctx.currentTime;
-      const g = ch.duckGain.gain;
-      g.cancelScheduledValues(t0);
-      g.setValueAtTime(g.value, t0);
-      g.linearRampToValueAtTime(0.0001, t0 + STOP_FADE_SEC);
-    }
-    // Kill every live voice so the oscillators actually stop running (the
-    // channel duck above just silences them downstream).
-    padSynth?.panic();
-    moduleScheduler?.stop();
-    moduleScheduler = null;
-    setJamPlaying(false);
-    setMetronomePlaying(false);
-    setCurrentBeat(0);
-    setBarCountdown(null);
-  }, [setJamPlaying, setMetronomePlaying, setCurrentBeat]);
-
-  // Keep the ref pointing at the latest stopPlayback so the linkage effect
-  // above can call it without capturing a stale closure.
-  useEffect(() => { stopRef.current = stopPlayback; }, [stopPlayback]);
+  // Queue rebuilds on key/progression changes and the metronome link live
+  // in the shared engine (initJam).
+  const stopPlayback = stopJam;
+  const startPlayback = startJam;
 
   // ---- Derived ----
 
@@ -445,16 +236,7 @@ export const JamCard: React.FC = () => {
             ))}
           </div>
         )}
-        {jam.isPlaying && barCountdown && (
-          <div className={`jam-countdown${barCountdown.beat != null ? ' jam-countdown--final' : ''}${barCountdown.countIn != null ? ' jam-countdown--countin' : ''}`}>
-            {barCountdown.countIn != null
-              ? <span>Count-in: {barCountdown.countIn}</span>
-              : barCountdown.beat != null
-                ? <span>Next in: {barCountdown.beat} {barCountdown.beat === 1 ? 'beat' : 'beats'}</span>
-                : <span>Bar {barCountdown.bar} of {barCountdown.total}</span>
-            }
-          </div>
-        )}
+        <JamCountdown />
       </div>
 
       {/* Mixer — Master + Pad volume + Metronome-click mute */}
@@ -494,7 +276,19 @@ export const JamCard: React.FC = () => {
           <Checkbox
             checked={!metronome.muted}
             onCheckedChange={(checked) => setMetronomeMuted(!checked)}
-            label="Metronome click"
+            label="Click"
+          />
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={metronome.volume}
+            onChange={(e) => setMetronomeVolume(Number(e.target.value))}
+            disabled={metronome.muted}
+            list="jam-mixer-ticks"
+            className="jam-mixer-slider"
+            aria-label="Metronome click volume"
           />
         </div>
         <datalist id="jam-mixer-ticks">
@@ -504,8 +298,17 @@ export const JamCard: React.FC = () => {
         </datalist>
       </div>
 
-      {/* Pad settings — collapsible */}
+      {/* Pad sound + settings — collapsible */}
       <div className="jam-mixer">
+        <div className="jam-mixer-row">
+          <span className="jam-mixer-label">Sound</span>
+          <Select
+            size="sm"
+            value={patchId}
+            onChange={(e) => handlePatchChange(e.target.value)}
+            options={PATCH_OPTIONS}
+          />
+        </div>
         <div className="jam-mixer-row">
           <Button
             variant="outline"
@@ -518,8 +321,8 @@ export const JamCard: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPad(DEFAULT_PAD)}
-              title="Reset pad settings to defaults"
+              onClick={() => setPad(padDefaultsFor(getPatch(patchId)))}
+              title="Reset pad settings to this sound's defaults"
             >
               Reset
             </Button>
@@ -567,10 +370,11 @@ export const JamCard: React.FC = () => {
           size="sm"
           value={jam.countIn}
           onChange={(e) => setJamCountIn(Number(e.target.value))}
+          disabled={jam.isPlaying}
           options={[
             { value: '0', label: 'None' },
-            { value: '4', label: '4 beats' },
-            { value: '8', label: '8 beats' },
+            { value: '1', label: '1 bar' },
+            { value: '2', label: '2 bars' },
           ]}
         />
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 import {
   notes,
@@ -33,7 +34,7 @@ const SWATCHES = {
 };
 
 export const GuitarNeck: React.FC = () => {
-  const { note, setSelectedScale, viewMode } = useStore();
+  const { note, setSelectedScale, viewMode } = useStore(useShallow(s => ({ note: s.note, setSelectedScale: s.setSelectedScale, viewMode: s.viewMode })));
   const [show24Frets, setShow24Frets] = React.useState(true);
   const [showRoot, setShowRoot] = React.useState(true);
   const [showScale, setShowScale] = React.useState(true);

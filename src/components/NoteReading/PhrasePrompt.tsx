@@ -7,10 +7,13 @@ interface Props {
   answerState: 'waiting' | 'correct';
   trebleEnabled: boolean;
   bassEnabled: boolean;
+  showLabels: boolean;
+  /** Passed through to MelodyStaff. */
+  scale?: number;
 }
 
 const PhrasePromptImpl: React.FC<Props> = ({
-  prompt, answerState, trebleEnabled, bassEnabled,
+  prompt, answerState, trebleEnabled, bassEnabled, showLabels, scale,
 }) => {
   const clef: 'treble' | 'bass' | 'grand' =
     trebleEnabled && bassEnabled ? 'grand' : bassEnabled ? 'bass' : 'treble';
@@ -23,6 +26,8 @@ const PhrasePromptImpl: React.FC<Props> = ({
         clef={clef}
         currentNoteIndex={prompt.noteIndex}
         currentJustCompleted={answerState === 'correct'}
+        showLabels={showLabels}
+        scale={scale}
       />
     </div>
   );

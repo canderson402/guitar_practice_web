@@ -1,0 +1,4 @@
+.grid { display: grid; gap: 4px; }
+.opt { border: none; background: var(--fill); color: var(--text); border-radius: var(--radius-sm); padding: 6px 0; font-weight: 600; font-size: var(--text-12); cursor: pointer; }
+.opt:hover { background: var(--line-strong); }
+.on, .on:hover { background: var(--text); color: var(--text-inverse); }

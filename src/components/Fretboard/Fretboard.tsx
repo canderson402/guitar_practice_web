@@ -10,6 +10,16 @@ import './Fretboard.css';
 // typed callbacks.
 // ---------------------------------------------------------------------------
 
+/** Makes a clickable cell a keyboard- and screen-reader-reachable button. */
+const cellButton = (label: string, activate: () => void) => ({
+  role: 'button',
+  tabIndex: 0,
+  'aria-label': label,
+  onKeyDown: (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+  },
+});
+
 export const Fretboard: React.FC<FretboardProps> = ({
   strings,
   fretCount,
@@ -71,6 +81,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                   className={classes}
                   style={style}
                   onClick={onCellClick ? () => onCellClick(index, 0, openNote) : undefined}
+                  {...(onCellClick ? cellButton(`${openNote} on string ${index + 1}, fret 0`, () => onCellClick(index, 0, openNote)) : {})}
                   draggable={isDragSource}
                   onDragStart={
                     isDragSource && onDragStart
@@ -186,6 +197,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                         <div
                           className="fretboard-cell-hit"
                           onClick={handleClick}
+                          {...(handleClick ? cellButton(`${noteName} on string ${stringIndex + 1}, fret ${fret}`, handleClick) : {})}
                           onDragOver={
                             cellsAcceptDrops
                               ? (e) => {

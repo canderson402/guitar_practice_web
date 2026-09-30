@@ -1,0 +1,5 @@
+.icon { display: inline-grid; place-items: center; border: none; background: transparent; color: var(--text-muted); border-radius: var(--radius-sm); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
+.icon:hover { background: var(--fill); color: var(--text); }
+.md { width: 32px; height: 32px; }
+.sm { width: 26px; height: 26px; }
+.active { color: var(--accent); }

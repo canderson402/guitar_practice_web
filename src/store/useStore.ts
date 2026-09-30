@@ -11,9 +11,9 @@ import {
 } from '../data/jamAlgorithms';
 import {
   Prompt as NoteReadingPrompt,
-  Label as NoteReadingLabel,
   nextPromptAvoidingRepeat,
   validateAnswer as validateNoteReadingAnswer,
+  Answer as NoteReadingAnswer,
 } from '../logic/noteReadingLogic';
 import {
   Melody,
@@ -39,8 +39,12 @@ interface MetronomeState {
    *  advances (including the beat-dot display); the playClick call just
    *  bails before it schedules any sound. */
   muted: boolean;
-  currentBeat: number;
+  /** Click volume, 0–100. */
+  volume: number;
   beatsPerMeasure: number;
+  /** Time signature bottom number (note value that gets the beat). Clicks
+   *  per bar = beatsPerMeasure; BPM counts this note value. */
+  beatUnit: number;
   subdivision: 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet';
   emphasizeFirstBeat: boolean;
   soundType: 'synth' | 'asrx';
@@ -108,6 +112,11 @@ export interface HarmonyNote {
   fret: number;
   interval: IntervalSpec;  // per-note spec — overrides are simply a value diff
   voicingIdx: number;      // index into the currently-computed voicings list
+  /** false = placed since the last Apply, so no harmony yet (v2). Missing
+   *  (older saves, v1) counts as harmonized. */
+  harmonized?: boolean;
+  /** A harmony spot the player picked (v2); otherwise the card chooses one. */
+  harmonyAt?: FretPosition;
 }
 
 interface HarmonyMakerState {
@@ -140,7 +149,8 @@ interface JamState {
   /** How many bars each chord is held before advancing. 1-16.
    *  (Scheduler multiplies by 4 internally to get beats, assuming 4/4.) */
   barsPerChord: number;
-  /** Count-in beats before the first chord plays. 0 = disabled. */
+  /** Count-in bars before the first chord plays. 0 = disabled. Whole bars
+   *  so the first chord always lands on a downbeat in any meter. */
   countIn: number;
   walkState: WalkState;
   mixer: JamMixer;
@@ -165,8 +175,10 @@ interface NoteReadingState {
   phraseNoteIndex: number;
   prompt: NoteReadingPrompt | null;
   answerState: 'waiting' | 'correct';
-  wrongPresses: NoteReadingLabel[];
-  justPressedCorrect: NoteReadingLabel | null;
+  /** Answers pressed wrong this round (piano MIDI or note-name label). */
+  wrongPresses: NoteReadingAnswer[];
+  /** The answer that was correct. */
+  justPressedCorrect: NoteReadingAnswer | null;
   hadWrongThisRound: boolean;
   score: {
     correct: number;
@@ -272,12 +284,13 @@ interface StoreState {
   // Metronome actions
   setMetronomePlaying: (isPlaying: boolean) => void;
   setBpm: (bpm: number) => void;
-  setCurrentBeat: (beat: number) => void;
   setBeatsPerMeasure: (beats: number) => void;
+  setBeatUnit: (unit: number) => void;
   setSubdivision: (subdivision: 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet') => void;
   setEmphasizeFirstBeat: (emphasize: boolean) => void;
   setMetronomeSoundType: (soundType: 'synth' | 'asrx') => void;
   setMetronomeMuted: (muted: boolean) => void;
+  setMetronomeVolume: (volume: number) => void;
   
   // Note actions
   setSelectedNote: (note: string | null) => void;
@@ -316,7 +329,13 @@ interface StoreState {
   // interval + voicing with it automatically.
   addBaseNote: (pos: FretPosition) => void;
   removeBaseNote: (stringIndex: number, fret: number) => void;
+  /** Move a note to another fret, keeping its interval and place in the order. */
+  moveBaseNote: (from: FretPosition, to: FretPosition) => void;
+  /** Keep a note's harmony at a spot the player picked. */
+  setHarmonyPosition: (stringIndex: number, fret: number, pos: FretPosition) => void;
   reorderNotes: (fromIdx: number, toIdx: number) => void;
+  /** Trade two notes' places in the play order. */
+  swapNotes: (a: number, b: number) => void;
   setNoteInterval: (stringIndex: number, fret: number, spec: IntervalSpec) => void;
   cycleNoteVoicing: (stringIndex: number, fret: number, totalVoicings: number) => void;
   setNoteVoicingIdx: (stringIndex: number, fret: number, idx: number) => void;
@@ -348,7 +367,7 @@ interface StoreState {
     bassEnabled: boolean;
   }>) => void;
   nextNoteReadingPrompt: () => void;
-  pressNoteReadingAnswer: (label: NoteReadingLabel) => void;
+  pressNoteReadingAnswer: (answer: NoteReadingAnswer) => void;
   resetNoteReadingScore: () => void;
 
   // Card management
@@ -376,8 +395,9 @@ export const useStore = create<StoreState>((set) => ({
     bpm: 120,
     isPlaying: false,
     muted: false,
-    currentBeat: 0,
+    volume: 80,
     beatsPerMeasure: 4,
+    beatUnit: 4,
     subdivision: 'quarter',
     emphasizeFirstBeat: false,
     soundType: 'asrx',
@@ -390,7 +410,7 @@ export const useStore = create<StoreState>((set) => ({
     changeMode: 'none',
     changeInterval: 4,
     randomize: false,
-    showNextNote: true,
+    showNextNote: false,
     autoAdvanceEnabled: true,
     selectedChord: null,
     // Standard tuning: high E → low E, top-down on the rendered fretboard.
@@ -430,7 +450,7 @@ export const useStore = create<StoreState>((set) => ({
     algorithm: 'fifths',
     drumPattern: 'rock',
     barsPerChord: 4,
-    countIn: 4,
+    countIn: 1,
     walkState: {},
     mixer: {
       master: { volume: 100 },
@@ -493,8 +513,8 @@ export const useStore = create<StoreState>((set) => ({
   setBpm: (bpm) => set((state) => ({ 
     metronome: { ...state.metronome, bpm } 
   })),
-  setCurrentBeat: (currentBeat) => set((state) => ({ 
-    metronome: { ...state.metronome, currentBeat } 
+  setBeatUnit: (beatUnit) => set((state) => ({
+    metronome: { ...state.metronome, beatUnit }
   })),
   setBeatsPerMeasure: (beatsPerMeasure) => set((state) => ({ 
     metronome: { ...state.metronome, beatsPerMeasure } 
@@ -510,6 +530,9 @@ export const useStore = create<StoreState>((set) => ({
   })),
   setMetronomeMuted: (muted) => set((state) => ({
     metronome: { ...state.metronome, muted }
+  })),
+  setMetronomeVolume: (volume) => set((state) => ({
+    metronome: { ...state.metronome, volume: Math.max(0, Math.min(100, volume)) }
   })),
   
   // Note actions
@@ -622,10 +645,30 @@ export const useStore = create<StoreState>((set) => ({
             fret: pos.fret,
             interval: state.harmonyMaker.defaultInterval,
             voicingIdx: 0,
+            harmonized: false,
           },
         ];
     return { harmonyMaker: { ...state.harmonyMaker, notes } };
   }),
+  moveBaseNote: (from, to) => set((state) => {
+    const notes = state.harmonyMaker.notes;
+    if (notes.some(n => n.stringIndex === to.stringIndex && n.fret === to.fret)) return state;
+    return {
+      harmonyMaker: {
+        ...state.harmonyMaker,
+        // New position → the harmony is re-found from there (nearest spot first).
+        notes: notes.map(n => (n.stringIndex === from.stringIndex && n.fret === from.fret
+          ? { ...n, stringIndex: to.stringIndex, fret: to.fret, voicingIdx: 0, harmonyAt: undefined } : n)),
+      },
+    };
+  }),
+  setHarmonyPosition: (stringIndex, fret, pos) => set((state) => ({
+    harmonyMaker: {
+      ...state.harmonyMaker,
+      notes: state.harmonyMaker.notes.map(n => (n.stringIndex === stringIndex && n.fret === fret
+        ? { ...n, harmonyAt: { stringIndex: pos.stringIndex, fret: pos.fret } } : n)),
+    },
+  })),
   removeBaseNote: (stringIndex, fret) => set((state) => ({
     harmonyMaker: {
       ...state.harmonyMaker,
@@ -647,6 +690,12 @@ export const useStore = create<StoreState>((set) => ({
     arr.splice(toIdx, 0, item);
     return { harmonyMaker: { ...state.harmonyMaker, notes: arr } };
   }),
+  swapNotes: (a, b) => set((state) => {
+    const notes = [...state.harmonyMaker.notes];
+    if (a === b || !notes[a] || !notes[b]) return state;
+    [notes[a], notes[b]] = [notes[b], notes[a]];
+    return { harmonyMaker: { ...state.harmonyMaker, notes } };
+  }),
   setNoteInterval: (stringIndex, fret, spec) => set((state) => ({
     harmonyMaker: {
       ...state.harmonyMaker,
@@ -654,7 +703,7 @@ export const useStore = create<StoreState>((set) => ({
       // the previous voicing was for a different pitch.
       notes: state.harmonyMaker.notes.map(n =>
         n.stringIndex === stringIndex && n.fret === fret
-          ? { ...n, interval: spec, voicingIdx: 0 }
+          ? { ...n, interval: spec, voicingIdx: 0, harmonyAt: undefined }
           : n
       ),
     },
@@ -694,6 +743,8 @@ export const useStore = create<StoreState>((set) => ({
         ...n,
         interval: state.harmonyMaker.defaultInterval,
         voicingIdx: 0,
+        harmonized: true,
+        harmonyAt: undefined,
       })),
     },
   })),
@@ -1037,17 +1088,17 @@ export const useStore = create<StoreState>((set) => ({
     };
   }),
 
-  pressNoteReadingAnswer: (label) => set((state) => {
+  pressNoteReadingAnswer: (answer) => set((state) => {
     const { prompt, wrongPresses, score, hadWrongThisRound, answerState } = state.noteReading;
     if (!prompt) return {};
     if (answerState === 'correct') return {};       // locked during feedback pause
-    if (wrongPresses.includes(label)) return {};    // already disabled this round
-    const result = validateNoteReadingAnswer(prompt, label);
+    if (wrongPresses.includes(answer)) return {};   // already disabled this round
+    const result = validateNoteReadingAnswer(prompt, answer);
     if (result === 'wrong') {
       return {
         noteReading: {
           ...state.noteReading,
-          wrongPresses: [...wrongPresses, label],
+          wrongPresses: [...wrongPresses, answer],
           hadWrongThisRound: true,
         },
       };
@@ -1058,7 +1109,7 @@ export const useStore = create<StoreState>((set) => ({
       noteReading: {
         ...state.noteReading,
         answerState: 'correct',
-        justPressedCorrect: label,
+        justPressedCorrect: answer,
         score: {
           correct: newCorrect,
           total: score.total + 1,

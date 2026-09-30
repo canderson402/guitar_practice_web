@@ -1,0 +1,30 @@
+/* Re-themes reused v1 visual components inside v2. v1 keeps its original
+   colors through the var() fallbacks in those components' own CSS. */
+.gp2 {
+  --ds-color-primary: var(--note-root);
+  --ds-color-secondary: var(--note-chord);
+  --ds-color-warning: var(--note-scale);
+  --ms-correct: var(--success);
+  --ms-current: var(--accent);
+  --pk-shadow: var(--elev-2);
+  --fb-shadow-board: var(--elev-2);
+  /* Sheet-music surface: light paper + dark ink in both themes. */
+  --paper: #fbfaf7;
+  --paper-text: #1c1824;
+}
+.gp2[data-theme='dark'] {
+  /* Still light paper (dark ink stays readable), just softer against the dark UI. */
+  --paper: #e8e4dc;
+  --fb-wood: #2a2433; --fb-wood-dark: #1f1a27; --fb-fret: #6d6580; --fb-fret-hi: #a49cb5;
+  --fb-string: #8f88a0; --fb-string-hi: #d3cde0; --fb-nut: #4a4358; --fb-nut-hi: #6d6580; --fb-inlay: #3a3446; --fb-shadow: #00000066;
+  --pk-white-top: #ece9f2; --pk-white-bottom: #d9d4e2; --pk-white-border: #9f98ad;
+  --pk-white-hover-top: #ffffff; --pk-white-hover-bottom: #e8e4ef;
+  --pk-black-top: #221e2b; --pk-black-bottom: #14121a; --pk-black-hover-top: #2e2939; --pk-black-hover-bottom: #1b1822;
+}
+.gp2[data-theme='light'] {
+  --fb-wood: #efe7da; --fb-wood-dark: #e2d6c2; --fb-fret: #a79b88; --fb-fret-hi: #cfc4b2;
+  --fb-string: #8a7f70; --fb-string-hi: #b7ab99; --fb-nut: #cfc4b2; --fb-nut-hi: #e8dfcf; --fb-inlay: #d9cdb9; --fb-shadow: #1c182433;
+  --pk-white-top: #ffffff; --pk-white-bottom: #f3f0f7; --pk-white-border: #d4cde0;
+  --pk-white-hover-top: #fffdf5; --pk-white-hover-bottom: #efeaf6;
+  --pk-black-top: #2a2433; --pk-black-bottom: #14121a; --pk-black-hover-top: #3a3446; --pk-black-hover-bottom: #221e2b;
+}

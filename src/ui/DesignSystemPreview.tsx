@@ -18,9 +18,9 @@ import {
   playKick,
   playSnare,
   playHat,
-  createScheduler,
-  Scheduler,
+  onSchedule,
 } from '../audio';
+import { useStore } from '../store/useStore';
 
 // ---------------------------------------------------------------------------
 // DesignSystemPreview — visual catalog of every primitive in every variant.
@@ -77,30 +77,29 @@ const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, ch
 
 // Audio playground — lets us verify every Phase 5a primitive by ear.
 const AudioDemo: React.FC = () => {
-  const [bpm, setBpm] = React.useState(100);
-  const [running, setRunning] = React.useState(false);
-  const schedulerRef = React.useRef<Scheduler | null>(null);
+  // Rides the app-wide transport like every other time-based feature.
+  const bpm = useStore(s => s.metronome.bpm);
+  const setBpm = useStore(s => s.setBpm);
+  const transportOn = useStore(s => s.metronome.isPlaying);
+  const setMetronomePlaying = useStore(s => s.setMetronomePlaying);
+  const [grooving, setGrooving] = React.useState(false);
+  const running = grooving && transportOn;
 
-  React.useEffect(() => () => schedulerRef.current?.stop(), []);
-
-  // Toggle a simple 4-on-the-floor kick + offbeat hat groove at the
-  // current BPM. Demonstrates the scheduler firing sample-accurate events.
-  const toggleGroove = () => {
-    if (running) {
-      schedulerRef.current?.stop();
-      setRunning(false);
-      return;
-    }
-    const sched = createScheduler(bpm, (beat, time) => {
-      // Quarter-note kicks, snare on 2 & 4, eighth-note closed hats.
-      playKick(time);
-      if (beat % 2 === 1) playSnare(time);
-      playHat(time);
-      playHat(time + 30 / bpm); // between-beat hat (eighth)
+  React.useEffect(() => {
+    if (!running) return;
+    // Quarter-note kicks, snare on 2 & 4, eighth-note closed hats.
+    return onSchedule(ev => {
+      if (ev.subIndex !== 0) return;
+      playKick(ev.time);
+      if (ev.beatCount % 2 === 1) playSnare(ev.time);
+      playHat(ev.time);
+      playHat(ev.time + ev.beatDuration / 2);
     });
-    schedulerRef.current = sched;
-    sched.start();
-    setRunning(true);
+  }, [running]);
+
+  const toggleGroove = () => {
+    setGrooving(!running);
+    setMetronomePlaying(!running);
   };
 
   const cMajor = [60, 64, 67];  // C E G
@@ -146,7 +145,6 @@ const AudioDemo: React.FC = () => {
             onChange={e => {
               const next = Number(e.target.value) || 100;
               setBpm(next);
-              schedulerRef.current?.setBpm(next);
             }}
             style={{ width: 60 }}
           />

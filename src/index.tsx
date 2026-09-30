@@ -4,6 +4,10 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { initTransport } from './audio';
+
+// One app-wide metronome clock; cards are views onto it.
+initTransport();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

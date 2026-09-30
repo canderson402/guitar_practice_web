@@ -15,8 +15,8 @@
 .melody-staff g.vf-stavenote.note-done rect,
 .melody-staff g.vf-stavenote.note-done line,
 .melody-staff g.vf-stavenote.note-done text {
-  fill: #3cc85a;
-  stroke: #3cc85a;
+  fill: var(--ms-correct, #3cc85a);
+  stroke: var(--ms-correct, #3cc85a);
 }
 
 .melody-staff g.vf-stavenote.note-current path,
@@ -24,6 +24,6 @@
 .melody-staff g.vf-stavenote.note-current rect,
 .melody-staff g.vf-stavenote.note-current line,
 .melody-staff g.vf-stavenote.note-current text {
-  fill: #ff8c00;
-  stroke: #ff8c00;
+  fill: var(--ms-current, #ff8c00);
+  stroke: var(--ms-current, #ff8c00);
 }

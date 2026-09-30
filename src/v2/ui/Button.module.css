@@ -1,0 +1,13 @@
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); border: 1px solid transparent; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), opacity var(--dur-fast); white-space: nowrap; }
+.btn:disabled { opacity: .45; cursor: default; }
+.md { height: 36px; padding: 0 var(--space-4); font-size: var(--text-14); }
+.sm { height: 28px; padding: 0 var(--space-3); font-size: var(--text-12); }
+/* background-origin: border-box sizes the gradient to the whole pill, so its
+   ends don't tile under the (transparent) border as a coloured seam. */
+.primary { background: var(--gradient-signature); background-origin: border-box; color: var(--note-label); }
+.primary:hover:not(:disabled) { opacity: .9; }
+.secondary { background: var(--fill); color: var(--text); border-color: var(--line); }
+.secondary:hover:not(:disabled) { border-color: var(--line-strong); }
+.ghost { background: transparent; color: var(--text-muted); }
+.ghost:hover:not(:disabled) { background: var(--fill); color: var(--text); }
+.danger { background: transparent; color: var(--danger); border-color: var(--danger); }

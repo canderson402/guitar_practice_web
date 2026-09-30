@@ -1,0 +1,6 @@
+.dots { display: flex; align-items: center; }
+.sm { gap: 5px; } .sm .dot { width: 8px; height: 8px; }
+.md { gap: 10px; } .md .dot { width: 14px; height: 14px; }
+.dot { border-radius: 50%; background: var(--fill); transition: background 150ms var(--ease), transform 150ms var(--ease); }
+.on { background: var(--accent); transform: scale(1.2); transition: none; }
+.first.on { background: var(--text); }

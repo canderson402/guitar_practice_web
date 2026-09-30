@@ -1,0 +1,53 @@
+import React from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import { ChevronDown } from 'lucide-react';
+import s from './Scale.module.css';
+import { useStore } from '../../../store/useStore';
+import { useV2Store } from '../../state/useV2Store';
+import { getScaleNotes, getChromaticScale, scales } from '../../../data/musicData';
+import { intervalSymbol, intervalName, scaleDegreeLabels } from '../../music/intervals';
+import { scaleShortName } from '../../shell/KeyPicker';
+import { useScaleAdvance } from './useScaleAdvance';
+import { HeroFace } from '../HeroFace';
+
+export const ScaleFace: React.FC = () => {
+  const n = useStore(useShallow(st => ({
+    root: st.note.selectedNote, scale: st.note.selectedScale, index: st.note.currentNoteIndex,
+    nextIndex: st.note.nextNoteIndex, showNext: st.note.showNextNote, setIndex: st.setCurrentNoteIndex,
+  })));
+  const setOverlay = useV2Store(st => st.setOverlay);
+
+  const notes = n.root
+    ? (n.scale && scales[n.scale as keyof typeof scales] ? getScaleNotes(n.root, n.scale as keyof typeof scales) : getChromaticScale(n.root))
+    : [];
+  const degrees = (n.scale && scaleDegreeLabels(n.scale)) || notes.map(x => intervalSymbol(n.root ?? 'C', x));
+  useScaleAdvance(notes.length);
+
+  if (!n.root || notes.length === 0) return <div className={s.face}>Pick a key from the dock.</div>;
+  const idx = Math.min(n.index, notes.length - 1);
+  const current = notes[idx];
+  const degree = degrees[idx];
+
+  return (
+    <HeroFace
+      top={
+        <button type="button" className={s.keyBtn} onClick={() => setOverlay({ kind: 'cardSheet', cardId: 'scale' })}>
+          {n.root} {scaleShortName(n.scale)} <ChevronDown size={12} aria-hidden="true" />
+        </button>
+      }
+      hero={current}
+      caption={<>{degree} · {intervalName(degree) ?? `degree ${idx + 1}`}</>}
+      controls={
+        <div className={s.notes}>
+          {notes.map((note, i) => (
+            <button key={note + i} type="button" aria-label={`${note}, ${degrees[i]}`} aria-pressed={i === idx}
+              className={[s.chip, i === idx ? s.cur : '', n.showNext && i === n.nextIndex && i !== idx ? s.next : ''].join(' ')}
+              onClick={() => n.setIndex(i)}>
+              <b>{note}</b><span>{degrees[i]}</span>
+            </button>
+          ))}
+        </div>
+      }
+    />
+  );
+};

@@ -1,0 +1,14 @@
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.label { font-size: var(--text-12); color: var(--text-muted); }
+.muted { color: var(--text-muted); font-size: var(--text-12); }
+.input { height: 34px; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: var(--radius-sm); padding: 0 var(--space-3); font: inherit; }
+.input:focus { border-color: var(--accent); }
+.row { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+.rowHead { display: flex; align-items: center; gap: var(--space-1); }
+.rowTitle { margin-right: auto; font-size: var(--text-11); font-weight: 600; color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase; }
+.card { display: flex; align-items: center; gap: 2px; padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--fill); }
+.cardTitle { margin-right: auto; font-weight: 600; font-size: var(--text-12); }
+.add { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+.menu { display: flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-1) 0; }
+.menuItem { border: 1px solid var(--line); background: var(--surface-raised); color: var(--text); border-radius: var(--radius-pill); padding: 4px 10px; font-size: var(--text-12); font-weight: 600; cursor: pointer; }
+.menuItem:hover { border-color: var(--accent); }

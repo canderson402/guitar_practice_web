@@ -4,6 +4,7 @@ import {
   Stave,
   StaveNote,
   Accidental,
+  Annotation,
   Formatter,
   Voice as VFVoice,
 } from 'vexflow';
@@ -36,25 +37,16 @@ const FLAT_TABLE: Array<[string, '' | 'b']> = [
 ];
 
 // Map a Note → { VexFlow key string, accidental glyph }.
-// Honors the Note.spelling hint. 'natural-C' / 'natural-F' handle the
-// B# / Cb / E# / Fb enharmonic cases where the letter *and* accidental both
-// shift vs. the pure sharp/flat table.
+// Honors the Note.spelling hint. 'natural-F' handles the E# / Fb enharmonic
+// cases where the letter *and* accidental both shift vs. the pure sharp/flat
+// table.
 const midiToVFKey = (note: Note): { key: string; accidental: '' | '#' | 'b' } => {
   const { midi, spelling = 'sharp' } = note;
   const pc = ((midi % 12) + 12) % 12;
   let letter: string;
   let acc: '' | '#' | 'b';
-  let octaveAdjust = 0;
 
-  if (spelling === 'natural-C' && (pc === 11 || pc === 0)) {
-    if (pc === 0) {
-      // B# — one octave below the naive C octave.
-      letter = 'b'; acc = '#'; octaveAdjust = -1;
-    } else {
-      // Cb — one octave above the naive B octave.
-      letter = 'c'; acc = 'b'; octaveAdjust = 1;
-    }
-  } else if (spelling === 'natural-F' && (pc === 4 || pc === 5)) {
+  if (spelling === 'natural-F' && (pc === 4 || pc === 5)) {
     if (pc === 5) {
       // E#
       letter = 'e'; acc = '#';
@@ -68,7 +60,7 @@ const midiToVFKey = (note: Note): { key: string; accidental: '' | '#' | 'b' } =>
     [letter, acc] = SHARP_TABLE[pc];
   }
 
-  const octave = Math.floor(midi / 12) - 1 + octaveAdjust;
+  const octave = Math.floor(midi / 12) - 1;
   return { key: `${letter}/${octave}`, accidental: acc };
 };
 
@@ -92,6 +84,12 @@ const makeStaveNote = (notes: Note[], clef: 'treble' | 'bass'): StaveNote => {
     if (m.accidental) sn.addModifier(new Accidental(m.accidental), i);
   });
   notes.forEach((n, i) => {
+    if (n.label) {
+      sn.addModifier(
+        new Annotation(n.label).setVerticalJustification(Annotation.VerticalJustify.BOTTOM),
+        i,
+      );
+    }
     if (n.color) {
       sn.setKeyStyle(i, { fillStyle: n.color, strokeStyle: n.color });
     }
@@ -108,8 +106,12 @@ export const GrandStaff: React.FC<GrandStaffProps> = ({
   voices,
   clef = 'grand',
   width,
+  padding,
+  scale = 1,
   className,
 }) => {
+  const padTop = padding?.top ?? 0;
+  const padBottom = padding?.bottom ?? 0;
   const hostRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -126,18 +128,20 @@ export const GrandStaff: React.FC<GrandStaffProps> = ({
 
     const w = width ?? Math.max(host.clientWidth || 0, 320);
     const twoStaves = clef === 'grand';
-    const h = twoStaves ? 220 : 140;
+    const h = (twoStaves ? 220 : 140) + padTop + padBottom;
 
     const renderer = new Renderer(host, Renderer.Backends.SVG);
-    renderer.resize(w, h);
+    renderer.resize(w * scale, h * scale);
     const ctx = renderer.getContext();
+    // Scaling only changes the viewBox: coordinates below stay unscaled.
+    if (scale !== 1) ctx.scale(scale, scale);
 
-    const treble = new Stave(20, 0, w - 40);
+    const treble = new Stave(20, padTop, w - 40);
     treble.addClef('treble').setContext(ctx).draw();
 
     let bass: Stave | null = null;
     if (twoStaves) {
-      bass = new Stave(20, 90, w - 40);
+      bass = new Stave(20, padTop + 90, w - 40);
       bass.addClef('bass').setContext(ctx).draw();
     }
 
@@ -175,7 +179,7 @@ export const GrandStaff: React.FC<GrandStaffProps> = ({
 
     drawInto(treble, trebleNotes);
     if (bass) drawInto(bass, bassNotes);
-  }, [notes, voices, clef, width]);
+  }, [notes, voices, clef, width, padTop, padBottom, scale]);
 
   return (
     <div
