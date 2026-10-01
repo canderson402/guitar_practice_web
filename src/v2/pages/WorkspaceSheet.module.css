@@ -5,10 +5,18 @@
 .input:focus { border-color: var(--accent); }
 .row { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
 .rowHead { display: flex; align-items: center; gap: var(--space-1); }
-.rowTitle { margin-right: auto; font-size: var(--text-11); font-weight: 600; color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase; }
+.grow { flex: 1; }
 .card { display: flex; align-items: center; gap: 2px; padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--fill); }
 .cardTitle { margin-right: auto; font-weight: 600; font-size: var(--text-12); }
 .add { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
 .menu { display: flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-1) 0; }
 .menuItem { border: 1px solid var(--line); background: var(--surface-raised); color: var(--text); border-radius: var(--radius-pill); padding: 4px 10px; font-size: var(--text-12); font-weight: 600; cursor: pointer; }
 .menuItem:hover { border-color: var(--accent); }
+.confirmText { margin: 0 0 var(--space-4); color: var(--text-muted); }
+.confirmActions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+.grip { border: none; background: transparent; color: var(--text-muted); cursor: grab; padding: 2px; display: grid; place-items: center; border-radius: var(--radius-sm); touch-action: none; }
+.grip:hover { color: var(--text); background: var(--fill); }
+.grip:active { cursor: grabbing; }
+.over { outline: 2px solid var(--accent); outline-offset: 1px; }
+.newRow { border: 1px dashed var(--line-strong); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; font-size: var(--text-12); color: var(--text-muted); }
+.dragPreview { display: inline-flex; white-space: nowrap; padding: 8px 14px; border-radius: var(--radius-pill); background: var(--surface-raised); border: 1px solid var(--accent); box-shadow: var(--elev-3); font-weight: 600; font-size: var(--text-12); color: var(--text); cursor: grabbing; }

@@ -3,7 +3,6 @@ import { useShallow } from 'zustand/react/shallow';
 import { Popover, SegmentedControl, Slider } from '../../ui';
 import { useStore } from '../../../store/useStore';
 import { TimeSignatureInput } from '../../ui';
-import { ConceptsMenu } from '../../learn/ConceptsMenu';
 
 type Sub = 'quarter' | 'eighth' | 'sixteenth' | 'eighthTriplet' | 'sixteenthTriplet';
 export const SUBDIVISIONS: Array<{ value: Sub; label: string; title: string }> = [
@@ -27,7 +26,7 @@ export const MeterPopover: React.FC<{ open: boolean; onClose(): void; anchorRef:
     setSubdivision: s.setSubdivision, setJamMixerVolume: s.setJamMixerVolume,
   })));
   return (
-    <Popover {...p} width={340} title="Meter & volume" titleExtra={<ConceptsMenu title="Meter & volume" concepts={['time-signature', 'subdivision']} />}>
+    <Popover {...p} width={340} title="Meter & volume">
       <Row label="Time signature"><TimeSignatureInput size="sm" /></Row>
       <Row label="Subdivision">
         <SegmentedControl label="Subdivision" size="sm" value={st.sub} onChange={st.setSubdivision} options={SUBDIVISIONS} />

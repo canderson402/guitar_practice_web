@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { ChevronDown } from 'lucide-react';
 import s from './Chords.module.css';
@@ -7,6 +7,12 @@ import { useV2Store } from '../../state/useV2Store';
 import { getScaleChords, scales } from '../../../data/musicData';
 import { scaleShortName } from '../../shell/KeyPicker';
 import { HeroFace } from '../HeroFace';
+import { SegmentedControl } from '../../ui';
+import { useCardPref } from '../../state/useCardPref';
+import { useChordBuilder } from './useChordBuilder';
+import { CompactBuilder } from './ChordBuilder';
+import { NotePicker } from '../keys/NotePicker';
+import { useEscape } from '../../ui/useEscape';
 
 /** The chords of the shared key and scale. Picking one selects it app-wide
  *  (the Fretboard highlights its tones); picking it again clears it. */
@@ -18,15 +24,60 @@ export const ChordsFace: React.FC = () => {
   const valid = n.root && n.scale && scales[n.scale as keyof typeof scales] && n.scale !== 'Chromatic';
   const chords = valid ? getScaleChords(n.root!, n.scale as keyof typeof scales) : [];
   const active = n.selected;
+  // In key: the seven chords of the key. Any chord: build any quality.
+  const [tab, setTabPref] = useCardPref<'key' | 'any'>('chord', 'tab', 'key');
+  const b = useChordBuilder();
+  // Any chord shows the last built chord; back to In key clears it.
+  const setTab = (t: 'key' | 'any') => {
+    setTabPref(t);
+    if (t === 'any') b.showCurrent();
+    else if (b.showing) b.clear();
+  };
+  // The root picker opens over the card (like the Note Trainer's).
+  const [rootOpen, setRootOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useEscape(rootOpen, () => setRootOpen(false));
+  useEffect(() => {
+    if (!rootOpen) return;
+    const onDown = (e: PointerEvent) => { if (!wrapRef.current?.contains(e.target as Node)) setRootOpen(false); };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [rootOpen]);
+  const tabs = (
+    <SegmentedControl<'key' | 'any'> label="Chord source" size="sm" value={tab} onChange={setTab}
+      options={[{ value: 'key', label: 'In key' }, { value: 'any', label: 'Any chord' }]} />
+  );
+
+  if (tab === 'any') {
+    return (
+      <div ref={wrapRef} className={s.wrap}>
+        <HeroFace
+          top={tabs}
+          hero={b.showing && active ? `${active.note}${active.symbol}` : '—'}
+          caption={b.showing ? b.type.formula : 'Pick a chord type'}
+          controls={<CompactBuilder b={b} rootOpen={rootOpen} onChangeRoot={() => setRootOpen(o => !o)} />}
+        />
+        {rootOpen && (
+          <div className={s.pickerOverlay}>
+            <span className={s.pickerTitle}>Root</span>
+            <NotePicker label="Root" value={b.state.root} autoFocus onPick={r => { b.setRoot(r); setRootOpen(false); }} />
+          </div>
+        )}
+      </div>
+    );
+  }
   return (
     <HeroFace
       top={
-        <button type="button" className={s.keyBtn} onClick={() => setOverlay({ kind: 'cardSheet', cardId: 'chord' })}>
-          {n.root ?? '—'} {scaleShortName(n.scale)} <ChevronDown size={12} aria-hidden="true" />
-        </button>
+        <span className={s.topRow}>
+          {tabs}
+          <button type="button" className={s.keyBtn} onClick={() => setOverlay({ kind: 'cardSheet', cardId: 'chord' })}>
+            {n.root ?? '—'} {scaleShortName(n.scale)} <ChevronDown size={12} aria-hidden="true" />
+          </button>
+        </span>
       }
-      hero={active ? `${active.note}${active.symbol}` : '—'}
-      caption={active ? `${active.roman} · ${active.type}` : chords.length ? 'Pick a chord' : 'No chords for this scale'}
+      hero={active && active.type !== 'custom' ? `${active.note}${active.symbol}` : '—'}
+      caption={active && active.type !== 'custom' ? `${active.roman} · ${active.type}` : chords.length ? 'Pick a chord' : 'No chords for this scale'}
       controls={
         <div className={s.chips}>
           {chords.map(c => {

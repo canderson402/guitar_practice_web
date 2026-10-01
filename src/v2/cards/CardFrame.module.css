@@ -1,4 +1,4 @@
-/* No overflow clipping on the card itself: header dropdowns (⋯ menu, concepts) must be able to extend past short cards. */
+/* No overflow clipping on the card itself: the header's ⋯ menu must be able to extend past short cards. */
 .card { height: 100%; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--elev-1); min-width: 0; }
 .editing { border-color: var(--accent); box-shadow: var(--focus-ring); }
 .head { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-2) var(--space-1) var(--space-3); cursor: grab; touch-action: none; }

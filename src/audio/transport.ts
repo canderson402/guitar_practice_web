@@ -120,10 +120,16 @@ interface Pending { time: number; fn: () => void }
 let pending: Pending[] = [];
 let rafId: number | null = null;
 
-const audibleNow = (): number => {
+// Output latency, read once when the transport starts. Browsers revise the
+// live estimate while playing; re-reading it every frame made beats land
+// unevenly (two due in one frame → a dot skipped, i.e. a flicker).
+let latency = 0;
+const readLatency = (): number => {
   const ctx = getAudioContext();
-  return ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0);
+  return Math.min(0.5, Math.max(0, ctx.outputLatency || ctx.baseLatency || 0));
 };
+
+const audibleNow = (): number => getAudioContext().currentTime - latency;
 
 const drain = (): void => {
   if (pending.length === 0) return;
@@ -274,6 +280,7 @@ const startInternal = (): void => {
   void ctx.resume();
   loadClickSamples();   // idempotent; any card can start the transport
   running = true;
+  latency = readLatency();
   nextTime = ctx.currentTime + START_OFFSET_SEC;
   subIndex = 0;
   subsPerBeat = 1;

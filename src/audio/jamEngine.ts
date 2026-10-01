@@ -75,9 +75,9 @@ const onJamTick = (ev: TickEvent): void => {
   const { jam: j } = useStore.getState();
   if (!j.isPlaying) return;
 
-  // Count-in is whole bars, so music always starts on a downbeat. Chord
-  // boundaries count bars (not beats) so a meter change can't push chords
-  // off the bar line.
+  // Count-in is whole bars, so music always starts on a downbeat. Chords
+  // change on bar lines (the transport's bars follow the time signature), so
+  // a chord always lasts whole bars — 5 beats each in 5/4.
   const musicBar = ev.barIndex - j.countIn;
   if (musicBar < 0 || ev.beatInBar !== 0) return;
   const isFirst = musicBar === 0;

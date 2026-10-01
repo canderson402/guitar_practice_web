@@ -129,11 +129,10 @@ describe('overlays', () => {
 });
 
 describe('persistence', () => {
-  it('persists workspaces, theme and progress but not ui state', () => {
-    act(() => { s().setThemeMode('light'); s().markRead('major-scale'); s().setOverlay({ kind: 'settings' }); });
+  it('persists workspaces and theme but not ui state', () => {
+    act(() => { s().setThemeMode('light'); s().setOverlay({ kind: 'settings' }); });
     const saved = JSON.parse(localStorage.getItem(V2_STORAGE_KEY)!).state;
     expect(saved.themeMode).toBe('light');
-    expect(saved.learnProgress['major-scale'].readAt).toEqual(expect.any(Number));
     expect(saved.workspaces[0].rows).toEqual(ALL_CARDS_ROWS);
     expect(saved.overlay).toBeUndefined();
     expect(saved.toast).toBeUndefined();
@@ -193,5 +192,20 @@ describe('card prefs', () => {
 
   it('ignores malformed saved card prefs', () => {
     expect(mergePersisted({ cardPrefs: 'x' }, useV2Store.getInitialState()).cardPrefs).toEqual({});
+  });
+});
+
+describe('change presets (shared by the Note Trainer and Jam)', () => {
+  it('start as 11, 8 and 6 beats; saved in the browser', () => {
+    expect(s().changePresets).toBeUndefined();
+    act(() => s().setChangePresets([{ mode: 'bars', interval: 2 }]));
+    expect(JSON.parse(localStorage.getItem(V2_STORAGE_KEY)!).state.changePresets).toEqual([{ mode: 'bars', interval: 2 }]);
+  });
+
+  it('picks up presets saved by the Note Trainer before they were shared', () => {
+    const merged = mergePersisted({ cardPrefs: { 'note-trainer': { presets: [{ mode: 'beats', interval: 7 }] } } }, useV2Store.getInitialState());
+    expect(merged.changePresets).toEqual([{ mode: 'beats', interval: 7 }]);
+    expect(mergePersisted({ changePresets: [{ mode: 'beats', interval: 5 }, { mode: 'nope', interval: 1 }] }, useV2Store.getInitialState()).changePresets)
+      .toEqual([{ mode: 'beats', interval: 5 }]);
   });
 });

@@ -7,15 +7,13 @@ import { useEscape } from './useEscape';
 interface Props {
   open: boolean; onClose(): void; anchorRef: React.RefObject<HTMLElement | null>;
   title: string; children: React.ReactNode; placement?: 'top' | 'bottom';
-  /** Rendered after the title (e.g. a Learn link). */
-  titleExtra?: React.ReactNode;
   /** Width in px (default 272). */
   width?: number;
 }
 
 /** Anchored pop-up for single quick controls (dock). Becomes a bottom sheet
  *  under 768px. Closes on Escape and outside pointerdown. */
-export const Popover: React.FC<Props> = ({ open, onClose, anchorRef, title, children, placement = 'top', titleExtra, width = 272 }) => {
+export const Popover: React.FC<Props> = ({ open, onClose, anchorRef, title, children, placement = 'top', width = 272 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const phone = useMediaQuery('(max-width: 767px)');
   const [pos, setPos] = useState<{ left: number; top?: number; bottom?: number }>({ left: 0 });
@@ -54,7 +52,7 @@ export const Popover: React.FC<Props> = ({ open, onClose, anchorRef, title, chil
   return createPortal(
     <div ref={ref} role="dialog" aria-label={title} className={[s.pop, phone ? s.sheet : ''].join(' ')}
       style={phone ? undefined : { ...pos, width }}>
-      <div className={s.title}>{title}{titleExtra}</div>
+      <div className={s.title}>{title}</div>
       {children}
     </div>,
     root,

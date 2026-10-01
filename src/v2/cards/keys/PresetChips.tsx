@@ -1,32 +1,33 @@
 import React from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { X } from 'lucide-react';
 import s from './NoteTrainer.module.css';
-import { useStore } from '../../../store/useStore';
-import { useCardPref } from '../../state/useCardPref';
-import { IconButton, Stepper } from '../../ui';
-import { Preset, presetLabel, presetMax, presetUnit, removePresetAt, samePreset, setPresetInterval, validPresets } from './presets';
+import { useV2Store } from '../../state/useV2Store';
+import { Button, IconButton, Stepper } from '../../ui';
+import { Preset, addPreset, presetLabel, presetMax, presetUnit, removePresetAt, samePreset, setPresetInterval, validPresets } from './presets';
 
-/** The saved presets (in the browser, with the card's other settings). */
+/** The "change every" presets — one list, shared by the Note Trainer and Jam,
+ *  saved in the browser. */
 export const usePresets = () => {
-  const [saved, setSaved] = useCardPref<unknown>('note-trainer', 'presets', undefined);
-  return { presets: validPresets(saved), setPresets: (p: Preset[]) => setSaved(p) };
+  const saved = useV2Store(st => st.changePresets);
+  const setPresets = useV2Store(st => st.setChangePresets);
+  return { presets: saved ?? validPresets(undefined), setPresets };
 };
 
-/** One-tap preset chips; the one matching the current setting is pressed. */
-export const PresetChips: React.FC = () => {
-  const st = useStore(useShallow(x => ({
-    mode: x.circleOfFifths.changeMode, interval: x.circleOfFifths.changeInterval,
-    setMode: x.setCircleChangeMode, setInterval: x.setCircleChangeInterval,
-  })));
+/** One-tap preset chips for a card's own "change every" setting; the chip
+ *  matching `value` is pressed. `disabledReason` greys out presets that
+ *  don't apply to this card. */
+export const PresetChips: React.FC<{
+  value: Preset; onChange(p: Preset): void; disabledReason?(p: Preset): string | null;
+}> = ({ value, onChange, disabledReason }) => {
   const { presets } = usePresets();
   return (
     <div className={s.presets}>
       {presets.map((p, i) => {
-        const on = samePreset(p, { mode: st.mode as Preset['mode'], interval: st.interval });
+        const on = samePreset(p, value);
+        const why = disabledReason?.(p) ?? null;
         return (
-          <button key={i} type="button" aria-pressed={on} className={[s.preset, on ? s.on : ''].join(' ')}
-            onClick={() => { st.setMode(p.mode); st.setInterval(p.interval); }}>{presetLabel(p)}</button>
+          <button key={i} type="button" aria-pressed={on} disabled={!!why} title={why ?? undefined}
+            className={[s.preset, on ? s.on : ''].join(' ')} onClick={() => onChange(p)}>{presetLabel(p)}</button>
         );
       })}
     </div>
@@ -49,5 +50,17 @@ export const PresetEditor: React.FC = () => {
         </div>
       ))}
     </div>
+  );
+};
+
+/** Save a card's current setting to the shared list. */
+export const SavePresetButton: React.FC<{ current: Preset }> = ({ current }) => {
+  const { presets, setPresets } = usePresets();
+  const saved = presets.some(p => samePreset(p, current));
+  const label = `Save ${presetLabel(current)} as a preset`;
+  return (
+    <Button size="sm" variant="ghost" aria-label={label} disabled={saved} onClick={() => setPresets(addPreset(presets, current))}>
+      {saved ? 'Saved as a preset' : label}
+    </Button>
   );
 };

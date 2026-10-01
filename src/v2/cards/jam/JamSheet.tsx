@@ -7,6 +7,7 @@ import { setClickVolume } from '../../../audio';
 import { PATCH_OPTIONS } from '../../../audio/jamEngine';
 import type { PadSettings } from '../../../audio/jamEngine';
 import { JamSource } from './JamSource';
+import { PresetEditor, SavePresetButton } from '../keys/PresetChips';
 import { useJamSound } from './useJamSound';
 
 type Knob = { key: keyof PadSettings; label: string; min: number; max: number; step: number; format(v: number): string };
@@ -23,9 +24,9 @@ const KNOBS: Knob[] = [
 
 export const JamSheet: React.FC = () => {
   const j = useStore(useShallow(st => ({
-    bars: st.jam.barsPerChord, countIn: st.jam.countIn, pad: st.jam.mixer.chords,
+    bars: st.jam.barsPerChord, setBars: st.setJamBarsPerChord, countIn: st.jam.countIn, pad: st.jam.mixer.chords,
     click: st.metronome.volume, clickMuted: st.metronome.muted,
-    setBars: st.setJamBarsPerChord, setCountIn: st.setJamCountIn,
+    setCountIn: st.setJamCountIn,
     setMixerVolume: st.setJamMixerVolume, setMixerMuted: st.setJamMixerMuted,
     setClick: st.setMetronomeVolume, setClickMuted: st.setMetronomeMuted,
   })));
@@ -33,8 +34,12 @@ export const JamSheet: React.FC = () => {
   return (
     <>
       <div className={s.field}><span className={s.label}>Chords</span><JamSource /></div>
-      <div className={s.field}><span className={s.label}>Bars per chord</span>
+      <div className={s.field}><span className={s.label}>Bars per chord (follows the time signature)</span>
         <Stepper label="Bars per chord" value={j.bars} min={1} max={16} onChange={j.setBars} editable />
+      </div>
+      <div className={s.field}><span className={s.label}>Presets (shared with the Note Trainer)</span>
+        <PresetEditor />
+        <SavePresetButton current={{ mode: 'bars', interval: j.bars }} />
       </div>
       <div className={s.field}><span className={s.label}>Count-in</span>
         <SegmentedControl label="Count-in" value={String(j.countIn)} onChange={v => j.setCountIn(Number(v))}

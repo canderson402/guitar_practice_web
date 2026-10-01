@@ -11,3 +11,18 @@
 .label { font-size: var(--text-12); color: var(--text-muted); }
 .selectedRow { display: flex; align-items: center; gap: var(--space-2); }
 .hint { color: var(--text-muted); font-size: var(--text-12); }
+.topRow { display: inline-flex; align-items: center; gap: var(--space-2); }
+.opts { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.opt { border: none; border-radius: var(--radius-md); background: var(--fill); color: var(--text); font-weight: 600; font-size: var(--text-12); padding: 4px 9px; cursor: pointer; }
+.opt:hover:not(:disabled) { background: var(--line-strong); }
+.opt:disabled { opacity: .35; cursor: default; }
+.optOn, .optOn:hover:not(:disabled) { background: var(--accent); color: var(--note-label); }
+.full { display: flex; flex-direction: column; gap: var(--space-2); align-items: stretch; }
+.wrap { position: relative; height: 100%; }
+.compact { width: 100%; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.anyRow { display: flex; align-items: center; gap: var(--space-2); }
+.rootBtn { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: var(--radius-pill); padding: 3px 10px; font-weight: 700; font-size: var(--text-12); cursor: pointer; }
+.rootBtn:hover, .rootBtn[aria-expanded='true'] { border-color: var(--accent); }
+.compact .opts { justify-content: center; }
+.pickerOverlay { position: absolute; inset: 0; z-index: 3; background: var(--surface); border-radius: var(--radius-lg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-4); }
+.pickerTitle { font-size: var(--text-11); letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: var(--text-muted); }

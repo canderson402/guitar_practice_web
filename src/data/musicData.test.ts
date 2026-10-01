@@ -1,4 +1,4 @@
-import { getScaleNotes, getChromaticPosition, getScaleChords, scales } from './musicData';
+import { getScaleNotes, getChromaticPosition, getScaleChords, getChordChromaticPositions, scales } from './musicData';
 
 it('offers a Chromatic scale with all twelve notes from the root', () => {
   expect(Object.keys(scales)).toContain('Chromatic');
@@ -15,4 +15,8 @@ it('knows the pitch of any spelling, including Fb, Cb, E#, B# and double acciden
 it('gets chord qualities right in keys spelled with double flats (Db Locrian)', () => {
   expect(getScaleNotes('Db', 'Locrian')).toEqual(['Db', 'Ebb', 'Fb', 'Gb', 'Abb', 'Bbb', 'Cb']);
   expect(getScaleChords('Db', 'Locrian').map(c => c.roman)).toEqual(['i°', 'II', 'iii', 'iv', 'V', 'VI', 'vii']);
+});
+
+it('chord positions for a type it doesn\'t know are empty (no crash)', () => {
+  expect(getChordChromaticPositions('C', 'maj9' as never)).toEqual([]);
 });

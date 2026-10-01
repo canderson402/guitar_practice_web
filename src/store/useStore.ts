@@ -55,6 +55,9 @@ export interface SelectedChord {
   type: string;
   symbol: string;
   roman: string;
+  /** A chord from the v2 chord builder carries its own intervals (semitones
+   *  above the root), so any chord can be shown — not just `chordTypes`. */
+  intervals?: number[];
 }
 
 interface NoteState {

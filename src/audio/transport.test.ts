@@ -2,10 +2,11 @@ import type { TickEvent } from './transport';
 
 // Fake audio clock: tests advance `mockNow` and fake timers drive the scan.
 let mockNow = 0;
+let mockLatency = 0;
 jest.mock('./engine', () => ({
   getAudioContext: () => ({
     get currentTime() { return mockNow; },
-    outputLatency: 0,
+    get outputLatency() { return mockLatency; },
     baseLatency: 0,
     resume: () => Promise.resolve(),
   }),
@@ -50,6 +51,7 @@ describe('transport', () => {
 
   beforeEach(() => {
     mockNow = 0;
+    mockLatency = 0;
     events = [];
     (scheduleClick as jest.Mock).mockClear();
     unsub = onSchedule(ev => events.push(ev));
@@ -59,6 +61,18 @@ describe('transport', () => {
   afterEach(() => {
     unsub();
     setMetronome({ isPlaying: false });
+  });
+
+  it('lights beats with a steady latency: the browser revising its output-latency estimate mid-run doesn\'t make beats jump', () => {
+    mockLatency = 0.2;
+    setMetronome({ isPlaying: true });   // beat 0 sounds at 0.05, heard at 0.25
+    run(0.2);
+    expect(useTransport.getState().beatCount).toBe(-1);
+    mockLatency = 0;                     // a live re-read would light beat 0 right now
+    run(0.025);
+    expect(useTransport.getState().beatCount).toBe(-1);
+    run(0.1);
+    expect(useTransport.getState().beatCount).toBe(0);
   });
 
   it('counts beats and bars monotonically at the right times', () => {

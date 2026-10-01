@@ -24,8 +24,6 @@ export interface CardDef {
   title: string;
   description: string;
   size: { colSpan: ColSpan; rowSpan: number };
-  /** Theory concepts this card uses — listed by the card's "?" (see learn/concepts.ts). */
-  concepts: string[];
   Face: React.FC;
   Sheet?: React.FC;
 }
@@ -37,7 +35,6 @@ export const CARDS: CardDef[] = [
     title: 'Metronome',
     description: 'Beat, tempo and click, driven by the shared clock.',
     size: { colSpan: 3, rowSpan: 6 },
-    concepts: ['tempo', 'time-signature', 'subdivision'],
     Face: MetronomeFace,
     Sheet: MetronomeSheet,
   },
@@ -46,7 +43,6 @@ export const CARDS: CardDef[] = [
     title: 'Timer',
     description: 'Session timer, counting up or down.',
     size: { colSpan: 3, rowSpan: 6 },
-    concepts: [],
     Face: TimerFace,
     Sheet: TimerSheet,
   },
@@ -55,7 +51,6 @@ export const CARDS: CardDef[] = [
     title: 'Scale',
     description: 'The notes of the current key, one at a time, with auto-advance.',
     size: { colSpan: 3, rowSpan: 6 },
-    concepts: ['intervals', 'scales-and-modes'],
     Face: ScaleFace,
     Sheet: ScaleSheet,
   },
@@ -64,7 +59,6 @@ export const CARDS: CardDef[] = [
     title: 'Circle of fifths',
     description: 'The 12 keys in circle order, with the current key\'s chords marked.',
     size: { colSpan: 3, rowSpan: 6 },
-    concepts: ['circle-of-fifths', 'chords-in-a-key', 'relative-keys'],
     Face: CircleFace,
     Sheet: CircleSheet,
   },
@@ -73,7 +67,6 @@ export const CARDS: CardDef[] = [
     title: 'Note Trainer',
     description: 'Cycles the key through all 12 — by fifths, fourths or at random — so you practice in every key.',
     size: { colSpan: 3, rowSpan: 6 },
-    concepts: ['all-12-keys', 'circle-of-fifths'],
     Face: KeysFace,
     Sheet: KeysSheet,
   },
@@ -82,7 +75,6 @@ export const CARDS: CardDef[] = [
     title: 'Chords',
     description: 'The chords of the current key; pick one to see it on the fretboard.',
     size: { colSpan: 3, rowSpan: 6 },
-    concepts: ['triads', 'chords-in-a-key'],
     Face: ChordsFace,
     Sheet: ChordsSheet,
   },
@@ -91,7 +83,6 @@ export const CARDS: CardDef[] = [
     title: 'Harmony',
     description: 'Place notes on the neck and see their harmony in the key — numbered in play order.',
     size: { colSpan: 12, rowSpan: 8 },
-    concepts: ['intervals', 'scales-and-modes'],
     Face: HarmonyFace,
     Sheet: HarmonySheet,
   },
@@ -100,7 +91,6 @@ export const CARDS: CardDef[] = [
     title: 'Jam',
     description: 'A pad plays through a chord progression in the current key, on the shared tempo.',
     size: { colSpan: 12, rowSpan: 6 },
-    concepts: ['chords-in-a-key', 'circle-of-fifths'],
     Face: JamFace,
     Sheet: JamSheet,
   },
@@ -109,7 +99,6 @@ export const CARDS: CardDef[] = [
     title: 'Fretboard',
     description: 'The whole neck (or a piano) showing the key, scale and current note.',
     size: { colSpan: 12, rowSpan: 9 },
-    concepts: ['intervals', 'scales-and-modes', 'tuning'],
     Face: FretboardFace,
     Sheet: FretboardSheet,
   },

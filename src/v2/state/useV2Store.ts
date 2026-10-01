@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { DEFAULT_WORKSPACE } from './defaultWorkspace';
 import { rowsFromFlat } from '../cards/rows';
+import { validPresets } from '../cards/keys/presets';
+import type { Preset } from '../cards/keys/presets';
 
 /** A workspace's cards, arranged in rows you set (top to bottom, left to right). */
 export interface Workspace { id: string; name: string; rows: string[][] }
@@ -29,9 +31,11 @@ interface Persisted {
   themeMode: ThemeMode;
   workspaces: Workspace[];
   activeWorkspaceId: string;
-  learnProgress: Record<string, { readAt: number }>;
   /** Per-card view settings (e.g. fretboard frets/labels), keyed by card id. */
   cardPrefs: Record<string, Record<string, unknown>>;
+  /** "Change every" presets shared by the Note Trainer and Jam. Undefined =
+   *  never edited (the defaults apply). */
+  changePresets?: Preset[];
 }
 
 export interface V2State extends Persisted {
@@ -39,6 +43,9 @@ export interface V2State extends Persisted {
   popover: PopoverId | null;
   /** An out-of-key note clicked on the Fretboard (not persisted). */
   pickedNote: PickedNote | null;
+  /** Whether a note is selected at all (like a chord, it can be toggled off).
+   *  Off by default; not persisted. */
+  noteSelected: boolean;
   toast: { id: number; message: string; undoable: boolean } | null;
   undo: UndoEntry | null;
   setThemeMode(m: ThemeMode): void;
@@ -55,11 +62,12 @@ export interface V2State extends Persisted {
   setRows(workspaceId: string, rows: string[][]): void;
   moveCardToWorkspace(cardId: string, fromId: string, toId: string): void;
   undoLast(): void;
-  markRead(slug: string): void;
   setCardPref(cardId: string, key: string, value: unknown): void;
+  setChangePresets(presets: Preset[]): void;
   setOverlay(o: Overlay): void;
   setPopover(p: PopoverId | null): void;
   setPickedNote(p: PickedNote | null): void;
+  setNoteSelected(on: boolean): void;
   dismissToast(): void;
 }
 
@@ -120,10 +128,14 @@ export const mergePersisted = (persisted: unknown, current: V2State): V2State =>
     ? (p.activeWorkspaceId as string)
     : (workspaces[0]?.id ?? '');
 
-  const learnProgress = p.learnProgress && typeof p.learnProgress === 'object' ? p.learnProgress : {};
   const cardPrefs = p.cardPrefs && typeof p.cardPrefs === 'object' && !Array.isArray(p.cardPrefs) ? p.cardPrefs : {};
 
-  return { ...current, themeMode, workspaces, activeWorkspaceId, learnProgress, cardPrefs };
+  // Change presets used to live in the Note Trainer's card prefs.
+  const legacyPresets = (cardPrefs['note-trainer'] as Record<string, unknown> | undefined)?.presets;
+  const savedPresets = p.changePresets ?? legacyPresets;
+  const changePresets = savedPresets === undefined ? undefined : validPresets(savedPresets);
+
+  return { ...current, themeMode, workspaces, activeWorkspaceId, cardPrefs, changePresets };
 };
 
 /** Saved-format upgrades. v1 had four built-in workspaces; v2 starts over
@@ -144,11 +156,11 @@ export const useV2Store = create<V2State>()(
         themeMode: 'dark',
         workspaces: defaultWorkspaces(),
         activeWorkspaceId: DEFAULT_WORKSPACE.id,
-        learnProgress: {},
         cardPrefs: {},
         overlay: null,
         popover: null,
         pickedNote: null,
+        noteSelected: false,
         toast: null,
         undo: null,
 
@@ -251,8 +263,8 @@ export const useV2Store = create<V2State>()(
           set({ undo: null, toast: null });
         },
 
-        markRead: slug => set(s => ({ learnProgress: { ...s.learnProgress, [slug]: { readAt: Date.now() } } })),
 
+        setChangePresets: changePresets => set({ changePresets }),
         setCardPref: (cardId, key, value) =>
           set(s => ({ cardPrefs: { ...s.cardPrefs, [cardId]: { ...s.cardPrefs[cardId], [key]: value } } })),
 
@@ -260,6 +272,7 @@ export const useV2Store = create<V2State>()(
 
         setPopover: popover => set({ popover }),
         setPickedNote: pickedNote => set({ pickedNote }),
+        setNoteSelected: noteSelected => set({ noteSelected }),
 
         dismissToast: () => set({ toast: null, undo: null }),
       };
@@ -272,8 +285,8 @@ export const useV2Store = create<V2State>()(
         themeMode: s.themeMode,
         workspaces: s.workspaces,
         activeWorkspaceId: s.activeWorkspaceId,
-        learnProgress: s.learnProgress,
         cardPrefs: s.cardPrefs,
+        changePresets: s.changePresets,
       }),
       // Future format changes: transform here per version; merge() then
       // validates field by field, so an unknown shape never wipes saved data.

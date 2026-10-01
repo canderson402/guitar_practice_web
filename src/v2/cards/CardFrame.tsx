@@ -4,7 +4,6 @@ import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/
 import s from './CardFrame.module.css';
 import type { CardDef } from './registry';
 import { IconButton } from '../ui';
-import { ConceptsMenu } from '../learn/ConceptsMenu';
 
 interface Props {
   def: CardDef;
@@ -36,7 +35,6 @@ export const CardFrame: React.FC<Props> = ({ def, editing, onOpenSheet, menu, dr
         )}
         <h3 className={s.title}>{def.title}</h3>
         <div className={s.tools}>
-          <ConceptsMenu title={def.title} concepts={def.concepts} />
           {def.Sheet && (
             <IconButton size="sm" label={`${def.title} settings`} active={editing} icon={<Settings size={14} />} data-sheet-trigger
               onPointerDown={e => e.stopPropagation()} onClick={onOpenSheet} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { buildDots } from './buildDots';
 import { FretboardFace } from './FretboardFace';
@@ -20,6 +20,23 @@ describe('buildDots', () => {
     expect(dots.get('5-8')?.variant).toBe('current');  // fret 8 = C, the selected note
     expect(dots.get('5-5')?.variant).toBe('root');
     expect(buildDots({ ...base, selected: 'C', show: { root: true, scale: true, selected: false } }).get('5-8')?.variant).toBe('scale');
+  });
+
+  it('with a chord showing, only its tones are drawn — plus the selected note, even outside the chord', () => {
+    const chord = { root: 'A', pitches: [9, 0, 4] };   // A minor: A C E
+    const show = { root: true, scale: true, selected: true };
+    expect(buildDots({ ...base, chord, selected: 'B', show }).get('5-7')?.variant).toBe('current');   // B: not in the chord, still shown
+    expect(buildDots({ ...base, chord, selected: 'C', show }).get('5-8')?.variant).toBe('current');   // C: a chord tone, selected color wins
+    expect(buildDots({ ...base, chord, selected: 'A', show }).get('5-5')?.variant).toBe('root');      // the chord's root keeps the root color
+    expect(buildDots({ ...base, chord, selected: 'B', show }).has('5-10')).toBe(false);              // D: neither
+    expect(buildDots({ ...base, chord, selected: 'B', show: { ...show, selected: false } }).has('5-7')).toBe(false);
+  });
+
+  it('when the selected note is the root, the root color shows (not the selected color)', () => {
+    const dots = buildDots({ ...base, selected: 'A', show: { root: true, scale: true, selected: true } });
+    expect(dots.get('5-5')?.variant).toBe('root');                 // low E fret 5 = A, the root
+    // With the root layer hidden, the selected highlight still shows it.
+    expect(buildDots({ ...base, selected: 'A', show: { root: false, scale: true, selected: true } }).get('5-5')?.variant).toBe('current');
   });
 
   it('marks the root over scale tones, and skips notes outside the scale', () => {
@@ -105,7 +122,7 @@ describe('clicking a note selects it', () => {
     expect(useV2Store.getState().pickedNote).toMatchObject({ note: 'A#' });
   });
 
-  it('works on open strings, and turns the Selected note layer on (clearing a chord) so the click shows', () => {
+  it('works on open strings, and turns the Selected note layer on so the click shows (a chord stays)', () => {
     act(() => {
       useV2Store.getState().setCardPref('fretboard', 'showSelected', false);
       useStore.getState().setSelectedChord({ note: 'A', type: 'minor', symbol: 'm', roman: 'i' });
@@ -113,7 +130,7 @@ describe('clicking a note selects it', () => {
     render(<MemoryRouter><FretboardFace /></MemoryRouter>);
     click('E on string 1, fret 0');
     expect(useV2Store.getState().cardPrefs.fretboard.showSelected).toBe(true);
-    expect(useStore.getState().note.selectedChord).toBeNull();
+    expect(useStore.getState().note.selectedChord).not.toBeNull();
     expect(useStore.getState().note.currentNoteIndex).toBe(4);
   });
 });
@@ -135,4 +152,53 @@ describe('pickNote', () => {
     expect(activePick(pick, { ...ctx, scale: 'Dorian' })).toBeNull();
     expect(activePick(null, ctx)).toBeNull();
   });
+});
+
+it('a chord (from the Chords card) doesn\'t affect the Selected note option', () => {
+  act(() => useStore.getState().setSelectedChord({ note: 'A', type: 'minor', symbol: 'm', roman: 'i' }));
+  render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+  expect(screen.getByRole('button', { name: 'Selected note' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Selected note' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Stop showing chord Am' }));
+  expect(useStore.getState().note.selectedChord).toBeNull();
+});
+
+describe('selecting and deselecting a note', () => {
+  it('nothing is selected at first; click a note to select it, click it again to deselect', () => {
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    expect(useV2Store.getState().noteSelected).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'C on string 6, fret 8' }));
+    expect(useV2Store.getState().noteSelected).toBe(true);
+    expect(useStore.getState().note.currentNoteIndex).toBe(2);
+    fireEvent.click(screen.getByRole('button', { name: 'C on string 5, fret 3' }));   // the same note elsewhere: still C
+    expect(useV2Store.getState().noteSelected).toBe(false);
+  });
+
+  it('an out-of-key note toggles too', () => {
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'A# on string 6, fret 6' }));
+    expect(useV2Store.getState().noteSelected).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'A# on string 6, fret 6' }));
+    expect(useV2Store.getState().noteSelected).toBe(false);
+  });
+});
+
+it('the selected note and chord show as dismissible chips on the left of the bar (apart from the layer toggles)', () => {
+  act(() => useStore.getState().setSelectedChord({ note: 'A', type: 'minor', symbol: 'm', roman: 'i' }));
+  render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+  expect(screen.queryByRole('button', { name: /Deselect note/ })).toBeNull();      // nothing selected yet
+  fireEvent.click(screen.getByRole('button', { name: 'E on string 1, fret 0' }));
+  const selection = screen.getByRole('group', { name: 'Selection' });
+  expect(within(selection).getByRole('button', { name: 'Deselect note E' })).toHaveTextContent('Note: E');
+  expect(within(selection).getByRole('button', { name: 'Stop showing chord Am' })).toBeInTheDocument();
+  expect(within(selection).queryByRole('button', { name: 'Selected note' })).toBeNull();  // toggles live elsewhere
+  fireEvent.click(within(selection).getByRole('button', { name: 'Deselect note E' }));
+  expect(useV2Store.getState().noteSelected).toBe(false);
+  expect(screen.queryByRole('button', { name: /Deselect note/ })).toBeNull();
+});
+
+it('dot labels use the names for the context (a built E♭ chord shows E♭, not D#)', () => {
+  const dots = buildDots({ tuning: STD, frets: 12, root: 'C', scaleNotes: [], show: { root: true, scale: true, selected: false }, labels: 'notes',
+    degreeOf: n => n, nameOf: n => (n === 'D#' ? 'Eb' : n), chord: { root: 'Eb', pitches: [3, 7, 10] } });
+  expect(dots.get('4-6')?.label).toBe('Eb');   // A string fret 6 = D#/E♭
 });

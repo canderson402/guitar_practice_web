@@ -21,3 +21,12 @@
 .pickItem .muted { grid-area: desc; font-size: var(--text-12); }
 .pickSize { grid-area: size; align-self: center; font-size: var(--text-11); color: var(--text-muted); }
 @media (max-width: 767px) { .tabsRow { flex-wrap: wrap; } .tabTools { margin-left: 0; } }
+.row { position: relative; }
+/* Row grip: a strip centered in the page gutter, shown only while the
+   pointer is over it (or it has keyboard focus). */
+.rowGrip { position: absolute; left: calc(-1 * var(--space-4)); top: 0; bottom: 0; width: var(--space-4); padding: 0; margin: 0; border: none; background: transparent; color: var(--text-muted); cursor: grab; display: flex; align-items: center; justify-content: center; opacity: 0; border-radius: var(--radius-sm); touch-action: none; transition: opacity .12s; }
+.rowGrip:hover, .rowGrip:focus-visible { opacity: 1; color: var(--text); background: var(--fill); }
+.rowGrip:active { cursor: grabbing; }
+.dropTarget { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--radius-lg); }
+.newRow { border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); padding: var(--space-6); text-align: center; color: var(--text-muted); font-size: var(--text-12); }
+.dragPreview { display: inline-flex; white-space: nowrap; padding: 8px 14px; border-radius: var(--radius-pill); background: var(--surface-raised); border: 1px solid var(--accent); box-shadow: var(--elev-3); font-weight: 600; font-size: var(--text-12); color: var(--text); cursor: grabbing; }

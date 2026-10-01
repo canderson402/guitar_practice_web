@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/no-container, testing-library/no-node-access -- VexFlow's SVG has no role to query by */
 import React from 'react';
 import { render } from '@testing-library/react';
 import { GrandStaff } from './GrandStaff';
@@ -85,7 +86,6 @@ describe('GrandStaff', () => {
     });
   });
 
-  /* eslint-disable testing-library/no-container, testing-library/no-node-access -- VexFlow's SVG has no role to query by */
   it('can add headroom for ledger-line notes and draw larger (opt-in; defaults unchanged)', () => {
     const { container } = render(
       <GrandStaff notes={[{ midi: 91 }]} clef="treble" width={300} padding={{ top: 50, bottom: 40 }} scale={1.5} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { KeysFace } from './KeysFace';
 import { KeysSheet } from './KeysSheet';
 import { nextKey, shouldAdvance, markPlayed, nextFromHat } from './keyCycle';
@@ -38,7 +38,6 @@ describe('keyCycle', () => {
 
 it('is a small card called Note Trainer', () => {
   expect(getCard('note-trainer')).toMatchObject({ title: 'Note Trainer', size: { colSpan: 3, rowSpan: 6 } });
-  expect(getCard('note-trainer')?.concepts).toEqual(['all-12-keys', 'circle-of-fifths']);
 });
 
 it('face: on/off, current → next, and the order', () => {
@@ -92,7 +91,7 @@ describe('presets', () => {
     render(<><KeysSheet /><KeysFace /></>);
     fireEvent.click(screen.getByRole('button', { name: 'Save 2 bars as a preset' }));
     expect(screen.getByRole('button', { name: 'Save 2 bars as a preset' })).toBeDisabled();
-    expect(JSON.parse(localStorage.getItem(V2_STORAGE_KEY)!).state.cardPrefs['note-trainer'].presets.at(-1))
+    expect(JSON.parse(localStorage.getItem(V2_STORAGE_KEY)!).state.changePresets.at(-1))
       .toEqual({ mode: 'bars', interval: 2 });
     act(() => useStore.getState().setCircleChangeInterval(4));
     fireEvent.click(screen.getByRole('button', { name: '2 bars' }));
@@ -106,7 +105,7 @@ describe('presets', () => {
     expect(screen.queryByRole('button', { name: '11 beats' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Remove preset 8 beats' }));
     expect(screen.queryByRole('button', { name: '8 beats' })).toBeNull();
-    expect(useV2Store.getState().cardPrefs['note-trainer'].presets).toEqual([{ mode: 'beats', interval: 12 }, { mode: 'beats', interval: 6 }]);
+    expect(useV2Store.getState().changePresets).toEqual([{ mode: 'beats', interval: 12 }, { mode: 'beats', interval: 6 }]);
   });
 });
 
@@ -149,5 +148,31 @@ describe('shuffle: every key once before repeating', () => {
     expect(screen.getByText('1 of 12 played')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('switch', { name: 'Play all 12 before repeating' }));
     expect(screen.queryByText(/of 12 played/)).toBeNull();
+  });
+});
+
+describe('choosing the note on the card', () => {
+  it('tap the note to pick another — no Scale card needed', () => {
+    render(<KeysFace />);
+    fireEvent.click(screen.getByRole('button', { name: 'Change note (C)' }));
+    const picker = screen.getByRole('radiogroup', { name: 'Note' });
+    expect(within(picker).getAllByRole('radio').map(r => r.textContent)).toEqual(['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B']);
+    fireEvent.click(within(picker).getByRole('radio', { name: 'E' }));
+    expect(useStore.getState().note.selectedNote).toBe('E');
+    expect(screen.queryByRole('radiogroup', { name: 'Note' })).toBeNull();
+  });
+
+  it('Escape closes the picker without changing the note', () => {
+    render(<KeysFace />);
+    fireEvent.click(screen.getByRole('button', { name: 'Change note (C)' }));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('radiogroup', { name: 'Note' })).toBeNull();
+    expect(useStore.getState().note.selectedNote).toBe('C');
+  });
+
+  it('the sheet has the current note too', () => {
+    render(<KeysSheet />);
+    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Current note' })).getByRole('radio', { name: 'Bb' }));
+    expect(useStore.getState().note.selectedNote).toBe('Bb');
   });
 });

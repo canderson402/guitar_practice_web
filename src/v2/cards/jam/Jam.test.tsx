@@ -77,8 +77,10 @@ it('face counts down from the shared transport while playing', () => {
   act(() => useTransport.setState({ running: false, beatCount: -1 }));
 });
 
-it('sheet: bars per chord, count-in, and pad/click levels', () => {
+it('sheet: chords change every N bars (following the time signature), count-in, and pad/click levels', () => {
+  act(() => useStore.getState().setJamBarsPerChord(4));
   render(<JamSheet />);
+  expect(screen.queryByRole('radiogroup', { name: 'Change unit' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Increase bars per chord by 1' }));
   expect(jam().barsPerChord).toBe(5);
   fireEvent.click(screen.getByRole('radio', { name: '2 bars' }));
@@ -104,4 +106,23 @@ it('sheet: pad settings are tucked away, adjust the sound, and reset to the soun
   expect(engine().pad.at(-1)).toMatchObject({ cutoff: 3000 });
   fireEvent.click(screen.getByRole('button', { name: 'Reset pad settings' }));
   expect((useV2Store.getState().cardPrefs.jam.pad as { cutoff: number }).cutoff).not.toBe(3000);
+});
+
+describe('change presets, shared with the Note Trainer', () => {
+  it('the face offers the same presets; bar presets set bars per chord, beat and seconds presets don\'t apply', () => {
+    act(() => useV2Store.getState().setChangePresets([{ mode: 'beats', interval: 8 }, { mode: 'bars', interval: 2 }, { mode: 'time', interval: 30 }]));
+    render(<JamFace />);
+    fireEvent.click(screen.getByRole('button', { name: '2 bars' }));
+    expect(jam().barsPerChord).toBe(2);
+    expect(screen.getByRole('button', { name: '2 bars' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '8 beats' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '30 sec' })).toBeDisabled();
+  });
+
+  it('a preset saved from Jam shows up in the shared list', () => {
+    act(() => useStore.getState().setJamBarsPerChord(3));
+    render(<JamSheet />);
+    fireEvent.click(screen.getByRole('button', { name: 'Save 3 bars as a preset' }));
+    expect(useV2Store.getState().changePresets?.at(-1)).toEqual({ mode: 'bars', interval: 3 });
+  });
 });

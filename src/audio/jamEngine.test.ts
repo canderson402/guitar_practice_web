@@ -130,3 +130,13 @@ it('switching sound loads that patch and resets the pad settings to its defaults
   expect(next).toMatchObject({ attack: 1, stagger: 0 });
   expect(getPadSettings()).toEqual(next);
 });
+
+it('in 5/4 a chord lasts the whole 5-beat bar (chords change on bar lines, following the time signature)', () => {
+  act(() => setJam({ isPlaying: true, countIn: 1, barsPerChord: 1, currentChordIndex: 0, chordQueue: [chord('C', 60), chord('F', 65)] }));
+  const onTick = calls().schedule[0];
+  const t5 = (beatCount: number): TickEvent => ({ time: beatCount, subIndex: 0, subsPerBeat: 1, beatCount, beatInBar: beatCount % 5, barIndex: Math.floor(beatCount / 5), beatsPerBar: 5, beatDuration: 0.5 });
+  for (let b = 5; b < 10; b++) onTick(t5(b));   // the whole first bar after the count-in
+  expect(calls().noteOn.map(n => n.midis[0])).toEqual([48, 60, 64, 67]);  // just C
+  onTick(t5(10));                                 // next bar line: F
+  expect(calls().noteOn.slice(4).map(n => n.midis[0])).toEqual([53, 65, 69, 72]);
+});

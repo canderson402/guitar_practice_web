@@ -7,6 +7,12 @@ import { useTransport } from '../../../audio';
 import { startJam, stopJam, jamCountdownText } from '../../../audio/jamEngine';
 import { JamSource } from './JamSource';
 import { useJamEngine } from './useJamSound';
+import { PresetChips } from '../keys/PresetChips';
+import type { Preset } from '../keys/presets';
+
+// Jam changes chords on bar lines (following the time signature), so only
+// bar presets apply; beat and seconds presets are for the Note Trainer.
+export const jamPresetDisabled = (p: Preset) => (p.mode === 'bars' ? null : 'Jam changes chords every few bars — this preset is for the Note Trainer');
 
 /** Countdown from the heard transport position — the only part that
  *  re-renders every beat. */
@@ -15,7 +21,7 @@ const Countdown: React.FC = () => {
   const pos = useTransport(useShallow(t => ({ beatCount: t.beatCount, barIndex: t.barIndex, beatInBar: t.beatInBar, beatsPerBar: t.beatsPerBar })));
   const text = jamCountdownText(jam, pos);
   const final = !!text?.startsWith('Next');
-  return <span className={[s.countdown, final ? s.final : ''].join(' ')}>{text ?? (jam.isPlaying ? '' : `${jam.barsPerChord} bars per chord`)}</span>;
+  return <span className={[s.countdown, final ? s.final : ''].join(' ')}>{text ?? (jam.isPlaying ? '' : `Every ${jam.barsPerChord} bar${jam.barsPerChord === 1 ? '' : 's'}`)}</span>;
 };
 
 /** A pad plays through a chord progression in the shared key, on the shared
@@ -25,6 +31,7 @@ export const JamFace: React.FC = () => {
   const j = useStore(useShallow(st => ({
     playing: st.jam.isPlaying, mode: st.jam.mode, preset: st.jam.selectedPreset,
     queue: st.jam.chordQueue, index: st.jam.currentChordIndex,
+    bars: st.jam.barsPerChord, setBars: st.setJamBarsPerChord,
   })));
   const current = j.queue[j.index] ?? null;
   const next = j.queue[j.index + 1] ?? (j.mode === 'preset' && j.queue.length > 0 ? j.queue[0] : null);
@@ -62,7 +69,11 @@ export const JamFace: React.FC = () => {
         )}
       </div>
 
-      <JamSource compact />
+      <div className={s.side}>
+        <JamSource compact />
+        <PresetChips value={{ mode: 'bars', interval: j.bars }} disabledReason={jamPresetDisabled}
+          onChange={p => j.setBars(p.interval)} />
+      </div>
     </div>
   );
 };

@@ -37,15 +37,28 @@ it('moves a card left/right within its row and up/down into another (or a new) r
   open();
   fireEvent.click(screen.getByRole('button', { name: 'Move Timer left' }));
   expect(ws().rows[0]).toEqual(['timer', 'metronome', 'scale']);
+  // The Fretboard row is full, so Scale gets its own row in between.
   fireEvent.click(screen.getByRole('button', { name: 'Move Scale down a row' }));
-  expect(ws().rows).toEqual([['timer', 'metronome'], ['fretboard', 'scale']]);
+  expect(ws().rows).toEqual([['timer', 'metronome'], ['scale'], ['fretboard']]);
+  // There's room in the row above, so Scale joins it.
+  fireEvent.click(screen.getByRole('button', { name: 'Move Scale up a row' }));
+  expect(ws().rows).toEqual([['timer', 'metronome', 'scale'], ['fretboard']]);
   fireEvent.click(screen.getByRole('button', { name: 'Move Timer up a row' }));
-  expect(ws().rows).toEqual([['timer'], ['metronome'], ['fretboard', 'scale']]);
+  expect(ws().rows).toEqual([['timer'], ['metronome', 'scale'], ['fretboard']]);
 });
 
-it('any workspace can be deleted from the panel, including the last one', () => {
+it('deleting a workspace asks first (Cancel keeps it); any workspace can be deleted, including the last one', () => {
   open();
   fireEvent.click(screen.getByRole('button', { name: 'Delete workspace' }));
+  const dialog = screen.getByRole('dialog', { name: 'Delete workspace?' });
+  expect(dialog).toHaveTextContent('Practice');
+  // Using the dialog doesn't close the panel behind it.
+  fireEvent.pointerDown(within(dialog).getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+  expect(v2().workspaces).toHaveLength(1);
+  expect(v2().overlay).toEqual({ kind: 'workspace' });
+  fireEvent.click(screen.getByRole('button', { name: 'Delete workspace' }));
+  fireEvent.click(within(screen.getByRole('dialog', { name: 'Delete workspace?' })).getByRole('button', { name: 'Delete' }));
   expect(v2().workspaces).toEqual([]);
 });
 
@@ -91,4 +104,17 @@ it('a full row has no Add card; other rows only offer cards that fit the space l
   const menu = screen.getByRole('menu', { name: 'Add card to row 1' });
   expect(within(menu).getByRole('menuitem', { name: 'Chords' })).toBeInTheDocument();
   expect(within(menu).queryByRole('menuitem', { name: 'Jam' })).toBeNull();       // full width: doesn't fit
+});
+
+it('cards and rows have drag handles (cards move between rows, rows reorder)', () => {
+  open();
+  expect(screen.getByRole('button', { name: 'Drag Metronome' })).toHaveAttribute('aria-roledescription', 'draggable');
+  // Plain drag-and-drop (not a sortable list), so nothing gets resized while dragging.
+  expect(screen.getByRole('button', { name: 'Drag row 1' })).toHaveAttribute('aria-roledescription', 'draggable');
+});
+
+it('rows have no visible "Row N" titles (still labeled for screen readers)', () => {
+  open();
+  expect(screen.queryByText(/^Row \d+$/)).toBeNull();
+  expect(screen.getAllByRole('group', { name: /^Row \d/ }).length).toBeGreaterThan(0);
 });

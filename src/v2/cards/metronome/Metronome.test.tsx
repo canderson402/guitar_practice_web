@@ -7,7 +7,7 @@ import { useStore } from '../../../store/useStore';
 import { getCard } from '../registry';
 
 
-// Sheets contain Learn links, which need a router.
+// Sheets are rendered inside a router like the app.
 const render = (ui: React.ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 
 beforeEach(() => act(() => {
@@ -61,8 +61,7 @@ it('the big BPM on the face can be clicked to type a tempo', () => {
   expect(useStore.getState().metronome.bpm).toBe(88);
 });
 
-it('declares its concepts on the card (not as inline ? marks in the sheet)', () => {
+it('the sheet has no links', () => {
   render(<MetronomeSheet />);
   expect(screen.queryAllByRole('link')).toHaveLength(0);
-  expect(getCard('metronome')?.concepts).toEqual(['tempo', 'time-signature', 'subdivision']);
 });

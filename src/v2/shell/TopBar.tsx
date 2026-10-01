@@ -2,8 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Moon, Sun, Monitor, Settings } from 'lucide-react';
 import s from './TopBar.module.css';
-import { BRAND } from '../brand';
-import { LogoMark, IconButton } from '../ui';
+import { IconButton } from '../ui';
 import { useV2Store, ThemeMode } from '../state/useV2Store';
 
 const NEXT: Record<ThemeMode, ThemeMode> = { dark: 'light', light: 'system', system: 'dark' };
@@ -16,11 +15,9 @@ export const TopBar: React.FC = () => {
   const link = ({ isActive }: { isActive: boolean }) => [s.link, isActive ? s.on : ''].join(' ');
   return (
     <header className={s.bar}>
-      <NavLink to="/v2" end className={s.brand}><LogoMark /><span className={s.name}>{BRAND.name}</span></NavLink>
       <nav className={s.nav} aria-label="Sections">
-        <NavLink to="/v2" end className={link}>Practice</NavLink>
-        <NavLink to="/v2/learn" className={link}>Learn</NavLink>
-        <NavLink to="/v2/sight-reading" className={link}>Sight Reading</NavLink>
+        <NavLink to="/" end className={link}>Practice</NavLink>
+        <NavLink to="/sight-reading" className={link}>Sight Reading</NavLink>
       </nav>
       <div className={s.right}>
         <IconButton label={`Theme: ${themeMode}`} icon={ICON[themeMode]} onClick={() => setThemeMode(NEXT[themeMode])} />

@@ -1,4 +1,4 @@
-import { packRows, moveInRow, moveToRow, moveRowBy, rowsFromFlat, splitOverfullRows } from './rows';
+import { packRows, moveInRow, moveToRow, moveRowBy, rowsFromFlat, splitOverfullRows, dropCard, moveRow } from './rows';
 
 const cards = (spec: Array<[string, number]>) => spec.map(([id, colSpan]) => ({ id, colSpan }));
 
@@ -51,4 +51,44 @@ describe('splitOverfullRows', () => {
   it('unknown cards take no room and stay put', () => {
     expect(splitOverfullRows([['a', 'x', 'b', 'c', 'd']], spanOf)).toEqual([['a', 'x', 'b', 'c', 'd']]);
   });
+});
+
+const SPAN: Record<string, number> = { a: 3, b: 3, c: 3, d: 3, e: 3, f: 3, full: 12, jam: 12 };
+const spanOf = (id: string) => SPAN[id];
+
+describe('moveToRow with room', () => {
+  it('joins the row above/below when the card fits', () => {
+    expect(moveToRow([['a', 'b'], ['c', 'd']], 1, 0, -1, spanOf)).toEqual([['a', 'b', 'c'], ['d']]);
+    expect(moveToRow([['a', 'b'], ['c', 'd']], 0, 1, 1, spanOf)).toEqual([['a'], ['c', 'd', 'b']]);
+  });
+  it('gets its own row in between when it doesn\'t fit', () => {
+    expect(moveToRow([['a', 'b', 'c', 'd'], ['e', 'f']], 1, 0, -1, spanOf)).toEqual([['a', 'b', 'c', 'd'], ['e'], ['f']]);
+    expect(moveToRow([['full'], ['a', 'b']], 1, 1, -1, spanOf)).toEqual([['full'], ['b'], ['a']]);
+  });
+  it('a card alone in its row that doesn\'t fit just swaps rows', () => {
+    expect(moveToRow([['a', 'b'], ['full']], 1, 0, -1, spanOf)).toEqual([['full'], ['a', 'b']]);
+    expect(moveToRow([['full'], ['jam']], 0, 0, 1, spanOf)).toEqual([['jam'], ['full']]);
+  });
+});
+
+describe('dropCard (dragging)', () => {
+  it('reorders within a row', () => {
+    expect(dropCard([['a', 'b', 'c']], 'a', { kind: 'card', row: 0, index: 2 }, spanOf)).toEqual([['b', 'c', 'a']]);
+  });
+  it('moves to another row before the card it was dropped on, when there\'s room', () => {
+    expect(dropCard([['a', 'b'], ['c']], 'a', { kind: 'card', row: 1, index: 0 }, spanOf)).toEqual([['b'], ['a', 'c']]);
+    expect(dropCard([['a'], ['c']], 'a', { kind: 'card', row: 1, index: 0 }, spanOf)).toEqual([['a', 'c']]); // emptied row goes
+  });
+  it('when the row is full, the two cards trade places (if both rows still fit)', () => {
+    expect(dropCard([['a'], ['b', 'c', 'd', 'e']], 'a', { kind: 'card', row: 1, index: 1 }, spanOf)).toEqual([['c'], ['b', 'a', 'd', 'e']]);
+    expect(dropCard([['full'], ['a', 'b']], 'full', { kind: 'card', row: 1, index: 0 }, spanOf)).toEqual([['full'], ['a', 'b']]); // full can't fit next to b: no change
+  });
+  it('can start a new row', () => {
+    expect(dropCard([['a', 'b'], ['c']], 'b', { kind: 'newRow', at: 1 }, spanOf)).toEqual([['a'], ['b'], ['c']]);
+    expect(dropCard([['a', 'b']], 'a', { kind: 'newRow', at: 1 }, spanOf)).toEqual([['b'], ['a']]);
+  });
+});
+
+it('moveRow drags a row to a new position', () => {
+  expect(moveRow([['a'], ['b'], ['c']], 0, 2)).toEqual([['b'], ['c'], ['a']]);
 });

@@ -13,9 +13,8 @@ beforeEach(() => act(() => {
   useStore.getState().setSelectedScale('Major (Ionian)');
 }));
 
-it('is a small card that lists circle-of-fifths concepts', () => {
+it('is a small card', () => {
   expect(getCard('circle-of-fifths')).toMatchObject({ title: 'Circle of fifths', size: { colSpan: 3, rowSpan: 6 } });
-  expect(getCard('circle-of-fifths')?.concepts).toEqual(['circle-of-fifths', 'chords-in-a-key', 'relative-keys']);
 });
 
 it('shows all 12 keys in circle order and marks the chords of the current key with Roman numerals', () => {

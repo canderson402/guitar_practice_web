@@ -597,7 +597,8 @@ export const getChordChromaticPositions = (
   type: keyof typeof chordTypes
 ): number[] => {
   const rootPos = getChromaticPosition(root);
-  return chordTypes[type].intervals.map(i => (rootPos + i) % 12);
+  // Unknown types (e.g. a built chord read by an older view) have no tones.
+  return (chordTypes[type]?.intervals ?? []).map(i => (rootPos + i) % 12);
 };
 
 // Interval-name spellings per chord type, in the same order as chordTypes[t].intervals.

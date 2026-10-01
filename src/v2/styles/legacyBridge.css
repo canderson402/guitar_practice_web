@@ -8,6 +8,24 @@
   --ms-current: var(--accent);
   --pk-shadow: var(--elev-2);
   --fb-shadow-board: var(--elev-2);
+  /* Design tokens the reused Fretboard / PianoKeyboard read with no fallback
+     (they used to come from the old app's global design-system.css). */
+  --ds-color-neutral-100: #e9ecef;
+  --ds-color-neutral-400: #999999;
+  --ds-color-neutral-500: #6c757d;
+  --ds-color-neutral-600: #666666;
+  --ds-color-neutral-700: #495057;
+  --ds-color-neutral-900: #212529;
+  --ds-color-white: #ffffff;
+  --ds-font-xs: 10px;
+  --ds-font-sm: 12px;
+  --ds-font-medium: 500;
+  --ds-font-semibold: 600;
+  --ds-font-bold: 700;
+  --ds-space-1: 4px;
+  --ds-space-4: 16px;
+  --ds-transition-fast: 0.15s ease;
+  --ds-transition-base: 0.2s ease;
   /* Sheet-music surface: light paper + dark ink in both themes. */
   --paper: #fbfaf7;
   --paper-text: #1c1824;

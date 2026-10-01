@@ -19,7 +19,7 @@ beforeAll(() => {
 });
 beforeEach(() => act(() => useV2Store.setState(useV2Store.getInitialState(), true)));
 
-// Card faces contain Learn links, so the page renders inside a router.
+// Card faces link between pages, so the page renders inside a router.
 const App = () => (<MemoryRouter><PracticePage /><CardSheetHost /><ToastHost /></MemoryRouter>);
 const openEmptyWorkspace = () => act(() => { const id = v2().addWorkspace('Empty'); v2().setActiveWorkspace(id); });
 const v2 = () => useV2Store.getState();
@@ -103,12 +103,12 @@ it('opens the card sheet on the side away from the card being edited', () => {
 
 it('card header is not itself a button; a dedicated handle carries keyboard reordering', () => {
   render(<App />);
-  const card = screen.getByRole('article', { name: 'Metronome' });
-  const handle = within(card).getByRole('button', { name: 'Reorder Metronome' });
-  expect(handle).toHaveAttribute('aria-roledescription', 'sortable');
+  const card = screen.getByRole('article', { name: 'Scale' });
+  const handle = within(card).getByRole('button', { name: 'Reorder Scale' });
+  expect(handle).toHaveAttribute('aria-roledescription', 'draggable');
   // The header's controls come first in the card; the face's controls follow.
   expect(within(card).getAllByRole('button').slice(0, 3).map(b => b.getAttribute('aria-label')))
-    .toEqual(['Reorder Metronome', 'Concepts in Metronome', 'Metronome settings']);
+    .toEqual(['Reorder Scale', 'Scale settings', 'Scale options']);
 });
 
 it('card menu: focus moves into it, arrows move between items, Escape returns to the trigger', () => {
@@ -132,20 +132,11 @@ it('cards carry no "follows key/tempo" tags', () => {
   expect(screen.queryByText(/follows/i)).toBeNull();
 });
 
-it('each card with concepts has one ? in its header; cards without concepts have none', () => {
+it('cards have no ? (concepts) button, in the header or the side panel', () => {
   render(<App />);
-  const metronome = screen.getByRole('article', { name: 'Metronome' });
-  expect(within(metronome).getByRole('button', { name: 'Concepts in Metronome' })).toBeInTheDocument();
-  const timer = screen.getByRole('article', { name: 'Timer' });
-  expect(within(timer).queryByRole('button', { name: /Concepts in/ })).toBeNull();
-});
-
-it('the card\'s ? is also in its side panel header', () => {
-  render(<App />);
-  fireEvent.click(screen.getByRole('button', { name: 'Metronome settings' }));
-  const sheet = screen.getByRole('dialog', { name: 'Metronome' });
-  fireEvent.click(within(sheet).getByRole('button', { name: 'Concepts in Metronome' }));
-  expect(within(sheet).getByRole('link', { name: 'Tempo' })).toBeInTheDocument();
+  expect(screen.queryAllByRole('button', { name: /^Concepts in/ })).toHaveLength(0);
+  fireEvent.click(screen.getByRole('button', { name: 'Scale settings' }));
+  expect(within(screen.getByRole('dialog', { name: 'Scale' })).queryByRole('button', { name: /^Concepts in/ })).toBeNull();
 });
 
 it('tapping outside the side panel closes it; tapping another card\'s ⚙ switches to it', () => {
@@ -167,13 +158,13 @@ it('the workspace toolbar has no rename / duplicate / reset buttons (double-clic
   expect(screen.getByRole('textbox', { name: 'Workspace name' })).toBeInTheDocument();
 });
 
-it('no row arrows; cards alone in their row (e.g. full-width Fretboard) have no drag handle', () => {
+it('every card has a drag handle (even alone in its row), and every row has its own handle', () => {
   render(<App />);
   expect(screen.queryByRole('button', { name: /Move row/ })).toBeNull();
   const fretboard = screen.getByRole('article', { name: 'Fretboard' });
-  expect(within(fretboard).queryByRole('button', { name: 'Reorder Fretboard' })).toBeNull();
-  const metronome = screen.getByRole('article', { name: 'Metronome' });
-  expect(within(metronome).getByRole('button', { name: 'Reorder Metronome' })).toBeInTheDocument();
+  expect(within(fretboard).getByRole('button', { name: 'Reorder Fretboard' })).toHaveAttribute('aria-roledescription', 'draggable');
+  expect(screen.getByRole('button', { name: 'Drag row 1' })).toBeInTheDocument();
+  expect(screen.getAllByRole('button', { name: /^Drag row \d+$/ })).toHaveLength(v2().workspaces[0].rows.length);
 });
 
 it('a newly added card appears at the top (first card of the first row)', () => {

@@ -8,13 +8,11 @@ import { useEscape } from './useEscape';
 
 interface Props {
   open: boolean; onClose(): void; title: string; children: React.ReactNode; side?: 'left' | 'right';
-  /** Rendered next to the title (e.g. the card's concepts "?"). */
-  titleExtra?: React.ReactNode;
 }
 
 /** Right-edge settings panel (bottom sheet under 768px via CSS). The page
  *  behind stays visible and live; there is no scrim over the grid. */
-export const SideSheet: React.FC<Props> = ({ open, onClose, title, children, side = 'right', titleExtra }) => {
+export const SideSheet: React.FC<Props> = ({ open, onClose, title, children, side = 'right' }) => {
   const ref = useRef<HTMLDivElement>(null);
   useFocusTrap(ref, open);
   useEscape(open, onClose);
@@ -27,7 +25,8 @@ export const SideSheet: React.FC<Props> = ({ open, onClose, title, children, sid
     if (!open) return;
     const onDown = (e: PointerEvent) => {
       const t = e.target as HTMLElement;
-      if (ref.current?.contains(t) || t.closest?.('[data-sheet-trigger]')) return;
+      // A modal dialog opened on top (e.g. a confirm) isn't "outside".
+      if (ref.current?.contains(t) || t.closest?.('[data-sheet-trigger]') || t.closest?.('[aria-modal="true"]')) return;
       closeRef.current();
     };
     document.addEventListener('pointerdown', onDown);
@@ -38,7 +37,7 @@ export const SideSheet: React.FC<Props> = ({ open, onClose, title, children, sid
   return createPortal(
     <aside ref={ref} role="dialog" aria-label={title} data-side={side} className={[s.sheet, side === 'left' ? s.left : ''].join(' ')}>
       <header className={s.head}>
-        <div className={s.titleRow}><h2 className={s.title}>{title}</h2>{titleExtra}</div>
+        <div className={s.titleRow}><h2 className={s.title}>{title}</h2></div>
         <IconButton label="Close" icon={<X size={16} />} onClick={onClose} />
       </header>
       <div className={s.body}>{children}</div>

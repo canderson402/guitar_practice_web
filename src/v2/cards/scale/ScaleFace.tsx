@@ -16,6 +16,8 @@ export const ScaleFace: React.FC = () => {
     nextIndex: st.note.nextNoteIndex, showNext: st.note.showNextNote, setIndex: st.setCurrentNoteIndex,
   })));
   const setOverlay = useV2Store(st => st.setOverlay);
+  const selected = useV2Store(st => st.noteSelected);
+  const setSelected = useV2Store(st => st.setNoteSelected);
 
   const notes = n.root
     ? (n.scale && scales[n.scale as keyof typeof scales] ? getScaleNotes(n.root, n.scale as keyof typeof scales) : getChromaticScale(n.root))
@@ -35,14 +37,15 @@ export const ScaleFace: React.FC = () => {
           {n.root} {scaleShortName(n.scale)} <ChevronDown size={12} aria-hidden="true" />
         </button>
       }
-      hero={current}
-      caption={<>{degree} · {intervalName(degree) ?? `degree ${idx + 1}`}</>}
+      hero={selected ? current : '—'}
+      caption={selected ? <>{degree} · {intervalName(degree) ?? `degree ${idx + 1}`}</> : 'Tap a note to select it'}
       controls={
         <div className={s.notes}>
           {notes.map((note, i) => (
-            <button key={note + i} type="button" aria-label={`${note}, ${degrees[i]}`} aria-pressed={i === idx}
-              className={[s.chip, i === idx ? s.cur : '', n.showNext && i === n.nextIndex && i !== idx ? s.next : ''].join(' ')}
-              onClick={() => n.setIndex(i)}>
+            <button key={note + i} type="button" aria-label={`${note}, ${degrees[i]}`} aria-pressed={selected && i === idx}
+              className={[s.chip, selected && i === idx ? s.cur : '', selected && n.showNext && i === n.nextIndex && i !== idx ? s.next : ''].join(' ')}
+              // Tapping the selected note again deselects it (like a chord).
+              onClick={() => { if (selected && i === idx) setSelected(false); else { n.setIndex(i); setSelected(true); } }}>
               <b>{note}</b><span>{degrees[i]}</span>
             </button>
           ))}

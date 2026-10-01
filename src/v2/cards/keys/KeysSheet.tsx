@@ -6,8 +6,9 @@ import { Switch, SegmentedControl, Stepper, Button } from '../../ui';
 import { useCardPref } from '../../state/useCardPref';
 import { useShuffleBag } from './shuffleBag';
 import { ORDER_OPTIONS, Order } from './KeysFace';
-import { PresetEditor, usePresets } from './PresetChips';
-import { addPreset, presetLabel, samePreset, Preset } from './presets';
+import { PresetEditor, SavePresetButton } from './PresetChips';
+import { NotePicker } from './NotePicker';
+import type { Preset } from './presets';
 
 type Mode = 'bars' | 'beats' | 'time';
 
@@ -18,14 +19,16 @@ export const KeysSheet: React.FC = () => {
   })));
   const order: Order = st.c.randomize ? 'random' : st.c.direction;
   const mode = (st.c.changeMode === 'none' ? 'beats' : st.c.changeMode) as Mode;
-  const { presets, setPresets } = usePresets();
   const [hat, setHat] = useCardPref('note-trainer', 'shuffleAll', true);
   const note = useStore(x => x.note.selectedNote ?? 'C');
+  const setNote = useStore(x => x.setSelectedNote);
   const resetHat = useShuffleBag(b => b.reset);
   const current: Preset = { mode, interval: st.c.changeInterval };
-  const saved = presets.some(p => samePreset(p, current));
   return (
     <>
+      <div className={s.field}><span className={s.label}>Current note</span>
+        <NotePicker label="Current note" value={note} onPick={setNote} />
+      </div>
       <div className={s.inline}><span className={s.label}>Auto-change</span><Switch label="Auto-change on" checked={st.c.autoAdvance} onChange={st.setAuto} /></div>
       <div className={s.field}><span className={s.label}>Order</span>
         <SegmentedControl<Order> label="Order" value={order} options={ORDER_OPTIONS}
@@ -45,10 +48,7 @@ export const KeysSheet: React.FC = () => {
       </div>
       <div className={s.field}><span className={s.label}>Presets</span>
         <PresetEditor />
-        <Button size="sm" variant="ghost" aria-label={`Save ${presetLabel(current)} as a preset`} disabled={saved}
-          onClick={() => setPresets(addPreset(presets, current))}>
-          {saved ? 'Saved as a preset' : `Save ${presetLabel(current)} as a preset`}
-        </Button>
+        <SavePresetButton current={current} />
       </div>
       <div className={s.field}><span className={s.label}>Count-in (beats)</span>
         <SegmentedControl label="Count-in" value={String(st.c.countIn)} onChange={v => st.setCountIn(Number(v))}

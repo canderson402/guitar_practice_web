@@ -18,6 +18,7 @@ beforeEach(() => act(() => {
 const face = () => render(<MemoryRouter><ScaleFace /></MemoryRouter>);
 
 it('shows the key and the current note with its interval — no inline ? marks (one per card, in the header)', () => {
+  act(() => useV2Store.getState().setNoteSelected(true));
   face();
   expect(screen.getByRole('button', { name: /A Aeolian/ })).toBeInTheDocument();
   expect(screen.getByText('♭3 · minor third')).toBeInTheDocument();
@@ -29,6 +30,20 @@ it('key button opens the Scale card\'s own settings, not the dock pop-up', () =>
   fireEvent.click(screen.getByRole('button', { name: /A Aeolian/ }));
   expect(useV2Store.getState().overlay).toEqual({ kind: 'cardSheet', cardId: 'scale' });
   expect(useV2Store.getState().popover).toBeNull();
+});
+
+it('starts with no note selected; tapping a note selects it, tapping it again deselects (like a chord)', () => {
+  face();
+  expect(useV2Store.getState().noteSelected).toBe(false);
+  expect(screen.getByTestId('hero-value')).toHaveTextContent('—');
+  expect(screen.queryAllByRole('button', { pressed: true })).toHaveLength(0);
+  fireEvent.click(screen.getByRole('button', { name: 'E, 5' }));
+  expect(useV2Store.getState().noteSelected).toBe(true);
+  expect(screen.getByRole('button', { name: 'E, 5' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByTestId('hero-value')).toHaveTextContent('E');
+  fireEvent.click(screen.getByRole('button', { name: 'E, 5' }));
+  expect(useV2Store.getState().noteSelected).toBe(false);
+  expect(screen.getByRole('button', { name: 'E, 5' })).toHaveAttribute('aria-pressed', 'false');
 });
 
 it('tapping a note jumps to it', () => {

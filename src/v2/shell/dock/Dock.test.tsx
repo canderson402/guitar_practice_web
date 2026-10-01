@@ -6,7 +6,7 @@ import { useStore } from '../../../store/useStore';
 import { useV2Store } from '../../state/useV2Store';
 
 
-// Pop-ups contain Learn links, which need a router.
+// Pop-ups are rendered inside a router like the app.
 const render = (ui: React.ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 
 beforeAll(() => {
@@ -74,15 +74,12 @@ it('dock summary shows the time signature (6/8, not 6/4)', () => {
   act(() => { useStore.getState().setBeatsPerMeasure(4); useStore.getState().setBeatUnit(4); });
 });
 
-it('the tempo and meter pop-ups link tempo, time signature and subdivision to Learn', () => {
+it('the tempo and meter pop-ups have no ? (concepts) button', () => {
   render(<Dock />);
   fireEvent.click(screen.getByRole('button', { name: /BPM/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Concepts in Tempo' }));
-  expect(screen.getByRole('link', { name: 'Tempo' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /^Concepts in/ })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /meter & volume/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Concepts in Meter & volume' }));
-  expect(screen.getByRole('link', { name: 'Time signatures' })).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Subdivisions' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /^Concepts in/ })).toBeNull();
 });
 
 it('groups scales: Modes (in mode order), then Other below; Ionian labeled with (Major)', () => {
@@ -113,4 +110,9 @@ it('the meter pop-up has just one volume — Master (click and pad live on their
   fireEvent.click(screen.getByRole('button', { name: /Meter & volume/ }));
   const pop = screen.getByRole('dialog', { name: 'Meter & volume' });
   expect(within(pop).getAllByRole('slider').map(el => el.getAttribute('aria-label'))).toEqual(['Master volume']);
+});
+
+it('beat dots switch instantly with no scale or fade (nothing to shimmer between beats)', () => {
+  const css = require('fs').readFileSync(require('path').join(__dirname, 'BeatDots.module.css'), 'utf8') as string;
+  expect(css).not.toMatch(/transition|transform|scale\(/);
 });
