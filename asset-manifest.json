@@ -1,12 +1,8 @@
 {
   "files": {
-    "main.css": "/guitar_practice_web/static/css/main.1b2b7c3e.css",
-    "main.js": "/guitar_practice_web/static/js/main.cb2e8e8c.js",
-    "static/css/378.10a631a5.chunk.css": "/guitar_practice_web/static/css/378.10a631a5.chunk.css",
-    "static/js/378.226c384c.chunk.js": "/guitar_practice_web/static/js/378.226c384c.chunk.js",
-    "static/js/453.871e83e9.chunk.js": "/guitar_practice_web/static/js/453.871e83e9.chunk.js",
-    "static/css/403.54049b7c.chunk.css": "/guitar_practice_web/static/css/403.54049b7c.chunk.css",
-    "static/js/403.b26f616f.chunk.js": "/guitar_practice_web/static/js/403.b26f616f.chunk.js",
+    "main.css": "/guitar_practice_web/static/css/main.93dae79a.css",
+    "main.js": "/guitar_practice_web/static/js/main.970f6946.js",
+    "static/js/453.48b64c58.chunk.js": "/guitar_practice_web/static/js/453.48b64c58.chunk.js",
     "static/media/inter-latin-ext-600-normal.woff": "/guitar_practice_web/static/media/inter-latin-ext-600-normal.4d0d5017d71ea1750fc1.woff",
     "static/media/inter-latin-ext-700-normal.woff": "/guitar_practice_web/static/media/inter-latin-ext-700-normal.d4a91814dd3f1e022ab1.woff",
     "static/media/inter-latin-ext-500-normal.woff": "/guitar_practice_web/static/media/inter-latin-ext-500-normal.2f93aaa35e870cec4704.woff",
@@ -100,16 +96,12 @@
     "index.html": "/guitar_practice_web/index.html",
     "static/media/jetbrains-mono-cyrillic-ext-500-normal.woff2": "/guitar_practice_web/static/media/jetbrains-mono-cyrillic-ext-500-normal.12b2790f450a0135a4cd.woff2",
     "static/media/jetbrains-mono-cyrillic-ext-700-normal.woff2": "/guitar_practice_web/static/media/jetbrains-mono-cyrillic-ext-700-normal.5ec92f9402c68a8c4489.woff2",
-    "main.1b2b7c3e.css.map": "/guitar_practice_web/static/css/main.1b2b7c3e.css.map",
-    "main.cb2e8e8c.js.map": "/guitar_practice_web/static/js/main.cb2e8e8c.js.map",
-    "378.10a631a5.chunk.css.map": "/guitar_practice_web/static/css/378.10a631a5.chunk.css.map",
-    "378.226c384c.chunk.js.map": "/guitar_practice_web/static/js/378.226c384c.chunk.js.map",
-    "453.871e83e9.chunk.js.map": "/guitar_practice_web/static/js/453.871e83e9.chunk.js.map",
-    "403.54049b7c.chunk.css.map": "/guitar_practice_web/static/css/403.54049b7c.chunk.css.map",
-    "403.b26f616f.chunk.js.map": "/guitar_practice_web/static/js/403.b26f616f.chunk.js.map"
+    "main.93dae79a.css.map": "/guitar_practice_web/static/css/main.93dae79a.css.map",
+    "main.970f6946.js.map": "/guitar_practice_web/static/js/main.970f6946.js.map",
+    "453.48b64c58.chunk.js.map": "/guitar_practice_web/static/js/453.48b64c58.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.1b2b7c3e.css",
-    "static/js/main.cb2e8e8c.js"
+    "static/css/main.93dae79a.css",
+    "static/js/main.970f6946.js"
   ]
 }
