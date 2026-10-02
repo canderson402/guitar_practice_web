@@ -6,6 +6,8 @@
 // No state — every factory takes the AudioContext and returns plain nodes.
 // ---------------------------------------------------------------------------
 
+import { Reverb } from 'smplr';
+
 /**
  * Generate a procedural reverb impulse response: stereo white noise with an
  * exponential amplitude decay. No asset weight, no CORS — perfect for a
@@ -221,4 +223,75 @@ export const scheduleDuck = (
   g.exponentialRampToValueAtTime(Math.max(0.001, floor), time + 0.005);
   // Then exponential recover to unity over releaseSec.
   g.exponentialRampToValueAtTime(1.0, time + releaseSec);
+};
+
+/**
+ * Plate reverb (Dattorro's algorithm, as an AudioWorklet) — smooth, dense
+ * and gently modulated, which is what makes a pad sound lush. smplr ships
+ * the worklet: creating its `Reverb` registers the 'DattorroReverb'
+ * processor, and we make our own node from it so we can set the tail.
+ *
+ * Until the worklet loads (or where worklets aren't supported) the send
+ * goes to `fallback` — the shared procedural room reverb.
+ */
+export interface PlateReverb {
+  input: GainNode;
+  /** True once sends go to the plate; false if it fell back. */
+  ready: Promise<boolean>;
+  /** Fade the plate's output out fast (its tail rings for seconds) — on Stop. */
+  silence: () => void;
+  /** Bring it back — on Play. */
+  restore: () => void;
+}
+
+// A long, darker tail than the processor's defaults (decay .5, damping .005).
+const PLATE_PARAMS = {
+  bandwidth: 0.6,        // input lowpass: no fizz going into the tank
+  inputDiffusion1: 0.75,
+  inputDiffusion2: 0.625,
+  decay: 0.85,
+  decayDiffusion1: 0.7,
+  decayDiffusion2: 0.5,
+  damping: 0.35,         // the tail darkens as it fades
+  excursionRate: 0.5,
+  excursionDepth: 0.9,   // slow modulation: the tail shimmers, never rings
+  wet: 1,
+  dry: 0,
+};
+const PLATE_PREDELAY_SEC = 0.025;
+const PLATE_RETURN = 0.45;
+
+export const createPlateReverb = (ctx: AudioContext, destination: AudioNode, fallback: AudioNode): PlateReverb => {
+  const input = ctx.createGain();
+  input.connect(fallback);
+  const wet = ctx.createGain();
+  wet.gain.value = PLATE_RETURN;
+  wet.connect(destination);
+  const fadeTo = (v: number, tc: number) => {
+    const t = ctx.currentTime;
+    wet.gain.cancelScheduledValues(t);
+    wet.gain.setTargetAtTime(v, t, tc);
+  };
+  const ready = (async () => {
+    if (!ctx.audioWorklet) return false;
+    try {
+      await new Reverb(ctx).ready();
+      const plate = new AudioWorkletNode(ctx, 'DattorroReverb', {
+        outputChannelCount: [2],
+        parameterData: { ...PLATE_PARAMS, preDelay: Math.round(PLATE_PREDELAY_SEC * ctx.sampleRate) },
+      });
+      plate.connect(wet);
+      input.connect(plate);
+      input.disconnect(fallback);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  return {
+    input,
+    ready,
+    silence: () => fadeTo(0, 0.08),
+    restore: () => fadeTo(PLATE_RETURN, 0.01),
+  };
 };

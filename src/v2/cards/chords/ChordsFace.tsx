@@ -7,7 +7,7 @@ import { useV2Store } from '../../state/useV2Store';
 import { getScaleChords, scales } from '../../../data/musicData';
 import { scaleShortName } from '../../shell/KeyPicker';
 import { HeroFace } from '../HeroFace';
-import { SegmentedControl } from '../../ui';
+import { SegmentedControl, ChipButton, ChipSub } from '../../ui';
 import { useCardPref } from '../../state/useCardPref';
 import { useChordBuilder } from './useChordBuilder';
 import { CompactBuilder } from './ChordBuilder';
@@ -83,11 +83,11 @@ export const ChordsFace: React.FC = () => {
           {chords.map(c => {
             const on = !!active && active.note === c.note && active.type === c.type;
             return (
-              <button key={c.roman} type="button" aria-label={`${c.note}${c.symbol}, ${c.roman}`} aria-pressed={on}
-                className={[s.chip, on ? s.on : ''].join(' ')}
+              <ChipButton key={c.roman} aria-label={`${c.note}${c.symbol}, ${c.roman}`} aria-pressed={on} selected={on}
+                className={s.chip}
                 onClick={() => n.setChord(on ? null : { note: c.note, type: c.type, symbol: c.symbol, roman: c.roman })}>
-                <b>{c.note}{c.symbol}</b><span>{c.roman}</span>
-              </button>
+                <b>{c.note}{c.symbol}</b><ChipSub>{c.roman}</ChipSub>
+              </ChipButton>
             );
           })}
         </div>

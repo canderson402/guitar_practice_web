@@ -11,17 +11,18 @@ import { Button } from '../../ui';
 import { cellToMidi } from '../../../data/pitch';
 import { preloadGuitar } from '../../../audio/guitar';
 import { playSteps } from './playback';
-import { resolvePairs, buildHarmonyDots, clickAction, sameNotePositions, nearest } from './harmonyModel';
+import { resolvePairs, buildHarmonyDots, clickAction, sameNotePositions, nearest, harmonyOrder } from './harmonyModel';
 import { useHarmonyPrefs } from './useHarmony';
 import { HarmonyBar } from './HarmonyBar';
-import { OrderStrip } from './OrderStrip';
+import { NoteRow } from './OrderStrip';
 
 /** Place notes on one fretboard; each gets a harmony in the shared key. Dots
  *  are numbered in play order (a harmony shares its note's number). */
 export const HarmonyFace: React.FC = () => {
   const st = useStore(useShallow(x => ({
     root: x.note.selectedNote, scale: x.note.selectedScale, tuning: x.note.tuning, notes: x.harmonyMaker.notes,
-    add: x.addBaseNote, setHarmonyAt: x.setHarmonyPosition, move: x.moveBaseNote, swap: x.swapNotes, bpm: x.metronome.bpm,
+    add: x.addBaseNote, setHarmonyAt: x.setHarmonyPosition, move: x.moveBaseNote, swap: x.swapNotes, swapHarmony: x.swapHarmonyOrder,
+    bpm: x.metronome.bpm,
   })));
   const prefs = useHarmonyPrefs();
   // The pair whose harmony spot is being chosen (its other spots are shown).
@@ -34,6 +35,13 @@ export const HarmonyFace: React.FC = () => {
   const pairs = useMemo(() => resolvePairs(st.notes, st.root, st.scale, board, prefs.frets, st.tuning), [st.notes, st.root, st.scale, board, prefs.frets, st.tuning]);
   const dragPair = drag ? pairs.find(p => p.key === drag.pair) ?? null : null;
   // Dragging a harmony shows its spots just like choosing one by clicking.
+  const harmonies = harmonyOrder(pairs);
+  // A harmony's spot sticks once placed: save any freshly chosen spot, so
+  // later edits to other notes can't move it.
+  useEffect(() => {
+    pairs.forEach(p => { if (p.selected && !p.pinned) st.setHarmonyAt(p.note.stringIndex, p.note.fret, p.selected); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pairs]);
   const active = drag?.kind === 'harmony' && dragPair ? dragPair.key : pairs.some(p => p.key === choosing) ? choosing : null;
   const baseMoves = useMemo(() => (drag?.kind === 'base' && dragPair
     ? sameNotePositions(board, dragPair.note.stringIndex, dragPair.note.fret, prefs.frets) : null), [drag, dragPair, board, prefs.frets]);
@@ -86,10 +94,11 @@ export const HarmonyFace: React.FC = () => {
   useEffect(() => { void preloadGuitar(); return () => stopRef.current?.(); }, []);
   const togglePlay = () => {
     if (stopRef.current) { stopRef.current(); return; }
-    const steps = pairs.map(p => [
-      cellToMidi(st.tuning, p.note.stringIndex, p.note.fret),
-      ...(p.selected ? [cellToMidi(st.tuning, p.selected.stringIndex, p.selected.fret)] : []),
-    ]);
+    // Step i: melody note i with harmony i (each in its own order).
+    const steps = pairs.map((p, i) => {
+      const h = harmonies[i]?.selected;
+      return [cellToMidi(st.tuning, p.note.stringIndex, p.note.fret), ...(h ? [cellToMidi(st.tuning, h.stringIndex, h.fret)] : [])];
+    });
     setPlaying(true);
     stopRef.current = playSteps(steps, st.bpm, setStep, () => { stopRef.current = null; setPlaying(false); setStep(null); });
   };
@@ -124,7 +133,14 @@ export const HarmonyFace: React.FC = () => {
           </>
         )}
       </div>
-      <OrderStrip pairs={pairs} current={step} />
+      {pairs.length === 0 ? <p className={s.empty}>Click any fret to add a note.</p> : (
+        <div className={s.rows}>
+          <NoteRow label="Melody" current={step} empty=""
+            items={pairs.map(p => ({ id: p.key, note: p.baseName }))} onSwap={st.swap} />
+          <NoteRow label="Harmony" current={step} empty="Press Apply to add harmonies."
+            items={harmonies.map(p => ({ id: `h:${p.key}`, note: p.selected!.note }))} onSwap={st.swapHarmony} />
+        </div>
+      )}
     </div>
   );
 };

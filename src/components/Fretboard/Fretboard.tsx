@@ -109,7 +109,6 @@ export const Fretboard: React.FC<FretboardProps> = ({
                         }
                       : undefined
                   }
-                  title={`${openNote} — open string ${strings - index}`}
                 >
                   {labelText}
                 </div>
@@ -214,7 +213,6 @@ export const Fretboard: React.FC<FretboardProps> = ({
                                 }
                               : undefined
                           }
-                          title={`${noteName} — String ${strings - stringIndex}, Fret ${fret}`}
                         >
                           <div
                             className={classNames}

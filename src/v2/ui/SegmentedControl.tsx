@@ -23,7 +23,7 @@ export const SegmentedControl = <T extends string>({ label, value, options, onCh
         const on = o.value === value;
         return (
           <button key={o.value} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1}
-            title={o.title} className={[s.seg, on ? s.on : ''].join(' ')} onClick={() => onChange(o.value)}>
+            aria-label={o.title} className={[s.seg, on ? s.on : ''].join(' ')} onClick={() => onChange(o.value)}>
             {o.label}
           </button>
         );

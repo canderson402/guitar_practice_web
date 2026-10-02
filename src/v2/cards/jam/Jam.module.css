@@ -16,10 +16,26 @@
 .sourceCompact { align-items: stretch; min-width: 200px; }
 .field { display: flex; flex-direction: column; gap: var(--space-2); }
 .label { font-size: var(--text-12); color: var(--text-muted); }
-.level { display: grid; grid-template-columns: auto 44px 1fr; align-items: center; gap: var(--space-2); font-size: var(--text-12); }
+.mixer { display: grid; grid-template-columns: 44px auto auto minmax(0, 3fr) minmax(0, 2fr); align-items: center; gap: var(--space-2); font-size: var(--text-12); }
+.mixHead { font-size: var(--text-11); color: var(--text-muted); }
+.mixName { font-weight: 600; }
+.mixToggle { width: 28px; height: 28px; padding: 0; font-size: var(--text-11); font-weight: 700; }
 .knob { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: var(--space-2); font-size: var(--text-12); color: var(--text-muted); }
 @media (max-width: 767px) {
   .face { grid-template-columns: 1fr; justify-items: center; gap: var(--space-3); padding-top: var(--space-2); }
   .upcoming { display: none; }
 }
 .side { display: flex; flex-direction: column; gap: var(--space-2); min-width: 220px; max-width: 320px; }
+.maker { display: flex; flex-direction: column; gap: var(--space-2); }
+.makerList { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1); min-height: 28px; }
+.makerEmpty { font-size: var(--text-12); color: var(--text-muted); align-self: center; }
+.makerChip { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px 2px 8px; border-radius: var(--radius-md); background: var(--fill); font-family: var(--font-mono); font-weight: 700; font-size: var(--text-12); }
+.makerRemove { display: grid; place-items: center; width: 18px; height: 18px; border: none; border-radius: 50%; background: transparent; color: var(--text-muted); cursor: pointer; padding: 0; }
+.makerRemove:hover { color: var(--text); }
+.makerAdd { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.makerNumeral { min-width: 40px; padding: 4px 8px; font-family: var(--font-mono); font-weight: 700; font-size: var(--text-12); }
+.makerActions { display: flex; gap: var(--space-2); }
+.tracks { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.trackToggle { border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: var(--radius-pill); padding: 3px 10px; font-weight: 600; font-size: var(--text-11); cursor: pointer; }
+.trackToggle:hover { border-color: var(--line-strong); }
+.trackOff { opacity: .45; }

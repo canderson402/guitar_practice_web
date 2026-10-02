@@ -6,7 +6,7 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 export const IconButton: React.FC<Props> = ({ label, icon, active, size = 'md', className, type = 'button', ...rest }) => (
-  <button type={type} aria-label={label} title={label} aria-pressed={active}
+  <button type={type} aria-label={label} aria-pressed={active}
     className={[s.icon, s[size], active ? s.active : '', className].filter(Boolean).join(' ')} {...rest}>
     {icon}
   </button>

@@ -9,6 +9,7 @@ import { intervalSymbol, intervalName, scaleDegreeLabels } from '../../music/int
 import { scaleShortName } from '../../shell/KeyPicker';
 import { useScaleAdvance } from './useScaleAdvance';
 import { HeroFace } from '../HeroFace';
+import { ChipButton, ChipSub } from '../../ui';
 
 export const ScaleFace: React.FC = () => {
   const n = useStore(useShallow(st => ({
@@ -42,12 +43,12 @@ export const ScaleFace: React.FC = () => {
       controls={
         <div className={s.notes}>
           {notes.map((note, i) => (
-            <button key={note + i} type="button" aria-label={`${note}, ${degrees[i]}`} aria-pressed={selected && i === idx}
-              className={[s.chip, selected && i === idx ? s.cur : '', selected && n.showNext && i === n.nextIndex && i !== idx ? s.next : ''].join(' ')}
+            <ChipButton key={note + i} aria-label={`${note}, ${degrees[i]}`} aria-pressed={selected && i === idx} selected={selected && i === idx}
+              className={[s.chip, selected && n.showNext && i === n.nextIndex && i !== idx ? s.next : ''].join(' ')}
               // Tapping the selected note again deselects it (like a chord).
               onClick={() => { if (selected && i === idx) setSelected(false); else { n.setIndex(i); setSelected(true); } }}>
-              <b>{note}</b><span>{degrees[i]}</span>
-            </button>
+              <b>{note}</b><ChipSub>{degrees[i]}</ChipSub>
+            </ChipButton>
           ))}
         </div>
       }

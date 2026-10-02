@@ -42,7 +42,7 @@ it('sheet edits time signature, subdivision, accent and sound in the shared stor
   expect(useStore.getState().metronome.beatsPerMeasure).toBe(6);
   expect(useStore.getState().metronome.beatUnit).toBe(8);
   expect(screen.getByRole('button', { name: /^Beats per bar:/ })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('radio', { name: '♫' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Eighth notes' }));
   expect(useStore.getState().metronome.subdivision).toBe('eighth');
   const accent = screen.getByRole('switch', { name: 'Accent first beat' });
   const before = useStore.getState().metronome.emphasizeFirstBeat;

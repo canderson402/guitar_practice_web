@@ -3,17 +3,21 @@ import type { TickEvent } from './transport';
 // Fake audio clock: tests advance `mockNow` and fake timers drive the scan.
 let mockNow = 0;
 let mockLatency = 0;
+let mockState = 'running';
+let mockResume: () => Promise<void> = () => Promise.resolve();
 jest.mock('./engine', () => ({
   getAudioContext: () => ({
     get currentTime() { return mockNow; },
     get outputLatency() { return mockLatency; },
+    get state() { return mockState; },
     baseLatency: 0,
-    resume: () => Promise.resolve(),
+    resume: () => mockResume(),
   }),
 }));
 jest.mock('./click', () => ({
   scheduleClick: jest.fn(),
   loadClickSamples: jest.fn(),
+  prefetchClickSamples: jest.fn(),
   cancelScheduledClicks: jest.fn(),
 }));
 
@@ -23,7 +27,7 @@ import { initTransport, onSchedule, onAudibleBeat, useTransport } from './transp
 // eslint-disable-next-line import/first
 import { useStore } from '../store/useStore';
 // eslint-disable-next-line import/first
-import { scheduleClick, cancelScheduledClicks } from './click';
+import { scheduleClick, cancelScheduledClicks, loadClickSamples } from './click';
 
 const run = (seconds: number) => {
   // Step the audio clock in scan-sized increments so lookahead behaves.
@@ -52,10 +56,12 @@ describe('transport', () => {
   beforeEach(() => {
     mockNow = 0;
     mockLatency = 0;
+    mockState = 'running';
+    mockResume = () => Promise.resolve();
     events = [];
     (scheduleClick as jest.Mock).mockClear();
     unsub = onSchedule(ev => events.push(ev));
-    setMetronome({ bpm: 120, beatsPerMeasure: 4, subdivision: 'quarter', isPlaying: false });
+    setMetronome({ bpm: 120, beatsPerMeasure: 4, subdivision: 'quarter', soundType: 'synth', isPlaying: false });
   });
 
   afterEach(() => {
@@ -73,6 +79,56 @@ describe('transport', () => {
     expect(useTransport.getState().beatCount).toBe(-1);
     run(0.1);
     expect(useTransport.getState().beatCount).toBe(0);
+  });
+
+  it('waits for a sleeping audio context to wake before scheduling, so the first click isn\'t lost', async () => {
+    mockState = 'suspended';
+    let wake = () => {};
+    mockResume = () => new Promise<void>(resolve => { wake = () => { mockState = 'running'; resolve(); }; });
+    setMetronome({ isPlaying: true });
+    jest.advanceTimersByTime(100);       // a suspended clock doesn't move
+    expect(events).toHaveLength(0);
+    mockNow = 1;                         // it wakes up a while later
+    wake();
+    await Promise.resolve(); await Promise.resolve();
+    run(0.1);
+    expect(events[0].beatCount).toBe(0);
+    expect(events[0].time).toBeGreaterThan(1.04);
+  });
+
+  it('with the sampled click, waits for the samples so beat 1 is the right sound', async () => {
+    let loaded = () => {};
+    (loadClickSamples as jest.Mock).mockImplementation(() => new Promise<void>(resolve => { loaded = resolve; }));
+    setMetronome({ soundType: 'asrx', muted: false, isPlaying: true });
+    jest.advanceTimersByTime(100);
+    expect(events).toHaveLength(0);
+    loaded();
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    run(0.1);
+    expect(events[0]?.beatCount).toBe(0);
+    setMetronome({ soundType: 'synth' });
+  });
+
+  it('...but never waits forever for them (slow network): starts anyway after a moment', async () => {
+    (loadClickSamples as jest.Mock).mockImplementation(() => new Promise<void>(() => {}));
+    setMetronome({ soundType: 'asrx', muted: false, isPlaying: true });
+    jest.advanceTimersByTime(1600);
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    run(0.1);
+    expect(events.length).toBeGreaterThan(0);
+    setMetronome({ soundType: 'synth' });
+  });
+
+  it('stopping while the context is still waking cancels the start', async () => {
+    mockState = 'suspended';
+    let wake = () => {};
+    mockResume = () => new Promise<void>(resolve => { wake = () => { mockState = 'running'; resolve(); }; });
+    setMetronome({ isPlaying: true });
+    setMetronome({ isPlaying: false });
+    wake();
+    await Promise.resolve(); await Promise.resolve();
+    run(0.5);
+    expect(events).toHaveLength(0);
   });
 
   it('counts beats and bars monotonically at the right times', () => {

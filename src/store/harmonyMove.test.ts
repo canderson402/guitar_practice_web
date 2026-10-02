@@ -13,7 +13,7 @@ it('moves one of your harmony notes to another fret, keeping its interval and pl
     st.cycleNoteVoicing(4, 3, 3);
   });
   act(() => useStore.getState().moveBaseNote({ stringIndex: 4, fret: 3 }, { stringIndex: 5, fret: 8 }));
-  expect(hm().notes[0]).toEqual({ stringIndex: 5, fret: 8, interval: { kind: 'diatonic', degrees: 4 }, voicingIdx: 0, harmonized: false });
+  expect(hm().notes[0]).toEqual({ stringIndex: 5, fret: 8, interval: { kind: 'diatonic', degrees: 4 }, voicingIdx: 0, harmonized: false, harmonyRank: 0 });
   expect(hm().notes[1]).toMatchObject({ stringIndex: 4, fret: 5 });
 });
 
@@ -36,7 +36,7 @@ it('new notes wait for Apply to be harmonized; Apply harmonizes them all', () =>
   expect(hm().notes[0].harmonized).toBe(true);
 });
 
-it('a harmony spot you pick is saved on the note; Apply, a new interval, or moving the note clears it', () => {
+it('a harmony spot is saved on the note; Apply or a new interval clears it, moving the note keeps it', () => {
   const st = () => useStore.getState();
   act(() => { st().addBaseNote({ stringIndex: 4, fret: 3 }); st().setHarmonyPosition(4, 3, { stringIndex: 2, fret: 9 }); });
   expect(hm().notes[0].harmonyAt).toEqual({ stringIndex: 2, fret: 9 });
@@ -45,7 +45,22 @@ it('a harmony spot you pick is saved on the note; Apply, a new interval, or movi
   act(() => st().setHarmonyPosition(4, 3, { stringIndex: 2, fret: 9 }));
   act(() => st().setNoteInterval(4, 3, { kind: 'diatonic', degrees: 4 }));
   expect(hm().notes[0].harmonyAt).toBeUndefined();
+  // Moving the note to the same note elsewhere keeps its harmony where it is.
   act(() => st().setHarmonyPosition(4, 3, { stringIndex: 2, fret: 9 }));
   act(() => st().moveBaseNote({ stringIndex: 4, fret: 3 }, { stringIndex: 5, fret: 8 }));
-  expect(hm().notes[0].harmonyAt).toBeUndefined();
+  expect(hm().notes[0].harmonyAt).toEqual({ stringIndex: 2, fret: 9 });
+});
+
+it('harmonies have their own order: swapping them leaves the melody order alone, and new notes go last in both', () => {
+  const st = () => useStore.getState();
+  act(() => { st().addBaseNote({ stringIndex: 4, fret: 3 }); st().addBaseNote({ stringIndex: 4, fret: 5 }); st().addBaseNote({ stringIndex: 4, fret: 7 }); });
+  const order = () => hm().notes.map((n, i) => ({ fret: n.fret, rank: n.harmonyRank ?? i })).sort((a, b) => a.rank - b.rank).map(x => x.fret);
+  expect(order()).toEqual([3, 5, 7]);
+  act(() => st().swapHarmonyOrder(0, 2));
+  expect(order()).toEqual([7, 5, 3]);
+  expect(hm().notes.map(n => n.fret)).toEqual([3, 5, 7]);   // melody order unchanged
+  act(() => st().swapNotes(0, 1));
+  expect(order()).toEqual([7, 5, 3]);                       // and the other way round
+  act(() => st().addBaseNote({ stringIndex: 3, fret: 2 }));
+  expect(order()).toEqual([7, 5, 3, 2]);
 });

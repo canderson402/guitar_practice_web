@@ -10,19 +10,19 @@
 .swBase { background: var(--ds-color-primary); }
 .swHarm { background: var(--ds-color-warning); }
 .choosing { color: var(--text); font-weight: 600; }
-.stripRow { display: flex; align-items: center; gap: var(--space-2); overflow-x: auto; }
-.stripLabel { font-size: var(--text-11); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; color: var(--text-muted); }
-.strip { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--space-2); }
-.pair { flex: none; }
-.chip { display: flex; align-items: center; line-height: 1; gap: 6px; border: none; background: var(--fill); color: var(--text); border-radius: var(--radius-md); padding: 5px 10px; font-size: var(--text-14); cursor: grab; touch-action: none; }
-.chip:hover { background: var(--line-strong); }
-.chip:active { cursor: grabbing; }
-.over .chip { outline: 2px solid var(--ds-color-primary); outline-offset: 1px; }
-.current .chip { background: var(--ds-color-primary); }
-.current .chip .order, .current .chip .base { color: var(--note-label); }
-.order { color: var(--text-muted); font-weight: 600; }
-.base { font-weight: 700; color: var(--ds-color-primary); }
-.empty { margin: 0; font-size: var(--text-12); color: var(--text-muted); }
-.field { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+.over .current .field { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
 .label { font-size: var(--text-12); color: var(--text-muted); }
 .inline { display: flex; align-items: center; justify-content: space-between; }
+.rows { display: flex; flex-direction: column; gap: var(--space-1); }
+/* Rows don't clip their chips: the strip wraps instead of scrolling. */
+.row { display: flex; align-items: center; gap: var(--space-2); min-height: 32px; }
+.rowLabel { flex: none; width: 64px; font-size: var(--text-11); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+.melodyLabel { color: var(--ds-color-primary); }
+.harmonyLabel { color: var(--ds-color-warning); }
+.strip { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
+.item { display: flex; align-items: center; gap: 2px; }
+.chip { font-size: var(--text-14); padding: 5px 10px; cursor: grab; touch-action: none; }
+.chip:active { cursor: grabbing; }
+.order { color: var(--text-muted); }
+.note { font-weight: 700; }
+.empty { margin: 0; font-size: var(--text-12); color: var(--text-muted); }

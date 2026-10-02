@@ -2,13 +2,15 @@ import React from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import s from './Jam.module.css';
 import { useStore } from '../../../store/useStore';
-import { SegmentedControl, Select, Slider, Stepper, Switch, Disclosure, Button } from '../../ui';
-import { setClickVolume } from '../../../audio';
+import { SegmentedControl, Select, Slider, Stepper, Disclosure, Button } from '../../ui';
 import { PATCH_OPTIONS } from '../../../audio/jamEngine';
 import type { PadSettings } from '../../../audio/jamEngine';
+import type { Color } from '../../../data/jamHarmony';
 import { JamSource } from './JamSource';
 import { PresetEditor, SavePresetButton } from '../keys/PresetChips';
-import { useJamSound } from './useJamSound';
+import { useJamSound, useJamColor } from './useJamSound';
+import { ProgressionMaker } from './ProgressionMaker';
+import { JamMixer, DrumPicker, BassPicker } from './JamMixer';
 
 type Knob = { key: keyof PadSettings; label: string; min: number; max: number; step: number; format(v: number): string };
 const KNOBS: Knob[] = [
@@ -19,21 +21,22 @@ const KNOBS: Knob[] = [
   { key: 'stagger', label: 'Stagger', min: 0, max: 0.2, step: 0.005, format: v => `${Math.round(v * 1000)}ms` },
   { key: 'detune', label: 'Detune', min: 0, max: 50, step: 1, format: v => `${Math.round(v)}¢` },
   { key: 'cutoff', label: 'Cutoff', min: 200, max: 8000, step: 50, format: v => `${Math.round(v)}Hz` },
-  { key: 'reverbAmount', label: 'Reverb', min: 0, max: 1.5, step: 0.05, format: v => v.toFixed(2) },
 ];
 
 export const JamSheet: React.FC = () => {
   const j = useStore(useShallow(st => ({
-    bars: st.jam.barsPerChord, setBars: st.setJamBarsPerChord, countIn: st.jam.countIn, pad: st.jam.mixer.chords,
-    click: st.metronome.volume, clickMuted: st.metronome.muted,
-    setCountIn: st.setJamCountIn,
-    setMixerVolume: st.setJamMixerVolume, setMixerMuted: st.setJamMixerMuted,
-    setClick: st.setMetronomeVolume, setClickMuted: st.setMetronomeMuted,
+    bars: st.jam.barsPerChord, setBars: st.setJamBarsPerChord, countIn: st.jam.countIn, setCountIn: st.setJamCountIn, mode: st.jam.mode,
   })));
   const sound = useJamSound();
+  const { color, setColor } = useJamColor();
   return (
     <>
       <div className={s.field}><span className={s.label}>Chords</span><JamSource /></div>
+      {j.mode === 'preset' && <div className={s.field}><span className={s.label}>Make your own</span><ProgressionMaker /></div>}
+      <div className={s.field}><span className={s.label}>Chord color</span>
+        <Select label="Chord color" value={color} onChange={v => setColor(v as Color)}
+          options={[{ value: 'triads', label: 'Triads' }, { value: '7ths', label: '7ths' }, { value: 'lush', label: 'Lush (9ths)' }]} />
+      </div>
       <div className={s.field}><span className={s.label}>Bars per chord (follows the time signature)</span>
         <Stepper label="Bars per chord" value={j.bars} min={1} max={16} onChange={j.setBars} editable />
       </div>
@@ -48,12 +51,9 @@ export const JamSheet: React.FC = () => {
       <div className={s.field}><span className={s.label}>Sound</span>
         <Select label="Sound" value={sound.patchId} onChange={sound.choosePatch} options={PATCH_OPTIONS} />
       </div>
-      <div className={s.field}><span className={s.label}>Levels</span>
-        <div className={s.level}><Switch label="Pad on" checked={!j.pad.muted} onChange={on => j.setMixerMuted('chords', !on)} /><span>Pad</span>
-          <Slider label="Pad volume" value={j.pad.volume} min={0} max={100} onChange={v => j.setMixerVolume('chords', v)} /></div>
-        <div className={s.level}><Switch label="Click on" checked={!j.clickMuted} onChange={on => j.setClickMuted(!on)} /><span>Click</span>
-          <Slider label="Click volume" value={j.click} min={0} max={100} onChange={v => { j.setClick(v); setClickVolume(v / 100); }} /></div>
-      </div>
+      <div className={s.field}><span className={s.label}>Drums</span><DrumPicker /></div>
+      <div className={s.field}><span className={s.label}>Bass</span><BassPicker /></div>
+      <div className={s.field}><span className={s.label}>Mixer</span><JamMixer /></div>
       <Disclosure title="Pad settings">
         {KNOBS.map(k => (
           <div key={k.key} className={s.knob}><span>{k.label}</span>

@@ -6,7 +6,10 @@ import { useStore } from '../../../store/useStore';
 import { useTransport } from '../../../audio';
 import { startJam, stopJam, jamCountdownText } from '../../../audio/jamEngine';
 import { JamSource } from './JamSource';
-import { useJamEngine } from './useJamSound';
+import { useJamEngine, useJamColor } from './useJamSound';
+import { colorSymbol } from '../../../data/jamHarmony';
+import type { JamChord } from '../../../data/jamAlgorithms';
+import { DrumPicker, TrackToggles } from './JamMixer';
 import { PresetChips } from '../keys/PresetChips';
 import type { Preset } from '../keys/presets';
 
@@ -31,12 +34,14 @@ export const JamFace: React.FC = () => {
   const j = useStore(useShallow(st => ({
     playing: st.jam.isPlaying, mode: st.jam.mode, preset: st.jam.selectedPreset,
     queue: st.jam.chordQueue, index: st.jam.currentChordIndex,
-    bars: st.jam.barsPerChord, setBars: st.setJamBarsPerChord,
+    bars: st.jam.barsPerChord, setBars: st.setJamBarsPerChord, progression: st.jam.progression,
   })));
+  const { color } = useJamColor();
+  const name = (c: JamChord) => `${c.note}${colorSymbol(c, color)}`;
   const current = j.queue[j.index] ?? null;
   const next = j.queue[j.index + 1] ?? (j.mode === 'preset' && j.queue.length > 0 ? j.queue[0] : null);
   const upcoming = j.queue.slice(j.index + 2, j.index + 6);
-  const canPlay = j.mode === 'infinite' || j.preset !== null;
+  const canPlay = j.mode === 'infinite' || j.progression.length > 0;
 
   return (
     <div className={s.face}>
@@ -50,27 +55,29 @@ export const JamFace: React.FC = () => {
 
       <div className={s.chords}>
         <div className={s.current} data-testid="jam-current">
-          <span className={s.chordName}>{current ? `${current.note}${current.symbol}` : '—'}</span>
+          <span className={s.chordName}>{current ? name(current) : '—'}</span>
           <span className={s.roman}>{current?.roman ?? ''}</span>
         </div>
         {next && (
           <>
             <span className={s.arrow} aria-hidden="true">→</span>
             <div className={s.next} data-testid="jam-next">
-              <span className={s.nextName}>{`${next.note}${next.symbol}`}</span>
+              <span className={s.nextName}>{name(next)}</span>
               <span className={s.roman}>{next.roman}</span>
             </div>
           </>
         )}
         {upcoming.length > 0 && (
           <ul aria-label="Coming up" className={s.upcoming}>
-            {upcoming.map((c, i) => <li key={`${j.index}-${i}`} style={{ opacity: 0.8 - i * 0.15 }}>{`${c.note}${c.symbol}`}</li>)}
+            {upcoming.map((c, i) => <li key={`${j.index}-${i}`} style={{ opacity: 0.8 - i * 0.15 }}>{name(c)}</li>)}
           </ul>
         )}
       </div>
 
       <div className={s.side}>
         <JamSource compact />
+        <DrumPicker size="sm" />
+        <TrackToggles />
         <PresetChips value={{ mode: 'bars', interval: j.bars }} disabledReason={jamPresetDisabled}
           onChange={p => j.setBars(p.interval)} />
       </div>

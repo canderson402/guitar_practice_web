@@ -1,6 +1,7 @@
 import React from 'react';
 import s from './NoteTrainer.module.css';
 import { chromaticPosition } from '../../music/intervals';
+import { ChipButton } from '../../ui';
 
 /** The 12 notes in chromatic order, spelled the way the circle of fifths
  *  spells them (C, Db, D, Eb…). */
@@ -12,9 +13,9 @@ export const NotePicker: React.FC<{ label: string; value: string; onPick(note: s
     {NOTES.map(n => {
       const on = chromaticPosition(n) === chromaticPosition(value);
       return (
-        <button key={n} type="button" role="radio" aria-checked={on} className={[s.noteOpt, on ? s.noteOn : ''].join(' ')}
+        <ChipButton key={n} tone="solid" role="radio" aria-checked={on} selected={on} className={s.noteOpt}
           // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={autoFocus && on} onClick={() => onPick(n)}>{n}</button>
+          autoFocus={autoFocus && on} onClick={() => onPick(n)}>{n}</ChipButton>
       );
     })}
   </div>

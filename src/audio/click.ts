@@ -13,7 +13,6 @@ import { getAudioContext, getMasterGain } from './engine';
 
 let asrxUpBuffer: AudioBuffer | null = null;
 let asrxDownBuffer: AudioBuffer | null = null;
-let sampleLoadStarted = false;
 
 // Every click routes through one bus so volume changes apply instantly —
 // even to clicks already scheduled inside the lookahead window.
@@ -36,30 +35,42 @@ export const setClickVolume = (value: number): void => {
   bus.gain.setTargetAtTime(clickVolume, bus.context.currentTime, 0.01);
 };
 
-/** Kick off async ASRX sample loads. Safe to call repeatedly — only the
- *  first call does work. Samples resolve into module state when ready; the
- *  synth click path doesn't need them so calls made before loading complete
- *  still produce sound (just the synth variety). */
-export const loadClickSamples = (): void => {
-  if (sampleLoadStarted) return;
-  sampleLoadStarted = true;
+const publicUrl = () => process.env.PUBLIC_URL ?? '';
+const SAMPLE_FILES = { up: 'ASRX_UP.wav', down: 'ASRX_Down.wav' } as const;
 
+// The sample files' bytes, fetched at app start (no audio needed) so the
+// first Play doesn't wait on the network.
+let prefetched: Promise<Record<keyof typeof SAMPLE_FILES, ArrayBuffer>> | null = null;
+
+/** Download the click samples (bytes only — no AudioContext is created).
+ *  Call once at app start. */
+export const prefetchClickSamples = (): Promise<Record<keyof typeof SAMPLE_FILES, ArrayBuffer>> => {
+  prefetched ??= (async () => {
+    const get = async (file: string) => {
+      const response = await fetch(`${publicUrl()}/${file}`);
+      if (!response.ok) throw new Error(`Failed to load ${file}: ${response.status}`);
+      return response.arrayBuffer();
+    };
+    const [up, down] = await Promise.all([get(SAMPLE_FILES.up), get(SAMPLE_FILES.down)]);
+    return { up, down };
+  })();
+  return prefetched;
+};
+
+let loading: Promise<void> | null = null;
+
+/** Decode the ASRX click samples (downloading them if they weren't
+ *  prefetched). Safe to call repeatedly. Resolves when they're ready — or
+ *  failed, in which case the synth click stands in. */
+export const loadClickSamples = (): Promise<void> => {
+  if (loading) return loading;
   const ctx = getAudioContext();
-  const publicUrl = process.env.PUBLIC_URL ?? '';
-
-  const loadSample = async (url: string): Promise<AudioBuffer> => {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to load ${url}: ${response.status}`);
-    return ctx.decodeAudioData(await response.arrayBuffer());
-  };
-
-  loadSample(`${publicUrl}/ASRX_UP.wav`)
-    .then(buffer => { asrxUpBuffer = buffer; })
-    .catch(err => console.error('Failed to load ASRX_UP.wav:', err));
-
-  loadSample(`${publicUrl}/ASRX_Down.wav`)
-    .then(buffer => { asrxDownBuffer = buffer; })
-    .catch(err => console.error('Failed to load ASRX_Down.wav:', err));
+  loading = prefetchClickSamples()
+    // decodeAudioData detaches its buffer; decode copies so a retry still works.
+    .then(({ up, down }) => Promise.all([ctx.decodeAudioData(up.slice(0)), ctx.decodeAudioData(down.slice(0))]))
+    .then(([up, down]) => { asrxUpBuffer = up; asrxDownBuffer = down; })
+    .catch(err => { console.error('Failed to load the click samples:', err); });
+  return loading;
 };
 
 // Clicks scheduled but not yet sounded. The transport schedules ~100 ms
@@ -111,9 +122,9 @@ export const scheduleClick = (time: number, opts: ClickOpts): void => {
   const dest = getClickBus();
   const firstBeatEmphasized = opts.emphasizeFirstBeat && opts.isFirstBeat;
 
-  if (opts.soundType === 'asrx') {
-    const buffer = firstBeatEmphasized ? asrxDownBuffer : asrxUpBuffer;
-    if (!buffer) return;   // sample still loading — fall through silently
+  const buffer = firstBeatEmphasized ? asrxDownBuffer : asrxUpBuffer;
+  // While the samples are still loading, the synth click below stands in.
+  if (opts.soundType === 'asrx' && buffer) {
     const source = ctx.createBufferSource();
     const gain = ctx.createGain();
     source.buffer = buffer;

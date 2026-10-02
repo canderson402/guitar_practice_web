@@ -132,7 +132,6 @@ export const PianoKeyboard: React.FC<FretboardProps> = ({
         className={classes}
         style={style}
         onClick={() => handleKeyClick(midi)}
-        title={`${pitch.name}${pitch.octave}`}
       >
         {dot && (
           <span className="piano-key-dot">

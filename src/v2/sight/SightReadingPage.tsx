@@ -125,7 +125,7 @@ export const SightReadingPage: React.FC = () => {
       {/* Prompt, feedback and answer in one card so your eyes stay in one place. */}
       <section className={s.card} aria-label="Practice">
         <div className={s.promptLine} data-testid="prompt-line">
-          <div className={s.stat} title="Correct first try / total">
+          <div className={s.stat}>
             <span className={s.statValue}>{nr.score.correct}/{nr.score.total}</span><span className={s.statLabel}>Correct</span>
           </div>
           <div className={s.promptCenter}>
@@ -136,7 +136,7 @@ export const SightReadingPage: React.FC = () => {
           </div>
           <div className={[s.stat, s.statRight].join(' ')}>
             <IconButton size="sm" label="Reset score" icon={<RotateCcw size={14} />} onClick={actions.reset} />
-            <div className={s.statStack} title="Correct in a row">
+            <div className={s.statStack}>
               <span className={s.statValue}>{nr.score.streak}</span><span className={s.statLabel}>Streak</span>
             </div>
           </div>

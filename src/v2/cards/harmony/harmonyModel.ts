@@ -20,6 +20,8 @@ export interface ResolvedPair {
   selectedIdx: number;
   selected: VoicingPosition | null;
   diatonic: boolean;
+  /** The harmony is at its saved spot (rather than a freshly chosen one). */
+  pinned: boolean;
 }
 
 /** Each note with its harmony, placed so the pair is playable:
@@ -40,7 +42,7 @@ export const resolvePairs = (
     // Placed since the last Apply: no harmony yet.
     const valid = n.harmonized !== false && root && scale && scales[scale as keyof typeof scales];
     const result = valid ? findAllVoicings(n, n.interval, root!, scale as keyof typeof scales, board, fretCount) : null;
-    if (!result || result.voicings.length === 0) return { note: n, key, baseName, voicings: [], selectedIdx: 0, selected: null, diatonic: true };
+    if (!result || result.voicings.length === 0) return { note: n, key, baseName, voicings: [], selectedIdx: 0, selected: null, diatonic: true, pinned: false };
     const { voicings } = result;
     const free = (v: VoicingPosition) => !taken.has(posKey(v.stringIndex, v.fret));
 
@@ -55,7 +57,7 @@ export const resolvePairs = (
     const selected = voicings[selectedIdx];
     taken.add(posKey(selected.stringIndex, selected.fret));
     prev = selected;
-    return { note: n, key, baseName, voicings, selectedIdx, selected, diatonic: result.diatonic };
+    return { note: n, key, baseName, voicings, selectedIdx, selected, diatonic: result.diatonic, pinned: picked >= 0 };
   });
 };
 
@@ -97,6 +99,14 @@ export const sameNotePositions = (board: FretboardCell[][], si: number, fret: nu
   return out;
 };
 
+/** Harmonies (that exist) in the harmony order — separate from the melody
+ *  order: by each note's harmonyRank, else its melody position. */
+export const harmonyOrder = (pairs: ResolvedPair[]): ResolvedPair[] =>
+  pairs.map((p, i) => ({ p, i, r: p.note.harmonyRank ?? i }))
+    .filter(x => x.p.selected)
+    .sort((a, b) => a.r - b.r || a.i - b.i)
+    .map(x => x.p);
+
 /** Index of the option closest to where something was dropped (moving across
  *  strings counts more than along them — as in the old Harmony card). */
 export const nearest = (options: Pos[], si: number, fret: number): number => {
@@ -133,7 +143,8 @@ export const buildHarmonyDots = (i: {
     }));
   }
   const label = (order: number, name: string) => (i.labels === 'order' ? String(order) : name);
-  i.pairs.forEach((p, idx) => {
+  // Harmonies are numbered in the harmony order (separate from the melody's).
+  harmonyOrder(i.pairs).forEach((p, idx) => {
     if (!p.selected) return;
     if (p.key === i.choosing) {
       p.voicings.forEach((v, vi) => {

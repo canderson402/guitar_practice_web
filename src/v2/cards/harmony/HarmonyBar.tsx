@@ -32,7 +32,7 @@ export const HarmonyBar: React.FC<{ play?: React.ReactNode }> = ({ play }) => {
       {play}
       {/* Harmonies are added on Apply, so they never land where you're about to place a note. */}
       <Button size="sm" variant={st.pending ? 'primary' : 'secondary'} disabled={st.count === 0} onClick={applyDefaultToAll}
-        title="Give every note its harmony at this interval">Apply</Button>
+        >Apply</Button>
       <Button size="sm" variant="ghost" disabled={st.count === 0} onClick={st.clear}>Clear</Button>
     </div>
   );

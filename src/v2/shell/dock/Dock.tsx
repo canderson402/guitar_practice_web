@@ -35,7 +35,7 @@ export const Dock: React.FC = () => {
       {/* Key and mode each have a fixed width, so changing either (e.g. the
           Note Trainer cycling keys) never shifts the rest of the dock. */}
       <button ref={keyRef} type="button" className={[s.chip, s.keyChip].join(' ')} aria-haspopup="dialog" aria-expanded={openId === 'key'}
-        title={`${st.note ?? '—'} ${scaleShortName(st.scale)}`} onClick={() => toggle('key')}>
+        onClick={() => toggle('key')}>
         <span data-testid="dock-key" className={s.keyPart}>{st.note ?? '—'}</span>{' '}
         <span data-testid="dock-mode" className={s.modePart}>{scaleShortName(st.scale)}</span>
       </button>

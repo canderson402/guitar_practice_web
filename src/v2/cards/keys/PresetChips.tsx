@@ -2,7 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import s from './NoteTrainer.module.css';
 import { useV2Store } from '../../state/useV2Store';
-import { Button, IconButton, Stepper } from '../../ui';
+import { Button, IconButton, Stepper, ChipButton } from '../../ui';
 import { Preset, addPreset, presetLabel, presetMax, presetUnit, removePresetAt, samePreset, setPresetInterval, validPresets } from './presets';
 
 /** The "change every" presets — one list, shared by the Note Trainer and Jam,
@@ -26,8 +26,8 @@ export const PresetChips: React.FC<{
         const on = samePreset(p, value);
         const why = disabledReason?.(p) ?? null;
         return (
-          <button key={i} type="button" aria-pressed={on} disabled={!!why} title={why ?? undefined}
-            className={[s.preset, on ? s.on : ''].join(' ')} onClick={() => onChange(p)}>{presetLabel(p)}</button>
+          <ChipButton key={i} tone="solid" aria-pressed={on} selected={on} disabled={!!why}
+            className={s.preset} onClick={() => onChange(p)}>{presetLabel(p)}</ChipButton>
         );
       })}
     </div>

@@ -30,10 +30,12 @@
 import { useEffect, useRef } from 'react';
 import { create } from 'zustand';
 import { getAudioContext } from './engine';
-import { scheduleClick, loadClickSamples, cancelScheduledClicks } from './click';
+import { scheduleClick, loadClickSamples, prefetchClickSamples, cancelScheduledClicks } from './click';
 import { useStore } from '../store/useStore';
 
 const SCAN_INTERVAL_MS = 25;
+// Longest Play waits for the click samples before starting without them.
+const SAMPLE_WAIT_MS = 1500;
 const LOOKAHEAD_SEC = 0.1;
 const START_OFFSET_SEC = 0.05;
 
@@ -275,10 +277,31 @@ const scan = (): void => {
   if (typeof document !== 'undefined' && document.hidden) drain();
 };
 
+// Bumped on every start/stop so a start still waiting on the audio context
+// to wake can tell it's been superseded.
+let startToken = 0;
+
 const startInternal = (): void => {
   const ctx = getAudioContext();
-  void ctx.resume();
-  loadClickSamples();   // idempotent; any card can start the transport
+  const token = ++startToken;
+  const m = useStore.getState().metronome;
+  const waits: Array<Promise<unknown>> = [];
+  // A sleeping context's clock is frozen: scheduling against it, the first
+  // click lands while the output is still waking and is lost. Wait for it.
+  if (ctx.state !== 'running') waits.push(ctx.resume());
+  // The sampled click must be loaded or beat 1 comes out as the wrong sound
+  // (or not at all) — but don't let a slow network hold Play up for long.
+  const samples = Promise.resolve(loadClickSamples());   // idempotent; any card can start the transport
+  if (m.soundType === 'asrx' && !m.muted) {
+    waits.push(Promise.race([samples, new Promise(resolve => setTimeout(resolve, SAMPLE_WAIT_MS))]));
+  }
+  if (waits.length === 0) { beginInternal(); return; }
+  const begin = () => { if (token === startToken) beginInternal(); };
+  Promise.all(waits).then(begin, begin);
+};
+
+const beginInternal = (): void => {
+  const ctx = getAudioContext();
   running = true;
   latency = readLatency();
   nextTime = ctx.currentTime + START_OFFSET_SEC;
@@ -296,6 +319,7 @@ const startInternal = (): void => {
 };
 
 const stopInternal = (): void => {
+  startToken += 1;
   running = false;
   stopTicks();
   // Clicks inside the lookahead window are already queued on the audio
@@ -320,6 +344,8 @@ let initialized = false;
 export const initTransport = (): void => {
   if (initialized) return;
   initialized = true;
+  // Fetch the click samples' bytes now, so the first Play needn't wait.
+  void Promise.resolve(prefetchClickSamples()).catch(() => {});
   useStore.subscribe((state, prev) => {
     const on = state.metronome.isPlaying;
     if (on === prev.metronome.isPlaying) return;

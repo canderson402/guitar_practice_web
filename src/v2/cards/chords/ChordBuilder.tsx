@@ -1,7 +1,7 @@
 import React from 'react';
 import s from './Chords.module.css';
 import { ChevronDown } from 'lucide-react';
-import { SegmentedControl } from '../../ui';
+import { SegmentedControl, ChipButton } from '../../ui';
 import { useCardPref } from '../../state/useCardPref';
 import { CHORD_TYPES } from '../../../data/chordBuilder';
 import { NotePicker } from '../keys/NotePicker';
@@ -19,8 +19,8 @@ const FAMILIES = [
 const TypeChip: React.FC<{ b: Builder; t: (typeof CHORD_TYPES)[number] }> = ({ b, t }) => {
   const on = b.showing && b.state.typeId === t.id;
   return (
-    <button type="button" aria-pressed={on} aria-label={`${t.symbol || 'maj'}, ${t.name}`} title={t.name}
-      className={[s.opt, on ? s.optOn : ''].join(' ')} onClick={() => b.setType(t.id, true)}>{t.symbol || 'maj'}</button>
+    <ChipButton aria-pressed={on} selected={on} aria-label={`${t.symbol || 'maj'}, ${t.name}`}
+      onClick={() => b.setType(t.id, true)}>{t.symbol || 'maj'}</ChipButton>
   );
 };
 

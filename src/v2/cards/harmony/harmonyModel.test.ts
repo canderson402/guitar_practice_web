@@ -1,4 +1,4 @@
-import { resolvePairs, buildHarmonyDots, clickAction, sameNotePositions, nearest } from './harmonyModel';
+import { resolvePairs, buildHarmonyDots, clickAction, sameNotePositions, nearest, harmonyOrder } from './harmonyModel';
 import { generateFretboard } from '../../../data/guitarData';
 import { posKey } from '../../../components/Fretboard/types';
 import { cellToMidi } from '../../../data/pitch';
@@ -137,4 +137,17 @@ describe('smart harmony placement (playable shapes)', () => {
     const [stale] = resolvePairs([{ ...ns[0], harmonyAt: { stringIndex: 0, fret: 0 } }], 'C', 'Major (Ionian)', board, 12, STD);
     expect(stale.selected).toEqual(auto.selected);
   });
+});
+
+describe('separate melody and harmony orders', () => {
+  it('harmonies are ordered by their own rank; harmony dots are numbered in that order', () => {
+    const ns = [{ ...notes[0], harmonyRank: 1 }, { ...notes[1], harmonyRank: 0 }];
+    const p = resolvePairs(ns, 'C', 'Major (Ionian)', board, 12, STD);
+    expect(harmonyOrder(p).map(x => x.baseName)).toEqual(['D', 'C']);
+    const dots = buildHarmonyDots({ pairs: p, labels: 'order', choosing: null });
+    expect(dots.get(posKey(p[1].selected!.stringIndex, p[1].selected!.fret))?.label).toBe('1');   // D's harmony is first
+    expect(dots.get(posKey(4, 3))?.label).toBe('1');                                              // C is still melody 1
+  });
+
+
 });

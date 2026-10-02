@@ -42,7 +42,7 @@ it('click a fret to add your note — no harmony yet, so it can\'t land where th
   fireEvent.click(cell('C on string 5, fret 3'));
   expect(hm().notes).toHaveLength(1);
   expect(pair().selected).toBeNull();
-  expect(within(screen.getByRole('list', { name: 'Order' })).getByText('C')).toBeInTheDocument();
+  expect(within(screen.getByRole('list', { name: 'Melody' })).getByText('C')).toBeInTheDocument();
   fireEvent.click(cell('C on string 5, fret 3'));
   expect(hm().notes).toHaveLength(0);
 });
@@ -70,13 +70,50 @@ it('click a harmony to choose another spot for it, then click the spot', () => {
   expect(screen.queryByText(/Pick a spot for harmony 1/)).toBeNull();
 });
 
-it('the Order strip is just the play order: number and note; drop a chip on another to swap them', () => {
-  act(() => { useStore.getState().addBaseNote({ stringIndex: 4, fret: 3 }); useStore.getState().addBaseNote({ stringIndex: 4, fret: 5 }); });
-  render(<HarmonyFace />);
-  const items = within(screen.getByRole('list', { name: 'Order' })).getAllByRole('listitem');
-  expect(items.map(li => li.textContent)).toEqual(['1C', '2D']);
-  expect(within(items[0]).getAllByRole('button').map(b => b.getAttribute('aria-label'))).toEqual(['Note 1, C — drag onto another note to swap']);
-  expect(within(items[0]).queryByRole('combobox')).toBeNull();
+describe('Melody and Harmony rows', () => {
+  const add = () => act(() => { const st = useStore.getState(); st.addBaseNote({ stringIndex: 4, fret: 3 }); st.addBaseNote({ stringIndex: 4, fret: 5 }); st.applyDefaultToAll(); });
+
+  it('two rows: Melody (your notes) and Harmony (their harmonies), each numbered in its own order', () => {
+    add();
+    render(<HarmonyFace />);
+    const melody = within(screen.getByRole('list', { name: 'Melody' })).getAllByRole('listitem');
+    const harmony = within(screen.getByRole('list', { name: 'Harmony' })).getAllByRole('listitem');
+    expect(melody.map(li => within(li).getAllByRole('button')[0].textContent)).toEqual(['1C', '2D']);
+    expect(harmony.map(li => within(li).getAllByRole('button')[0].textContent)).toEqual(['1E', '2F']);
+    expect(screen.getByRole('button', { name: 'Melody 1, C — drag onto another to swap' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Harmony 1, E — drag onto another to swap' })).toBeInTheDocument();
+  });
+
+  it('no ⟳ buttons on the chips', () => {
+    add();
+    render(<HarmonyFace />);
+    expect(screen.queryByRole('button', { name: /^Next spot for/ })).toBeNull();
+  });
+
+  it('harmony spots stick once placed: moving one note doesn\'t move the other harmonies', () => {
+    add();
+    render(<HarmonyFace />);
+    // Placed spots are saved on the notes as soon as the harmonies appear.
+    expect(hm().notes.every(n => n.harmonyAt)).toBe(true);
+    const second = hm().notes[1].harmonyAt;
+    act(() => useStore.getState().moveBaseNote({ stringIndex: 4, fret: 3 }, { stringIndex: 5, fret: 8 }));
+    expect(hm().notes[1].harmonyAt).toEqual(second);
+  });
+
+  it('moving a melody note to the same note elsewhere keeps its harmony where it is', () => {
+    add();
+    render(<HarmonyFace />);
+    const harmonyBefore = hm().notes[0].harmonyAt;
+    act(() => useStore.getState().moveBaseNote({ stringIndex: 4, fret: 3 }, { stringIndex: 5, fret: 8 }));
+    expect(hm().notes[0].harmonyAt).toEqual(harmonyBefore);
+    expect(pair().selected).toMatchObject(harmonyBefore!);
+  });
+
+  it('dropping one chip on another swaps them within its own row only', () => {
+    expect(swapForDrop(['a', 'b', 'c'], 'a', 'c')).toEqual([0, 2]);
+    expect(swapForDrop(['a', 'b', 'c'], 'b', 'b')).toBeNull();
+    expect(swapForDrop(['a', 'b', 'c'], 'b', null)).toBeNull();
+  });
 });
 
 it('the top bar sets the interval for new notes, applies it to all (confirming overrides), and clears', () => {
@@ -165,7 +202,8 @@ it('Play plays the pairs in order as quarter notes at the tempo, highlighting ea
   // C3 (48) with its harmony E3 (52) together first.
   const played = () => (globalThis as unknown as { mockPlayed: Played }).mockPlayed;
   expect(played().slice(0, 2).map(p => p.midi).sort()).toEqual([48, 52]);
-  expect(within(screen.getByRole('list', { name: 'Order' })).getAllByRole('listitem')[0]).toHaveAttribute('aria-current', 'step');
+  expect(within(screen.getByRole('list', { name: 'Melody' })).getAllByRole('listitem')[0]).toHaveAttribute('aria-current', 'step');
+  expect(within(screen.getByRole('list', { name: 'Harmony' })).getAllByRole('listitem')[0]).toHaveAttribute('aria-current', 'step');
   fireEvent.click(screen.getByRole('button', { name: 'Stop harmony' }));
   act(() => { jest.advanceTimersByTime(5000); });
   expect(played()).toHaveLength(2);
@@ -173,8 +211,3 @@ it('Play plays the pairs in order as quarter notes at the tempo, highlighting ea
   jest.useRealTimers();
 });
 
-it('dropping a chip on another chip swaps those two', () => {
-  expect(swapForDrop(['a', 'b', 'c'], 'a', 'c')).toEqual([0, 2]);
-  expect(swapForDrop(['a', 'b', 'c'], 'b', 'b')).toBeNull();
-  expect(swapForDrop(['a', 'b', 'c'], 'b', null)).toBeNull();
-});

@@ -1,14 +1,14 @@
 import { create } from 'zustand';
-import { IntervalSpec, scales, majorProgressions, minorProgressions } from '../data/musicData';
+import { IntervalSpec, scales } from '../data/musicData';
 import {
   JamChord,
   JamAlgorithm,
   DrumPatternName,
   generateNextChord,
   buildJamChord,
-  buildPresetQueue,
   WalkState,
 } from '../data/jamAlgorithms';
+import { progressionQueue } from '../data/jamHarmony';
 import {
   Prompt as NoteReadingPrompt,
   nextPromptAvoidingRepeat,
@@ -120,6 +120,9 @@ export interface HarmonyNote {
   harmonized?: boolean;
   /** A harmony spot the player picked (v2); otherwise the card chooses one. */
   harmonyAt?: FretPosition;
+  /** Position in the harmony order, which is separate from the melody order
+   *  (missing = same as its melody position). */
+  harmonyRank?: number;
 }
 
 interface HarmonyMakerState {
@@ -147,6 +150,8 @@ interface JamState {
   chordQueue: JamChord[];
   queueLength: number;
   selectedPreset: string | null;
+  /** The chosen progression, as scale degrees (0 = I). */
+  progression: number[];
   algorithm: JamAlgorithm;
   drumPattern: DrumPatternName;
   /** How many bars each chord is held before advancing. 1-16.
@@ -339,6 +344,8 @@ interface StoreState {
   reorderNotes: (fromIdx: number, toIdx: number) => void;
   /** Trade two notes' places in the play order. */
   swapNotes: (a: number, b: number) => void;
+  /** Trade two harmonies' places in the harmony order (a, b = positions in it). */
+  swapHarmonyOrder: (a: number, b: number) => void;
   setNoteInterval: (stringIndex: number, fret: number, spec: IntervalSpec) => void;
   cycleNoteVoicing: (stringIndex: number, fret: number, totalVoicings: number) => void;
   setNoteVoicingIdx: (stringIndex: number, fret: number, idx: number) => void;
@@ -350,6 +357,8 @@ interface StoreState {
   setJamMode: (mode: 'preset' | 'infinite') => void;
   setJamPlaying: (playing: boolean) => void;
   setJamPreset: (preset: string | null) => void;
+  /** Choose a progression (a library id, or your own) by its scale degrees. */
+  setJamProgression: (id: string | null, degrees: number[]) => void;
   setJamAlgorithm: (algo: JamAlgorithm) => void;
   setJamDrumPattern: (pattern: DrumPatternName) => void;
   setJamBarsPerChord: (bars: number) => void;
@@ -450,7 +459,8 @@ export const useStore = create<StoreState>((set) => ({
     chordQueue: [],
     queueLength: 8,
     selectedPreset: null,
-    algorithm: 'fifths',
+    progression: [],
+    algorithm: 'endless',
     drumPattern: 'rock',
     barsPerChord: 4,
     countIn: 1,
@@ -649,6 +659,8 @@ export const useStore = create<StoreState>((set) => ({
             interval: state.harmonyMaker.defaultInterval,
             voicingIdx: 0,
             harmonized: false,
+            // Last in the harmony order too.
+            harmonyRank: state.harmonyMaker.notes.reduce((m, n, i) => Math.max(m, n.harmonyRank ?? i), -1) + 1,
           },
         ];
     return { harmonyMaker: { ...state.harmonyMaker, notes } };
@@ -659,9 +671,9 @@ export const useStore = create<StoreState>((set) => ({
     return {
       harmonyMaker: {
         ...state.harmonyMaker,
-        // New position → the harmony is re-found from there (nearest spot first).
         notes: notes.map(n => (n.stringIndex === from.stringIndex && n.fret === from.fret
-          ? { ...n, stringIndex: to.stringIndex, fret: to.fret, voicingIdx: 0, harmonyAt: undefined } : n)),
+          // Same note elsewhere: its harmony is unchanged, so it keeps its spot.
+          ? { ...n, stringIndex: to.stringIndex, fret: to.fret, voicingIdx: 0 } : n)),
       },
     };
   }),
@@ -697,6 +709,17 @@ export const useStore = create<StoreState>((set) => ({
     const notes = [...state.harmonyMaker.notes];
     if (a === b || !notes[a] || !notes[b]) return state;
     [notes[a], notes[b]] = [notes[b], notes[a]];
+    return { harmonyMaker: { ...state.harmonyMaker, notes } };
+  }),
+  swapHarmonyOrder: (a, b) => set((state) => {
+    const notes = [...state.harmonyMaker.notes];
+    const rank = (i: number) => notes[i].harmonyRank ?? i;
+    const order = notes.map((_, i) => i).sort((x, y) => rank(x) - rank(y) || x - y);
+    const [ia, ib] = [order[a], order[b]];
+    if (ia === undefined || ib === undefined || ia === ib) return state;
+    const [ra, rb] = [rank(ia), rank(ib)];
+    notes[ia] = { ...notes[ia], harmonyRank: rb };
+    notes[ib] = { ...notes[ib], harmonyRank: ra };
     return { harmonyMaker: { ...state.harmonyMaker, notes } };
   }),
   setNoteInterval: (stringIndex, fret, spec) => set((state) => ({
@@ -776,6 +799,9 @@ export const useStore = create<StoreState>((set) => ({
       chordQueue: [],
       walkState: {},
     },
+  })),
+  setJamProgression: (selectedPreset, progression) => set((state) => ({
+    jam: { ...state.jam, selectedPreset, progression, currentChordIndex: 0, chordQueue: [], walkState: {} },
   })),
   setJamAlgorithm: (algorithm) => set((state) => ({
     jam: {
@@ -889,12 +915,8 @@ export const useStore = create<StoreState>((set) => ({
     let newQueue: JamChord[] = [];
     let newWalkState: WalkState = {};
 
-    if (jam.mode === 'preset' && jam.selectedPreset !== null) {
-      const pool = { ...majorProgressions, ...minorProgressions } as Record<string, { chords: string[] }>;
-      const preset = pool[jam.selectedPreset];
-      if (preset) {
-        newQueue = buildPresetQueue(preset.chords, rootNote, scaleType);
-      }
+    if (jam.mode === 'preset') {
+      newQueue = progressionQueue(jam.progression, rootNote, scaleType);
     } else {
       // Infinite mode: seed with root chord then generate queueLength chords
       const rootChord = buildJamChord(rootNote, rootNote, scaleType);

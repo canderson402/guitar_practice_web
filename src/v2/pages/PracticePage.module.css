@@ -27,6 +27,9 @@
 .rowGrip { position: absolute; left: calc(-1 * var(--space-4)); top: 0; bottom: 0; width: var(--space-4); padding: 0; margin: 0; border: none; background: transparent; color: var(--text-muted); cursor: grab; display: flex; align-items: center; justify-content: center; opacity: 0; border-radius: var(--radius-sm); touch-action: none; transition: opacity .12s; }
 .rowGrip:hover, .rowGrip:focus-visible { opacity: 1; color: var(--text); background: var(--fill); }
 .rowGrip:active { cursor: grabbing; }
-.dropTarget { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--radius-lg); }
+/* Drop target: a ring drawn inside the element, over its content (the card
+   fills the cell), so nothing around it can clip it. */
+.dropTarget { position: relative; }
+.dropTarget::after { content: ''; position: absolute; inset: 0; border: 2px solid var(--accent); border-radius: var(--radius-lg); pointer-events: none; z-index: 4; }
 .newRow { border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); padding: var(--space-6); text-align: center; color: var(--text-muted); font-size: var(--text-12); }
 .dragPreview { display: inline-flex; white-space: nowrap; padding: 8px 14px; border-radius: var(--radius-pill); background: var(--surface-raised); border: 1px solid var(--accent); box-shadow: var(--elev-3); font-weight: 600; font-size: var(--text-12); color: var(--text); cursor: grabbing; }

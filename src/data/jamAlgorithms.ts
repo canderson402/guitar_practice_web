@@ -13,12 +13,15 @@ import {
   chordTypes,
   scales,
 } from './musicData';
+import { diatonicChord, parentScale, keyMode, nextEndless } from './jamHarmony';
+import type { EndlessState } from './jamHarmony';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export type JamAlgorithm =
+  | 'endless'
   | 'fifths'
   | 'fourths'
   | 'skip1'
@@ -35,6 +38,11 @@ export interface JamChord {
   symbol: string;
   roman: string;
   midi: number[];
+  /** Stacked intervals above the root (from the key when diatonic). */
+  third?: number;
+  fifth?: number;
+  seventh?: number;
+  ninth?: number;
 }
 
 export type DrumPatternName = 'rock' | 'bossa' | 'hiphop';
@@ -48,6 +56,8 @@ export interface DrumHit {
 }
 
 export interface WalkState {
+  /** Endless mode: the phrase in progress. */
+  endless?: EndlessState;
   iiVState?: {
     /** 0 = about to play ii, 1 = about to play V, 2 = about to play I */
     position: number;
@@ -219,6 +229,9 @@ export const buildJamChord = (
   rootNote: string,
   scaleType: keyof typeof scales
 ): JamChord => {
+  // In the key: its real diatonic chord (vii° stays diminished).
+  const degree = parentScale(rootNote, scaleType).findIndex(n => getChromaticPosition(n) === getChromaticPosition(note));
+  if (degree >= 0) return { ...diatonicChord(rootNote, scaleType, degree), note };
   const raw = getChordQuality(note, rootNote, scaleType);
   const { type, symbol } = clampType(raw.type);
   const roman = romanLabel(note, type, rootNote, scaleType);
@@ -383,6 +396,10 @@ export const generateNextChord = (
   let nextWalkState: WalkState = {};
 
   switch (algorithm) {
+    case 'endless': {
+      const r = nextEndless(keyMode(rootNote, scaleType), walkState?.endless ?? {});
+      return { chord: diatonicChord(rootNote, scaleType, r.degree), walkState: { endless: r.state } };
+    }
     case 'fifths':
     case 'fourths':
     case 'skip1':
