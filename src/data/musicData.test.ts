@@ -20,3 +20,8 @@ it('gets chord qualities right in keys spelled with double flats (Db Locrian)', 
 it('chord positions for a type it doesn\'t know are empty (no crash)', () => {
   expect(getChordChromaticPositions('C', 'maj9' as never)).toEqual([]);
 });
+
+it('offers Phrygian Dominant, spelled with one letter per degree', () => {
+  expect(getScaleNotes('E', 'Phrygian Dominant')).toEqual(['E', 'F', 'G#', 'A', 'B', 'C', 'D']);
+  expect(getScaleChords('E', 'Phrygian Dominant').map(c => c.roman)).toEqual(['I', 'II', 'iii°', 'iv', 'v°', 'VI+', 'vii']);
+});

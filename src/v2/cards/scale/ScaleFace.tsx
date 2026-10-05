@@ -10,6 +10,7 @@ import { scaleShortName } from '../../shell/KeyPicker';
 import { useScaleAdvance } from './useScaleAdvance';
 import { HeroFace } from '../HeroFace';
 import { ChipButton, ChipSub } from '../../ui';
+import { useScalePlayback } from './ScalePlay';
 
 export const ScaleFace: React.FC = () => {
   const n = useStore(useShallow(st => ({
@@ -25,6 +26,9 @@ export const ScaleFace: React.FC = () => {
     : [];
   const degrees = (n.scale && scaleDegreeLabels(n.scale)) || notes.map(x => intervalSymbol(n.root ?? 'C', x));
   useScaleAdvance(notes.length);
+
+  // While the header's Play button plays the scale, only the sounding note is lit.
+  const step = useScalePlayback(st => st.step);
 
   if (!n.root || notes.length === 0) return <div className={s.face}>Pick a key from the dock.</div>;
   const idx = Math.min(n.index, notes.length - 1);
@@ -43,8 +47,11 @@ export const ScaleFace: React.FC = () => {
       controls={
         <div className={s.notes}>
           {notes.map((note, i) => (
-            <ChipButton key={note + i} aria-label={`${note}, ${degrees[i]}`} aria-pressed={selected && i === idx} selected={selected && i === idx}
-              className={[s.chip, selected && n.showNext && i === n.nextIndex && i !== idx ? s.next : ''].join(' ')}
+            <ChipButton key={note + i} aria-label={`${note}, ${degrees[i]}`} aria-pressed={selected && i === idx}
+              // While playing, only the sounding note is lit (the octave step lights the root again).
+              selected={step !== null ? step % notes.length === i : selected && i === idx}
+              aria-current={step !== null && step % notes.length === i ? 'step' : undefined}
+              className={[s.chip, step === null && selected && n.showNext && i === n.nextIndex && i !== idx ? s.next : ''].join(' ')}
               // Tapping the selected note again deselects it (like a chord).
               onClick={() => { if (selected && i === idx) setSelected(false); else { n.setIndex(i); setSelected(true); } }}>
               <b>{note}</b><ChipSub>{degrees[i]}</ChipSub>

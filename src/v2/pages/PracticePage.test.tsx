@@ -107,8 +107,8 @@ it('card header is not itself a button; a dedicated handle carries keyboard reor
   const handle = within(card).getByRole('button', { name: 'Reorder Scale' });
   expect(handle).toHaveAttribute('aria-roledescription', 'draggable');
   // The header's controls come first in the card; the face's controls follow.
-  expect(within(card).getAllByRole('button').slice(0, 3).map(b => b.getAttribute('aria-label')))
-    .toEqual(['Reorder Scale', 'Scale settings', 'Scale options']);
+  expect(within(card).getAllByRole('button').slice(0, 4).map(b => b.getAttribute('aria-label')))
+    .toEqual(['Reorder Scale', 'Play scale', 'Scale settings', 'Scale options']);
 });
 
 it('card menu: focus moves into it, arrows move between items, Escape returns to the trigger', () => {

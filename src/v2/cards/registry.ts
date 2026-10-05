@@ -4,6 +4,7 @@ import { MetronomeFace } from './metronome/MetronomeFace';
 import { MetronomeSheet } from './metronome/MetronomeSheet';
 import { ScaleFace } from './scale/ScaleFace';
 import { ScaleSheet } from './scale/ScaleSheet';
+import { ScalePlayButton } from './scale/ScalePlay';
 import { FretboardFace } from './fretboard/FretboardFace';
 import { FretboardSheet } from './fretboard/FretboardSheet';
 import { TimerFace } from './timer/TimerFace';
@@ -26,6 +27,8 @@ export interface CardDef {
   size: { colSpan: ColSpan; rowSpan: number };
   Face: React.FC;
   Sheet?: React.FC;
+  /** Small icon buttons the card adds to its header, before settings. */
+  HeaderTools?: React.FC;
 }
 
 // Cards are added here as each one passes its review (spec §7.3).
@@ -53,6 +56,7 @@ export const CARDS: CardDef[] = [
     size: { colSpan: 3, rowSpan: 6 },
     Face: ScaleFace,
     Sheet: ScaleSheet,
+    HeaderTools: ScalePlayButton,
   },
   {
     id: 'circle-of-fifths',

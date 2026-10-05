@@ -6,6 +6,19 @@ import { ScaleSheet } from './ScaleSheet';
 import { useStore } from '../../../store/useStore';
 import { useV2Store } from '../../state/useV2Store';
 import { getCard } from '../registry';
+import { ScalePlayButton } from './ScalePlay';
+
+// Playback uses the audio clock and guitar samples; jsdom has neither.
+type Played = Array<{ midi: number; time?: number }>;
+jest.mock('../../../audio/engine', () => ({ getAudioContext: () => ({ currentTime: 0 }) }));
+jest.mock('../../../audio/guitar', () => ({
+  preloadGuitar: () => Promise.resolve(),
+  playGuitarNote: (midi: number, _d: number, time?: number) => {
+    const g = globalThis as unknown as { mockPlayed?: Played };
+    (g.mockPlayed ??= []).push({ midi, time });
+    return Promise.resolve();
+  },
+}));
 
 const n = () => useStore.getState().note;
 beforeEach(() => act(() => {
@@ -99,4 +112,36 @@ it('is a small card, the same height as the other small cards', () => {
 
 it('"Show next note" is off by default', () => {
   expect(useStore.getInitialState().note.showNextNote).toBe(false);
+});
+
+it('the header Play button plays the scale up note by note on guitar, to the octave, lighting each note; Stop stops', () => {
+  jest.useFakeTimers();
+  const played = () => (globalThis as unknown as { mockPlayed: Played }).mockPlayed;
+  (globalThis as unknown as { mockPlayed: Played }).mockPlayed = [];
+  act(() => useStore.getState().setBpm(120));
+  render(<MemoryRouter><ScalePlayButton /><ScaleFace /></MemoryRouter>);
+  fireEvent.click(screen.getByRole('button', { name: 'Play scale' }));
+  act(() => { jest.advanceTimersByTime(150); });
+  expect(screen.getByRole('button', { name: 'A, 1' })).toHaveAttribute('aria-current', 'step');
+  expect(screen.getByRole('button', { name: 'Stop scale' })).toBeInTheDocument();
+  act(() => { jest.advanceTimersByTime(5000); });
+  // A minor from A2: A B C D E F G, then A3.
+  expect(played().map(p => p.midi)).toEqual([45, 47, 48, 50, 52, 53, 55, 57]);
+  // One note per beat at 120 bpm.
+  expect(played()[1].time! - played()[0].time!).toBeCloseTo(0.5);
+  expect(screen.getByRole('button', { name: 'Play scale' })).toBeInTheDocument();
+  // Playing doesn't change which note is selected.
+  expect(useV2Store.getState().noteSelected).toBe(false);
+
+  played().length = 0;
+  fireEvent.click(screen.getByRole('button', { name: 'Play scale' }));
+  act(() => { jest.advanceTimersByTime(150); });
+  fireEvent.click(screen.getByRole('button', { name: 'Stop scale' }));
+  act(() => { jest.advanceTimersByTime(5000); });
+  expect(played()).toHaveLength(1);
+  jest.useRealTimers();
+});
+
+it('the Play button sits in the Scale card\'s header', () => {
+  expect(getCard('scale')!.HeaderTools).toBe(ScalePlayButton);
 });

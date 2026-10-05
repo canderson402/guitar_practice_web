@@ -10,6 +10,9 @@ import { TimerFace } from './timer/TimerFace';
 import { useStore } from '../../store/useStore';
 import { useV2Store } from '../state/useV2Store';
 
+// The Scale card preloads guitar samples for its Play button; jsdom has no audio.
+jest.mock('../../audio/guitar', () => ({ preloadGuitar: () => Promise.resolve(), playGuitarNote: () => Promise.resolve() }));
+
 // The small cards share one layout (top line, hero value, caption, controls)
 // so their big values and controls line up across a row of cards.
 const slots = (el: HTMLElement) =>

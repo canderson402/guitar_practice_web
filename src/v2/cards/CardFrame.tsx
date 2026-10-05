@@ -21,7 +21,7 @@ interface Props {
 
 
 export const CardFrame: React.FC<Props> = ({ def, editing, onOpenSheet, menu, drag }) => {
-  const { Face } = def;
+  const { Face, HeaderTools } = def;
   // dnd-kit types its listeners loosely (Function); narrow the keyboard one.
   const { onKeyDown, ...pointerListeners } = (drag?.listeners ?? {}) as { onKeyDown?: React.KeyboardEventHandler<HTMLElement> } & Record<string, unknown>;
   return (
@@ -35,6 +35,7 @@ export const CardFrame: React.FC<Props> = ({ def, editing, onOpenSheet, menu, dr
         )}
         <h3 className={s.title}>{def.title}</h3>
         <div className={s.tools}>
+          {HeaderTools && <HeaderTools />}
           {def.Sheet && (
             <IconButton size="sm" label={`${def.title} settings`} active={editing} icon={<Settings size={14} />} data-sheet-trigger
               onPointerDown={e => e.stopPropagation()} onClick={onOpenSheet} />

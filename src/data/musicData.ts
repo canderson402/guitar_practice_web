@@ -78,6 +78,12 @@ export const scales = {
   'Harmonic Minor': {
     intervals: [0, 2, 3, 5, 7, 8, 11],
     description: '1 - 2 - ♭3 - 4 - 5 - ♭6 - 7'
+  },
+
+  // Phrygian Dominant (5th mode of Harmonic Minor)
+  'Phrygian Dominant': {
+    intervals: [0, 1, 4, 5, 7, 8, 10],
+    description: '1 - ♭2 - 3 - 4 - 5 - ♭6 - ♭7'
   }
 };
 // Helper function to determine if a key uses sharps or flats
@@ -576,6 +582,7 @@ export const scaleSuggestions: { [key: string]: 'major' | 'minor' | 'both' } = {
   'Major Pentatonic': 'major',
   'Minor Pentatonic': 'minor',
   'Harmonic Minor': 'minor',
+  'Phrygian Dominant': 'major',
 };
 
 // Define which scales support traditional chord progressions
@@ -587,7 +594,8 @@ export const diatonicScales = [
   'Mixolydian',
   'Aeolian (Natural Minor)',
   'Locrian',
-  'Harmonic Minor'
+  'Harmonic Minor',
+  'Phrygian Dominant'
 ];
 
 // Chord-tone chromatic positions (0–11) for a chord rooted at `root`. Use for

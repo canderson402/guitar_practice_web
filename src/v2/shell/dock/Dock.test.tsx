@@ -89,7 +89,7 @@ it('groups scales: Modes (in mode order), then Other below; Ionian labeled with 
     .getAllByRole('radio').map(r => r.textContent);
   expect(modes).toEqual(['Ionian (Major)', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian (Natural Minor)', 'Locrian']);
   const others = within(screen.getByRole('radiogroup', { name: 'Other' })).getAllByRole('radio').map(r => r.textContent);
-  expect(others).toEqual(expect.arrayContaining(['Chromatic', 'Major Pentatonic', 'Minor Pentatonic', 'Harmonic Minor']));
+  expect(others).toEqual(expect.arrayContaining(['Chromatic', 'Major Pentatonic', 'Minor Pentatonic', 'Harmonic Minor', 'Phrygian Dominant']));
   expect(others).not.toContain('Dorian');
 });
 
