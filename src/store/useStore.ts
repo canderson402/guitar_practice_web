@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { IntervalSpec, scales } from '../data/musicData';
 import {
   JamChord,
@@ -133,7 +134,7 @@ interface HarmonyMakerState {
 export interface JamMixer {
   /** Master output level — controls the engine's master gain node.
    *  Range 0-150 where 100 = unity. No mute (Play/Stop covers that role). */
-  master:  { volume: number };
+  master:  { volume: number; muted?: boolean };
   chords:  { volume: number; muted: boolean };
   bass:    { volume: number; muted: boolean };
   strum:   { volume: number; muted: boolean };
@@ -365,6 +366,8 @@ interface StoreState {
   setJamCountIn: (countIn: number) => void;
   setJamMixerVolume: (part: keyof JamMixer, volume: number) => void;
   setJamMixerMuted: (part: JamMixerPart, muted: boolean) => void;
+  /** Mute everything (the master output), keeping its level for unmute. */
+  setMasterMuted: (muted: boolean) => void;
   advanceJamChord: () => void;
   rebuildJamQueue: () => void;
 
@@ -396,7 +399,67 @@ interface StoreState {
   setViewMode: (mode: ViewMode) => void;
 }
 
-export const useStore = create<StoreState>((set) => ({
+// ---- Saved preferences ----
+// Settings are remembered in the browser; what only matters while playing
+// (playing/stopped, queues, positions, scores) is not.
+
+export const APP_STORAGE_KEY = 'gp-app';
+
+const pick = <T extends object, K extends keyof T>(o: T, keys: K[]): Pick<T, K> =>
+  Object.fromEntries(keys.map(k => [k, o[k]])) as Pick<T, K>;
+
+/** The parts of the state that are saved. */
+export const appPrefs = (s: StoreState) => ({
+  timer: pick(s.timer, ['mode', 'targetSeconds']),
+  metronome: pick(s.metronome, ['bpm', 'muted', 'volume', 'beatsPerMeasure', 'beatUnit', 'subdivision', 'emphasizeFirstBeat', 'soundType']),
+  note: pick(s.note, ['selectedNote', 'selectedScale', 'changeMode', 'changeInterval', 'randomize', 'showNextNote', 'tuning']),
+  circleOfFifths: pick(s.circleOfFifths, ['autoAdvance', 'direction', 'changeMode', 'changeInterval', 'randomize', 'showNext', 'countIn']),
+  harmonyMaker: s.harmonyMaker,
+  jam: { ...pick(s.jam, ['mode', 'selectedPreset', 'progression', 'algorithm', 'barsPerChord', 'countIn']), mixer: { master: s.jam.mixer.master } },
+  noteReading: pick(s.noteReading, ['mode', 'fretCount', 'phraseBars', 'phraseKey', 'phraseNotesPerBar', 'trebleEnabled', 'bassEnabled']),
+  viewMode: s.viewMode,
+});
+type AppPrefs = ReturnType<typeof appPrefs>;
+
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+/** Saved fields over the current slice — only fields the slice has, with
+ *  the same kind of value (a malformed save can't break the app). */
+const over = <T extends object>(current: T, saved: unknown, allowed: Array<keyof T>): T => {
+  if (!isObj(saved)) return current;
+  const out = { ...current };
+  allowed.forEach(k => {
+    const v = saved[k as string];
+    const cur = current[k];
+    if (v === undefined) return;
+    if (cur === null || v === null ? (cur === null || v === null) : Array.isArray(cur) ? Array.isArray(v) : typeof v === typeof cur) out[k] = v as T[keyof T];
+  });
+  return out;
+};
+
+/** Restore saved preferences over the defaults. */
+export const mergeAppPrefs = (persisted: unknown, current: StoreState): StoreState => {
+  const p = (isObj(persisted) ? persisted : {}) as Partial<Record<keyof AppPrefs, unknown>>;
+  const keys = <S extends keyof AppPrefs>(slice: S) => Object.keys(appPrefs(current)[slice] as object) as never[];
+  const note = over(current.note, p.note, keys('note'));
+  if (!note.tuning.every(n => typeof n === 'string') || note.tuning.length < 4) note.tuning = current.note.tuning;
+  const savedJam = isObj(p.jam) ? p.jam : {};
+  const jam = over(current.jam, savedJam, keys('jam').filter(k => k !== 'mixer'));
+  const savedMaster = isObj(savedJam.mixer) ? savedJam.mixer.master : undefined;
+  jam.mixer = { ...current.jam.mixer, master: over(current.jam.mixer.master, savedMaster, ['volume', 'muted']) };
+  return {
+    ...current,
+    timer: over(current.timer, p.timer, keys('timer')),
+    metronome: over(current.metronome, p.metronome, keys('metronome')),
+    note,
+    circleOfFifths: over(current.circleOfFifths, p.circleOfFifths, keys('circleOfFifths')),
+    harmonyMaker: over(current.harmonyMaker, p.harmonyMaker, ['notes', 'defaultInterval']),
+    jam,
+    noteReading: over(current.noteReading, p.noteReading, keys('noteReading')),
+    viewMode: p.viewMode === 'piano' || p.viewMode === 'fretboard' ? p.viewMode : current.viewMode,
+  };
+};
+
+export const useStore = create<StoreState>()(persist((set) => ({
   timer: {
     isRunning: false,
     elapsedSeconds: 0,
@@ -466,7 +529,7 @@ export const useStore = create<StoreState>((set) => ({
     countIn: 1,
     walkState: {},
     mixer: {
-      master: { volume: 100 },
+      master: { volume: 100, muted: false },
       chords: { volume: 100, muted: false },
       bass:   { volume: 100, muted: false },
       strum:  { volume:  80, muted: false },
@@ -833,6 +896,9 @@ export const useStore = create<StoreState>((set) => ({
       },
     };
   }),
+  setMasterMuted: (muted) => set((state) => ({
+    jam: { ...state.jam, mixer: { ...state.jam.mixer, master: { ...state.jam.mixer.master, muted } } },
+  })),
   setJamMixerMuted: (part, muted) => set((state) => ({
     jam: {
       ...state.jam,
@@ -1184,4 +1250,10 @@ export const useStore = create<StoreState>((set) => ({
   }),
 
   setViewMode: (viewMode) => set({ viewMode }),
+}), {
+  name: APP_STORAGE_KEY,
+  version: 1,
+  storage: createJSONStorage(() => localStorage),
+  partialize: appPrefs,
+  merge: (persisted, current) => mergeAppPrefs(persisted, current),
 }));

@@ -105,14 +105,51 @@ it('the key chip shows key and mode as two fixed-width parts, so changing either
   expect(mode).toHaveClass('modePart');
 });
 
-it('the meter pop-up has just one volume — Master (click and pad live on their cards)', () => {
+it('the meter pop-up has the master and metronome volumes (pad levels live on the Jam card)', () => {
   render(<Dock />);
   fireEvent.click(screen.getByRole('button', { name: /Meter & volume/ }));
   const pop = screen.getByRole('dialog', { name: 'Meter & volume' });
-  expect(within(pop).getAllByRole('slider').map(el => el.getAttribute('aria-label'))).toEqual(['Master volume']);
+  expect(within(pop).getAllByRole('slider').map(el => el.getAttribute('aria-label'))).toEqual(['Master volume', 'Metronome volume']);
 });
 
 it('beat dots switch instantly with no scale or fade (nothing to shimmer between beats)', () => {
   const css = require('fs').readFileSync(require('path').join(__dirname, 'BeatDots.module.css'), 'utf8') as string;
   expect(css).not.toMatch(/transition|transform|scale\(/);
+});
+
+it('clicking the tempo opens straight into typing: type a BPM, Enter', () => {
+  render(<Dock />);
+  fireEvent.click(screen.getByRole('button', { name: /BPM/ }));
+  const input = screen.getByRole('spinbutton', { name: 'Tempo' });
+  expect(input).toHaveFocus();
+  fireEvent.change(input, { target: { value: '93' } });
+  fireEvent.keyDown(input, { key: 'Enter' });
+  expect(useStore.getState().metronome.bpm).toBe(93);
+});
+
+it('the meter & volume pop-up also sets the metronome volume', () => {
+  render(<Dock />);
+  fireEvent.click(screen.getByRole('button', { name: /meter & volume/i }));
+  fireEvent.change(screen.getByRole('slider', { name: 'Metronome volume' }), { target: { value: '35' } });
+  expect(useStore.getState().metronome.volume).toBe(35);
+});
+
+it('master and metronome each have an M (mute) button in the meter & volume pop-up', () => {
+  act(() => { useStore.getState().setMasterMuted(false); useStore.getState().setMetronomeMuted(false); });
+  render(<Dock />);
+  fireEvent.click(screen.getByRole('button', { name: /meter & volume/i }));
+  const master = screen.getByRole('button', { name: 'Mute master' });
+  expect(master).toHaveAttribute('aria-pressed', 'false');
+  fireEvent.click(master);
+  expect(useStore.getState().jam.mixer.master.muted).toBe(true);
+  expect(master).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Mute metronome' }));
+  expect(useStore.getState().metronome.muted).toBe(true);
+});
+
+it('the key picker highlights the key whichever way it is spelled (C# lights up Db)', () => {
+  act(() => useStore.getState().setSelectedNote('C#'));
+  render(<Dock />);
+  fireEvent.click(screen.getByTestId('dock-key'));
+  expect(screen.getByRole('radio', { name: 'Db' })).toHaveAttribute('aria-checked', 'true');
 });

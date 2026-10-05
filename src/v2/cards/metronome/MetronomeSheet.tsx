@@ -6,7 +6,6 @@ import { SegmentedControl, Switch, Slider, Stepper } from '../../ui';
 import { clampBpm, BPM_MIN, BPM_MAX } from '../../shell/dock/tapTempo';
 import { SUBDIVISIONS } from '../../shell/dock/MeterPopover';
 import { TimeSignatureInput } from '../../ui';
-import { setClickVolume } from '../../../audio';
 
 export const MetronomeSheet: React.FC = () => {
   const m = useStore(useShallow(st => ({
@@ -40,7 +39,7 @@ export const MetronomeSheet: React.FC = () => {
       </div>
       <div className={s.field}><span className={s.label}>Click volume</span>
         <Slider label="Click volume" value={m.volume} min={0} max={100} showValue format={v => `${v}%`}
-          onChange={v => { m.setMetronomeVolume(v); setClickVolume(v / 100); }} />
+          onChange={m.setMetronomeVolume} />
       </div>
     </>
   );

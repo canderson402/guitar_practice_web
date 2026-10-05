@@ -28,11 +28,11 @@ const getClickBus = (): GainNode => {
   return clickBus;
 };
 
-/** Metronome click volume, 0–1. Applies immediately. */
+/** Metronome click volume, 0–1. Applies immediately; before the first click
+ *  it's just remembered (no audio engine is started for it). */
 export const setClickVolume = (value: number): void => {
   clickVolume = Math.max(0, Math.min(1, value));
-  const bus = getClickBus();
-  bus.gain.setTargetAtTime(clickVolume, bus.context.currentTime, 0.01);
+  if (clickBus) clickBus.gain.setTargetAtTime(clickVolume, clickBus.context.currentTime, 0.01);
 };
 
 const publicUrl = () => process.env.PUBLIC_URL ?? '';

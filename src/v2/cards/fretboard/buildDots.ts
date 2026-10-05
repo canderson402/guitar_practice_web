@@ -24,30 +24,36 @@ export interface DotInput {
 // Colors come from v2 music tokens so dots follow light/dark themes.
 const COLOR = { root: 'var(--note-root)', scale: 'var(--note-scale)', current: 'var(--note-chord)' };
 
-/** Which dot (if any) sits on every string/fret. Priority: root > selected
+export type DotStyle = Omit<DotInput, 'tuning' | 'frets'>;
+
+/** The dot for one note (any octave), or null. Priority: root > selected
  *  note > scale tone (a selected note that is the root keeps the root
  *  color). With a chord showing, only its tones are drawn (its root as the
- *  root) — plus the selected note, which always shows, in or out of the chord. */
+ *  root) — plus the selected note, which always shows. Shared by the
+ *  fretboard and the piano. */
+export const dotForNote = (i: DotStyle, note: string): DotInfo | null => {
+  const inScale = i.scaleNotes.some(n => chromaticPosition(n) === chromaticPosition(note));
+  const same = (a: string | null | undefined, b: string) => !!a && chromaticPosition(a) === chromaticPosition(b);
+  const label = i.labels === 'none' ? '' : i.labels === 'intervals' ? i.degreeOf(note) : (i.nameOf?.(note) ?? note);
+  let variant: 'root' | 'scale' | 'current' | null = null;
+  if (i.chord) {
+    const inChord = i.chord.pitches.includes(chromaticPosition(note));
+    if (inChord && i.show.root && same(i.chord.root, note)) variant = 'root';
+    else if (i.show.selected && same(i.selected, note)) variant = 'current';
+    else if (inChord && i.show.scale && !same(i.chord.root, note)) variant = 'scale';
+  } else if (i.show.root && same(i.root, note)) variant = 'root';
+  else if (i.show.selected && same(i.selected, note)) variant = 'current';
+  else if (i.show.scale && inScale) variant = 'scale';
+  return variant ? { variant, label, color: COLOR[variant] } : null;
+};
+
+/** Which dot (if any) sits on every string/fret (see `dotForNote`). */
 export const buildDots = (i: DotInput): Map<string, DotInfo> => {
   const map = new Map<string, DotInfo>();
-  const board = generateFretboard(i.tuning, i.frets);
-  const inScale = new Set(i.scaleNotes.map(chromaticPosition));
-  const same = (a: string | null | undefined, b: string) => !!a && chromaticPosition(a) === chromaticPosition(b);
-
-  board.forEach((string, si) => string.forEach(cell => {
+  generateFretboard(i.tuning, i.frets).forEach((string, si) => string.forEach(cell => {
     if (!cell || cell.fret > i.frets) return;
-    const note = cell.note;
-    const label = i.labels === 'none' ? '' : i.labels === 'intervals' ? i.degreeOf(note) : (i.nameOf?.(note) ?? note);
-    let variant: 'root' | 'scale' | 'current' | null = null;
-    if (i.chord) {
-      const inChord = i.chord.pitches.includes(chromaticPosition(note));
-      if (inChord && i.show.root && same(i.chord.root, note)) variant = 'root';
-      else if (i.show.selected && same(i.selected, note)) variant = 'current';
-      else if (inChord && i.show.scale && !same(i.chord.root, note)) variant = 'scale';
-    } else if (i.show.root && same(i.root, note)) variant = 'root';
-    else if (i.show.selected && same(i.selected, note)) variant = 'current';
-    else if (i.show.scale && inScale.has(chromaticPosition(note))) variant = 'scale';
-    if (variant) map.set(posKey(si, cell.fret), { variant, label, color: COLOR[variant] });
+    const dot = dotForNote(i, cell.note);
+    if (dot) map.set(posKey(si, cell.fret), dot);
   }));
   return map;
 };

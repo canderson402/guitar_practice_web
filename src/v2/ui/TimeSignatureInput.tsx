@@ -23,7 +23,7 @@ export const TimeSignatureInput: React.FC<{ size?: 'sm' | 'md' }> = ({ size = 'm
         <span className={s.rule} aria-hidden="true" />
         <EditableNumber label="Beat unit" value={m.unit} min={1} max={32} allowed={BEAT_UNITS} onChange={m.setUnit} className={s.num} />
       </div>
-      <SegmentedControl label="Common time signatures" size="sm"
+      <SegmentedControl label="Common time signatures" size="sm" columns={4}
         value={COMMON_SIGNATURES.includes(current) ? current : ''}
         onChange={v => { const [b, u] = v.split('/').map(Number); m.setBeats(b); m.setUnit(u); }}
         options={COMMON_SIGNATURES.map(sig => ({ value: sig, label: sig }))} />

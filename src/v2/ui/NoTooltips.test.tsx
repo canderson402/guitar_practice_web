@@ -21,6 +21,6 @@ it('fretboard cells and piano keys have no hover tooltips', () => {
   const { unmount } = render(<Fretboard strings={6} fretCount={5} tuning={STD} dots={new Map()} onCellClick={() => {}} />);
   expect(screen.getByRole('button', { name: 'C on string 5, fret 3' })).not.toHaveAttribute('title');
   unmount();
-  render(<PianoKeyboard strings={6} fretCount={5} tuning={STD} dots={new Map()} onCellClick={() => {}} />);
+  render(<PianoKeyboard dotFor={() => null} onKeyClick={() => {}} />);
   screen.getAllByRole('button').forEach(k => expect(k).not.toHaveAttribute('title'));
 });

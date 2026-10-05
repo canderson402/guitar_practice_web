@@ -26,6 +26,7 @@
 
 import { buildPadTable, tableBaseFor, sawPhaseCoefficients, SUPERSAW_OFFSETS } from './padTable';
 import type { PadTableSpec } from './padTable';
+import { midiToFreq, getReferencePitch } from './pitch';
 
 export interface PadVoiceOpts {
   /** Attack ramp in seconds (silence → peak). */
@@ -341,7 +342,9 @@ export interface PadSynth {
   dispose: () => void;
 }
 
-const midiToFreq = (midi: number): number => 440 * Math.pow(2, (midi - 69) / 12);
+// Wavetables are built at A4 = 440 (so the cache never goes stale) and
+// retuned to the reference pitch by playback rate.
+const tableFreq = (midi: number): number => 440 * Math.pow(2, (midi - 69) / 12);
 
 // ---- Shared, per-context caches ----
 
@@ -358,7 +361,7 @@ const getTable = (ctx: BaseAudioContext, patch: Patch, base: number): AudioBuffe
   if (!buf) {
     buf = ctx.createBuffer(2, TABLE_SIZE, ctx.sampleRate);
     for (let ch = 0; ch < 2; ch++) {
-      const data = buildPadTable(patch.table!, { size: TABLE_SIZE, sampleRate: ctx.sampleRate, baseFreq: midiToFreq(base), seed: base * 2 + ch + 1 });
+      const data = buildPadTable(patch.table!, { size: TABLE_SIZE, sampleRate: ctx.sampleRate, baseFreq: tableFreq(base), seed: base * 2 + ch + 1 });
       buf.getChannelData(ch).set(data);
     }
     cache.set(key, buf);
@@ -514,7 +517,7 @@ export const createPadSynth = (
         const src = ctx.createBufferSource();
         src.buffer = table?.buf ?? getTable(ctx, patch, want);
         src.loop = true;
-        src.playbackRate.value = midiToFreq(layerMidi) / midiToFreq(base);
+        src.playbackRate.value = (tableFreq(layerMidi) / tableFreq(base)) * (getReferencePitch() / 440);
         addSource(src, src.detune, layer.spread, mix, Math.random() * src.buffer.duration);
         continue;
       }

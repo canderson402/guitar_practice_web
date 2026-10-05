@@ -25,7 +25,7 @@ export const SettingsSheet: React.FC = () => {
         <SegmentedControl<ThemeMode> label="Theme" value={themeMode} onChange={setThemeMode}
           options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }, { value: 'system', label: 'System' }]} />
       </Field>
-      <TuningEditor />
+      <TuningEditor testTone />
       <Field label="Master volume">
         <Slider label="Master volume" value={Math.min(master, 100)} min={0} max={100}
           onChange={v => setJamMixerVolume('master', v)} showValue format={v => `${v}%`} />

@@ -1,7 +1,10 @@
 import { SplendidGrandPiano } from 'smplr';
 import { getAudioContext, getMasterGain } from './engine';
+import { referenceCents } from './pitch';
+import { playFallbackTone } from './fallbackTone';
 
 let piano: SplendidGrandPiano | null = null;
+const ALL_KEYS = Array.from({ length: 88 }, (_, i) => 21 + i);
 let loading: Promise<SplendidGrandPiano> | null = null;
 
 const getPiano = (): Promise<SplendidGrandPiano> => {
@@ -10,11 +13,16 @@ const getPiano = (): Promise<SplendidGrandPiano> => {
   const ctx = getAudioContext();
   const instance = new SplendidGrandPiano(ctx, {
     destination: getMasterGain(),
+    // One velocity layer (the one notes play at) — a fifth of the download.
+    notesToLoad: { notes: ALL_KEYS, velocityRange: [85, 100] },
   });
   loading = instance.load.then(() => {
     piano = instance;
     loading = null;
     return instance;
+  }, err => {
+    loading = null;   // a failed download can be retried on the next note
+    throw err;
   });
   return loading;
 };
@@ -28,10 +36,21 @@ export const playPianoNote = async (
   duration = 1.2,
   time?: number,
 ): Promise<void> => {
-  const p = await getPiano();
-  p.start(
+  // Still downloading: play a synth tone now rather than queueing the note
+  // to sound late (all at once) when the samples arrive.
+  if (!piano) {
+    void getPiano().catch(() => {});
+    playFallbackTone(midi, duration, time);
+    return;
+  }
+  // Wake the audio if the browser put it to sleep.
+  const ctx = getAudioContext();
+  if (ctx.state === 'suspended') void ctx.resume();
+  // Samples are recorded at A4 = 440: retune them to the reference pitch.
+  const detune = referenceCents();
+  piano.start(
     time !== undefined
-      ? { note: midi, duration, time }
-      : { note: midi, duration },
+      ? { note: midi, duration, time, detune }
+      : { note: midi, duration, detune },
   );
 };

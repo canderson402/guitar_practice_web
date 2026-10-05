@@ -1,6 +1,7 @@
 import { getAudioContext, getMasterGain } from './engine';
 import { SynthOpts } from './types';
 import { getInstrument, midiToNoteName } from './soundfont';
+import { midiToFreq } from './pitch';
 
 // ---------------------------------------------------------------------------
 // Instrument-agnostic note/chord player. Tries SoundFont samples first for
@@ -17,8 +18,6 @@ const DEFAULTS = {
   instrument: 'electric_piano_1',
 };
 
-/** Convert a MIDI note number to frequency in Hz. */
-const midiToFreq = (midi: number): number => 440 * Math.pow(2, (midi - 69) / 12);
 
 /**
  * Schedule a single note.

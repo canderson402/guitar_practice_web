@@ -7,5 +7,6 @@ export const useFretboardPrefs = () => {
   const [showRoot, setShowRoot] = useCardPref<boolean>('fretboard', 'showRoot', true);
   const [showScale, setShowScale] = useCardPref<boolean>('fretboard', 'showScale', true);
   const [showSelected, setShowSelected] = useCardPref<boolean>('fretboard', 'showSelected', true);
-  return { frets, setFrets, labels, setLabels, showRoot, setShowRoot, showScale, setShowScale, showSelected, setShowSelected };
+  const [playNotes, setPlayNotes] = useCardPref<boolean>('fretboard', 'playNotes', false);
+  return { frets, setFrets, labels, setLabels, showRoot, setShowRoot, showScale, setShowScale, showSelected, setShowSelected, playNotes, setPlayNotes };
 };

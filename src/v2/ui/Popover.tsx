@@ -30,7 +30,9 @@ export const Popover: React.FC<Props> = ({ open, onClose, anchorRef, title, chil
   useEffect(() => {
     if (!open) return;
     const anchor = anchorRef.current;
-    ref.current?.querySelector<HTMLElement>('button, input, [tabindex]:not([tabindex="-1"])')?.focus();
+    // A field marked data-autofocus (e.g. the tempo, ready to type) wins.
+    const el = ref.current;
+    (el?.querySelector<HTMLElement>('[data-autofocus]') ?? el?.querySelector<HTMLElement>('button, input, [tabindex]:not([tabindex="-1"])'))?.focus();
     return () => { if (anchor && document.body.contains(anchor)) anchor.focus(); };
   }, [open, anchorRef]);
 

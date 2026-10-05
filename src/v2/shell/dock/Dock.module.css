@@ -11,4 +11,5 @@
 @media (max-width: 767px) { .summaryText { display: none; } .summaryIcon { display: block; } }
 .keyChip { display: inline-flex; align-items: center; padding-left: 0; padding-right: 0; }
 .keyPart { width: 3.2em; text-align: center; font-family: var(--font-mono); font-weight: 700; font-size: var(--text-14); }
-.modePart { width: 9.5em; padding: 0 12px; border-left: 1px solid var(--line-strong); overflow: hidden; text-overflow: ellipsis; text-align: center; }
+/* Wide enough for the longest mode name (Major Pentatonic) — never cut off. */
+.modePart { min-width: 11em; padding: 0 12px; border-left: 1px solid var(--line-strong); white-space: nowrap; text-align: center; }

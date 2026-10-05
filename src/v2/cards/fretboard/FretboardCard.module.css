@@ -6,8 +6,20 @@
 .off { opacity: .45; }
 .swatch { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 /* The neck fills the card's designed height; the fretboard scrolls sideways on narrow screens. */
-.neck { flex: 1; min-height: 0; overflow-x: auto; display: flex; align-items: center; }
-.neck > * { width: 100%; }
+.neck { position: relative; flex: 1; min-height: 0; overflow-x: auto; display: flex; align-items: center; }
+.neck > :not(.ripple):not(.flash) { width: 100%; }
+/* A small, muted circle spreading out from the centre of a played note. */
+.ripple { position: absolute; box-sizing: border-box; border-radius: 50%; border: 1.5px solid var(--text-muted); background: color-mix(in srgb, var(--text-muted) 12%, transparent); pointer-events: none; z-index: 5; animation: note-ripple .45s ease-out forwards; }
+/* Starts at the dot's edge (it's sized to the dot) and spreads out from it. */
+@keyframes note-ripple { from { transform: scale(1); opacity: .7; } to { transform: scale(1.8); opacity: 0; } }
+/* The played note flashes grey: a dot-sized circle with its label. */
+.flash { position: absolute; pointer-events: none; z-index: 4; animation: note-flash .35s ease-out forwards; }
+.flashDot { box-sizing: border-box; border-radius: 50%; display: grid; place-items: center; }
+/* The played note's name (or interval), so notes without a dot show what you played. */
+.flashLabel { color: var(--text); font-weight: 700; font-size: var(--text-11); line-height: 1; animation: note-flash-label .45s ease-out forwards; }
+@keyframes note-flash { from { background-color: color-mix(in srgb, var(--text-muted) 55%, transparent); } to { background-color: transparent; } }
+@keyframes note-flash-label { 0%, 50% { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ripple, .flash, .flashLabel { animation-duration: 1ms; opacity: 0; } }
 .inline { display: flex; align-items: center; justify-content: space-between; }
 .field { display: flex; flex-direction: column; gap: var(--space-2); }
 .label { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-12); color: var(--text-muted); }

@@ -35,6 +35,8 @@ export const Fretboard: React.FC<FretboardProps> = ({
   onDrop,
   textMode = 'white',
   clickableEmpty,
+  labelOf,
+  fullSizePreview,
 }) => {
   // Always derive the note grid from tuning. Memoised so dot rendering
   // doesn't allocate a fresh 2D array each frame.
@@ -46,7 +48,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
   const stringLabels = tuning.slice(0, strings);
 
   return (
-    <div className={`fretboard-root ${textMode}-text-mode`}>
+    <div data-testid="fretboard" className={`fretboard-root ${textMode}-text-mode${fullSizePreview ? ' full-preview' : ''}`}>
       {title && <div className="fretboard-title">{title}</div>}
 
       <div className="fretboard-grid">
@@ -215,6 +217,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                           }
                         >
                           <div
+                            data-testid="fret-dot"
                             className={classNames}
                             style={style}
                             draggable={isDragSource}
@@ -235,6 +238,10 @@ export const Fretboard: React.FC<FretboardProps> = ({
                           >
                             {showLabel && (
                               <span className="fretboard-note-label">{labelText}</span>
+                            )}
+                            {/* An empty fret previews its note on hover. */}
+                            {clickableEmpty && !visualDot && (
+                              <span className="fretboard-note-label fretboard-ghost-label">{labelOf?.(noteName) ?? noteName}</span>
                             )}
                           </div>
                         </div>

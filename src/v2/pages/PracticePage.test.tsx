@@ -27,10 +27,10 @@ const v2 = () => useV2Store.getState();
 it('renders workspace tabs and only registered cards of the active workspace', () => {
   render(<App />);
   expect(screen.getByRole('tab', { name: 'Practice' })).toHaveAttribute('aria-selected', 'true');
-  ['Metronome', 'Timer', 'Scale', 'Circle of fifths', 'Note Trainer', 'Chords', 'Fretboard', 'Harmony', 'Jam'].forEach(name =>
-    expect(screen.getByRole('article', { name })).toBeInTheDocument());
+  // The default workspace: metronome, scale, chords and the fretboard.
+  expect(screen.getAllByRole('article').map(a => a.getAttribute('aria-label'))).toEqual(['Metronome', 'Scale', 'Chords', 'Fretboard']);
   act(() => v2().setRows('practice', [['future-card', 'metronome', 'timer', 'scale'], ['fretboard']]));
-  expect(screen.getAllByRole('article')).toHaveLength(9); // 'future-card' isn't registered: hidden, kept
+  expect(screen.getAllByRole('article')).toHaveLength(5); // + chords, kept in a last row; 'future-card' isn't registered: hidden, kept
   expect(cardsIn(v2().workspaces[0])).toContain('future-card');
 });
 
@@ -142,12 +142,12 @@ it('cards have no ? (concepts) button, in the header or the side panel', () => {
 it('tapping outside the side panel closes it; tapping another card\'s ⚙ switches to it', () => {
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Metronome settings' }));
-  const timerGear = screen.getByRole('button', { name: 'Timer settings' });
-  fireEvent.pointerDown(timerGear);
-  fireEvent.click(timerGear);
-  expect(screen.getByRole('dialog', { name: 'Timer' })).toBeInTheDocument();
+  const scaleGear = screen.getByRole('button', { name: 'Scale settings' });
+  fireEvent.pointerDown(scaleGear);
+  fireEvent.click(scaleGear);
+  expect(screen.getByRole('dialog', { name: 'Scale' })).toBeInTheDocument();
   fireEvent.pointerDown(screen.getByRole('tab', { name: 'Practice' }));
-  expect(screen.queryByRole('dialog', { name: 'Timer' })).toBeNull();
+  expect(screen.queryByRole('dialog', { name: 'Scale' })).toBeNull();
 });
 
 it('the workspace toolbar has no rename / duplicate / reset buttons (double-click a tab to rename)', () => {

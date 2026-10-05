@@ -15,7 +15,8 @@ export const TempoPopover: React.FC<{ open: boolean; onClose(): void; anchorRef:
   };
   return (
     <Popover {...p} title="Tempo">
-      <Stepper label="Tempo" value={bpm} min={BPM_MIN} max={BPM_MAX} small={1} big={5} editable onChange={v => setBpm(clampBpm(v))} />
+      {/* Opens ready to type: click the tempo, type a BPM, Enter. */}
+      <Stepper label="Tempo" value={bpm} min={BPM_MIN} max={BPM_MAX} small={1} big={5} editable autoEdit onChange={v => setBpm(clampBpm(v))} />
       <Slider label="Tempo slider" value={bpm} min={BPM_MIN} max={BPM_MAX} onChange={v => setBpm(clampBpm(v))} />
       <Button onClick={onTap}>Tap tempo{taps > 1 ? ` · ${taps}` : ''}</Button>
     </Popover>

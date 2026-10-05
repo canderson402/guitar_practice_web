@@ -38,3 +38,16 @@ it('panic stops notes scheduled for later', () => {
   bass.panic();
   ctx.oscs.forEach((o: any) => expect(o.stopAt).toBe('now'));
 });
+
+it('tunes to the reference pitch', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { setReferencePitch } = require('./pitch');
+  setReferencePitch(432);
+  try {
+    const ctx = fakeCtx();
+    createBassSynth(ctx, ctx.createGain()).play(33, 0, 1, 1);
+    ctx.oscs.forEach((o: any) => expect(o.frequency.value).toBeCloseTo(54, 3));
+  } finally {
+    setReferencePitch(440);
+  }
+});

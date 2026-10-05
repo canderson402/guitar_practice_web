@@ -1,5 +1,5 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent, act } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, act, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { MetronomeFace } from './MetronomeFace';
 import { MetronomeSheet } from './MetronomeSheet';
@@ -64,4 +64,21 @@ it('the big BPM on the face can be clicked to type a tempo', () => {
 it('the sheet has no links', () => {
   render(<MetronomeSheet />);
   expect(screen.queryAllByRole('link')).toHaveLength(0);
+});
+
+it('the face has a quick subdivision picker', () => {
+  render(<MetronomeFace />);
+  const sub = screen.getByRole('radiogroup', { name: 'Subdivision' });
+  fireEvent.click(within(sub).getByRole('radio', { name: 'Sixteenth notes' }));
+  expect(useStore.getState().metronome.subdivision).toBe('sixteenth');
+  fireEvent.click(within(sub).getByRole('radio', { name: 'Quarter notes' }));
+  expect(useStore.getState().metronome.subdivision).toBe('quarter');
+});
+
+it('the face fits a small card: tempo steps and Play share a row, the subdivisions below', () => {
+  render(<MetronomeFace />);
+  const row = screen.getByTestId('metronome-transport');
+  expect(within(row).getByRole('button', { name: 'Play' })).toBeInTheDocument();
+  expect(within(row).getByRole('button', { name: 'Increase tempo by 1' })).toBeInTheDocument();
+  expect(within(row).queryByRole('radiogroup', { name: 'Subdivision' })).toBeNull();
 });

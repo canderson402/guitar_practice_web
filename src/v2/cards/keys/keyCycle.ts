@@ -2,19 +2,28 @@ import { CIRCLE_KEYS } from '../../shell/KeyPicker';
 import { chromaticPosition } from '../../music/intervals';
 
 export type Direction = 'clockwise' | 'counterclockwise';
+export type Accidental = 'sharp' | 'flat';
 export type ChangeMode = 'none' | 'bars' | 'beats' | 'time';
 
+const SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const FLATS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+/** A note spelled with sharps or flats (naturals stay as they are). */
+export const spell = (note: string, accidental: Accidental): string =>
+  (accidental === 'sharp' ? SHARPS : FLATS)[chromaticPosition(note)];
+
 /** The next note to practice: one step around the circle of fifths
- *  (clockwise) or fourths (counterclockwise), or a random different key. */
-export const nextKey = (current: string, direction: Direction, random: boolean): string => {
+ *  (clockwise) or fourths (counterclockwise), or a random different key —
+ *  black keys spelled with sharps or flats, as chosen. */
+export const nextKey = (current: string, direction: Direction, random: boolean, accidental: Accidental = 'sharp'): string => {
   const pc = chromaticPosition(current);
   const i = Math.max(0, CIRCLE_KEYS.findIndex(k => chromaticPosition(k) === pc));
   if (random) {
     let j = i;
     while (j === i) j = Math.floor(Math.random() * CIRCLE_KEYS.length);
-    return CIRCLE_KEYS[j];
+    return spell(CIRCLE_KEYS[j], accidental);
   }
-  return CIRCLE_KEYS[(i + (direction === 'clockwise' ? 1 : -1) + 12) % 12];
+  return spell(CIRCLE_KEYS[(i + (direction === 'clockwise' ? 1 : -1) + 12) % 12], accidental);
 };
 
 /** Whether a heard beat is a change point. Bars: the downbeat starting every
@@ -38,8 +47,8 @@ export const markPlayed = (played: string[], note: string): string[] => {
 
 /** "Out of a hat": a random key not yet played this round. When every key has
  *  been played, any key other than the current one (a new round begins). */
-export const nextFromHat = (current: string, played: string[]): string => {
+export const nextFromHat = (current: string, played: string[], accidental: Accidental = 'sharp'): string => {
   const left = CIRCLE_KEYS.filter(k => !played.some(p => samePitch(p, k)));
   const pool = left.length ? left : CIRCLE_KEYS.filter(k => !samePitch(k, current));
-  return pool[Math.floor(Math.random() * pool.length)];
+  return spell(pool[Math.floor(Math.random() * pool.length)], accidental);
 };

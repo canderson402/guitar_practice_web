@@ -34,3 +34,9 @@ it('offers common signatures as shortcuts', () => {
   fireEvent.click(screen.getByRole('radio', { name: '6/8' }));
   expect([m().beatsPerMeasure, m().beatUnit]).toEqual([6, 8]);
 });
+
+it('the common time signatures sit in two rows of four (never cut off)', () => {
+  render(<TimeSignatureInput size="sm" />);
+  const group = screen.getByRole('radiogroup', { name: 'Common time signatures' });
+  expect(group.style.getPropertyValue('--columns')).toBe('4');
+});

@@ -5,3 +5,6 @@
 .seg:hover { color: var(--text); }
 .on { background: var(--text); color: var(--text-inverse); font-weight: 600; }
 .on:hover { color: var(--text-inverse); }
+/* Wrap into rows of --columns segments (labels are never cut off). */
+.wrapped { flex-wrap: wrap; }
+.wrapped .seg { flex: 1 0 calc(100% / var(--columns) - 2px); }

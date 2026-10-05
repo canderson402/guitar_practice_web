@@ -1,6 +1,6 @@
 import { act } from '@testing-library/react';
+import { DEFAULT_WORKSPACE } from './defaultWorkspace';
 import { useV2Store, V2_STORAGE_KEY, mergePersisted, migrateV2State, cardsIn } from './useV2Store';
-import { ALL_CARDS_ROWS } from './defaultWorkspace';
 
 const s = () => useV2Store.getState();
 const ws = (id: string) => s().workspaces.find(w => w.id === id)!;
@@ -9,10 +9,10 @@ const reset = () => act(() => useV2Store.setState(useV2Store.getInitialState(), 
 beforeEach(() => { localStorage.clear(); reset(); });
 
 describe('workspaces', () => {
-  it('starts with one "Practice" workspace holding every card', () => {
+  it('starts with one "Practice" workspace: metronome, scale and chords, with the fretboard below', () => {
     expect(s().workspaces.map(w => w.name)).toEqual(['Practice']);
     expect(s().activeWorkspaceId).toBe('practice');
-    expect(ws('practice').rows).toEqual(ALL_CARDS_ROWS);
+    expect(ws('practice').rows).toEqual([['metronome', 'scale', 'chord'], ['fretboard']]);
   });
 
   it('adds, renames, duplicates and reorders', () => {
@@ -23,7 +23,7 @@ describe('workspaces', () => {
     expect(ws(id).name).toBe('Scales warm-up');
     let dup = '';
     act(() => { dup = s().duplicateWorkspace('practice'); });
-    expect(ws(dup)).toMatchObject({ name: 'Practice copy', rows: ALL_CARDS_ROWS });
+    expect(ws(dup)).toMatchObject({ name: 'Practice copy', rows: [['metronome', 'scale', 'chord'], ['fretboard']] });
     act(() => s().reorderWorkspaces(0, 1));
     expect(s().workspaces[1].id).toBe('practice');
   });
@@ -80,17 +80,17 @@ describe('cards', () => {
   });
 
   it('undo keeps edits made while the toast was up', () => {
-    act(() => s().removeCard('practice', 'timer'));
+    act(() => s().removeCard('practice', 'scale'));
     act(() => s().renameWorkspace(other, 'Other lab'));
     act(() => s().undoLast());
-    expect(cardsIn(ws('practice'))).toContain('timer');
+    expect(cardsIn(ws('practice'))).toContain('scale');
     expect(ws(other).name).toBe('Other lab');
   });
 
   it('moves a card to another workspace (to its top)', () => {
-    act(() => s().moveCardToWorkspace('timer', 'practice', other));
-    expect(cardsIn(ws('practice'))).not.toContain('timer');
-    expect(ws(other).rows[0][0]).toBe('timer');
+    act(() => s().moveCardToWorkspace('scale', 'practice', other));
+    expect(cardsIn(ws('practice'))).not.toContain('scale');
+    expect(ws(other).rows[0][0]).toBe('scale');
   });
 
   it('setRows replaces the layout but keeps ids it did not mention (unregistered cards) in a last row', () => {
@@ -133,7 +133,7 @@ describe('persistence', () => {
     act(() => { s().setThemeMode('light'); s().setOverlay({ kind: 'settings' }); });
     const saved = JSON.parse(localStorage.getItem(V2_STORAGE_KEY)!).state;
     expect(saved.themeMode).toBe('light');
-    expect(saved.workspaces[0].rows).toEqual(ALL_CARDS_ROWS);
+    expect(saved.workspaces[0].rows).toEqual(DEFAULT_WORKSPACE.rows);
     expect(saved.overlay).toBeUndefined();
     expect(saved.toast).toBeUndefined();
   });
@@ -164,7 +164,7 @@ describe('persistence', () => {
   it('upgrading from the old four-workspace format starts over with the single Practice workspace, keeping other settings', () => {
     const migrated = migrateV2State({ themeMode: 'light', workspaces: [{ id: 'warm-up', name: 'Warm-up', builtIn: true, cards: ['timer'] }], activeWorkspaceId: 'warm-up', cardPrefs: { fretboard: { frets: 15 } } }, 1);
     expect(migrated).toMatchObject({ themeMode: 'light', activeWorkspaceId: 'practice', cardPrefs: { fretboard: { frets: 15 } } });
-    expect((migrated as { workspaces: unknown[] }).workspaces).toEqual([{ id: 'practice', name: 'Practice', rows: ALL_CARDS_ROWS }]);
+    expect((migrated as { workspaces: unknown[] }).workspaces).toEqual([{ id: 'practice', name: 'Practice', rows: DEFAULT_WORKSPACE.rows }]);
   });
 
   it('with nothing saved, starts with the default workspace', () => {

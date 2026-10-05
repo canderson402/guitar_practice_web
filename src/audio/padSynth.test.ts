@@ -161,3 +161,26 @@ describe('never stalls playback building wavetables', () => {
     expect(ctx.made.buffers.length).toBe(built);
   });
 });
+
+describe('reference pitch', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { setReferencePitch } = require('./pitch');
+  afterEach(() => setReferencePitch(440));
+
+  it('synth voices tune to it', () => {
+    setReferencePitch(432);
+    const ctx = fakeCtx();
+    const synth = createPadSynth(ctx, ctx.createGain(), getPatch('supersaw'));
+    synth.noteOn([69], 0, opts);
+    ctx.made.oscs.filter((o: any) => o.wave).forEach((o: any) => expect(o.frequency.value).toBeCloseTo(432, 6));
+  });
+
+  it('wavetable voices are retuned by playback rate', () => {
+    const at440 = fakeCtx();
+    createPadSynth(at440, at440.createGain(), getPatch('lush')).noteOn([69], 0, opts);
+    setReferencePitch(432);
+    const at432 = fakeCtx();
+    createPadSynth(at432, at432.createGain(), getPatch('lush')).noteOn([69], 0, opts);
+    expect(at432.made.sources[0].playbackRate.value / at440.made.sources[0].playbackRate.value).toBeCloseTo(432 / 440, 6);
+  });
+});

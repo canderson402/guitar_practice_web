@@ -1,4 +1,5 @@
 import React from 'react';
+import { getChromaticPosition } from '../../data/musicData';
 import { useShallow } from 'zustand/react/shallow';
 import { Picker } from '../ui';
 import { useStore } from '../../store/useStore';
@@ -35,7 +36,8 @@ export const KeyPicker: React.FC = () => {
   })));
   return (
     <>
-      <Picker label="Key" value={note ?? 'C'} onChange={setSelectedNote}
+      {/* The key may be spelled either way (the Note Trainer uses C# and Db): highlight it by pitch. */}
+      <Picker label="Key" value={CIRCLE_KEYS.find(k => getChromaticPosition(k) === getChromaticPosition(note ?? 'C')) ?? 'C'} onChange={setSelectedNote}
         options={CIRCLE_KEYS.map(k => ({ value: k, label: k }))} />
       <span className={s.group}>Modes</span>
       <Picker label="Modes" value={scale ?? MAJOR} onChange={setSelectedScale} columns={2}

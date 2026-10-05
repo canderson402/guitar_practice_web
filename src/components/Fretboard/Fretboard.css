@@ -371,6 +371,22 @@
   background: var(--ds-color-neutral-400);
 }
 
+/* Full-size preview: as big as a regular dot (the Fretboard card). */
+.full-preview .fretboard-cell-hit:hover .fretboard-cell.clickable-empty {
+  width: 26px;
+  height: 26px;
+}
+
+/* The previewed note's label: fades in with the ghost dot. */
+.fretboard-ghost-label {
+  opacity: 0;
+  transition: opacity var(--ds-transition-base);
+}
+
+.fretboard-cell-hit:hover .fretboard-ghost-label {
+  opacity: 1;
+}
+
 /* ============================================
    VARIANTS — one rule per DotVariant
    --fretboard-dot-color CSS var allows per-instance color override
@@ -475,6 +491,15 @@
 @keyframes fretboard-drop-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.5); }
   50%      { box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1); }
+}
+
+/* Hovering a dot turns its own border white — a ring exactly the dot's size. */
+.fretboard-cell-hit:hover .fretboard-cell.variant-root,
+.fretboard-cell-hit:hover .fretboard-cell.variant-scale,
+.fretboard-cell-hit:hover .fretboard-cell.variant-current,
+.fretboard-cell-hit:hover .fretboard-cell.variant-base,
+.fretboard-cell-hit:hover .fretboard-cell.variant-harmony {
+  border-color: rgba(255, 255, 255, 0.9);
 }
 
 /* Active-dot hover: subtle pop via the hit area so the whole fret lights up. */

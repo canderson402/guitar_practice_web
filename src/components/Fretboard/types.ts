@@ -68,4 +68,10 @@ export interface FretboardProps {
 
   // Makes every empty cell a faint hit target (HarmonyMaker base side).
   clickableEmpty?: boolean;
+  /** With `clickableEmpty`: the label an empty fret previews on hover
+   *  (default: the note name). */
+  labelOf?: (note: string) => string;
+  /** With `clickableEmpty`: preview at a regular dot's size (default: the
+   *  smaller secondary size). */
+  fullSizePreview?: boolean;
 }

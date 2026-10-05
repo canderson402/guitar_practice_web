@@ -4,6 +4,8 @@
 // the pluck, with a short decay to a held level.
 // ---------------------------------------------------------------------------
 
+import { midiToFreq } from './pitch';
+
 export interface BassSynth {
   /** Play `midi` at `time` for `dur` seconds, velocity 0–1. */
   play: (midi: number, time: number, dur: number, velocity: number) => void;
@@ -11,7 +13,6 @@ export interface BassSynth {
   panic: () => void;
 }
 
-const midiToFreq = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
 export const createBassSynth = (ctx: BaseAudioContext, destination: AudioNode): BassSynth => {
   const pending = new Map<OscillatorNode[], { start: number; gain: GainNode }>();

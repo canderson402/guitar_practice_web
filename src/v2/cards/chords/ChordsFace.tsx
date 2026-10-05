@@ -4,7 +4,8 @@ import { ChevronDown } from 'lucide-react';
 import s from './Chords.module.css';
 import { useStore } from '../../../store/useStore';
 import { useV2Store } from '../../state/useV2Store';
-import { getScaleChords, scales } from '../../../data/musicData';
+import { getScaleChords, scales, chordTypes } from '../../../data/musicData';
+import { CHORD_TYPES, degreeLabel } from '../../../data/chordBuilder';
 import { scaleShortName } from '../../shell/KeyPicker';
 import { HeroFace } from '../HeroFace';
 import { SegmentedControl, ChipButton, ChipSub } from '../../ui';
@@ -13,6 +14,19 @@ import { useChordBuilder } from './useChordBuilder';
 import { CompactBuilder } from './ChordBuilder';
 import { NotePicker } from '../keys/NotePicker';
 import { useEscape } from '../../ui/useEscape';
+
+/** A key chord's full quality name and formula ("minor", "1 ♭3 5"). */
+const describe = (type: string): { name: string; formula: string } | null => {
+  const intervals = chordTypes[type as keyof typeof chordTypes]?.intervals;
+  if (!intervals) return null;
+  const match = CHORD_TYPES.find(t => t.intervals.length === intervals.length && t.intervals.every((x, i) => x === intervals[i]));
+  return { name: match?.name ?? type, formula: intervals.map(i => degreeLabel(i, intervals)).join(' ') };
+};
+
+/** The chord's intervals, on a small line above the card's controls. */
+const Formula: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <span data-testid="chord-formula" className={s.formula}>{children}</span>
+);
 
 /** The chords of the shared key and scale. Picking one selects it app-wide
  *  (the Fretboard highlights its tones); picking it again clears it. */
@@ -24,6 +38,7 @@ export const ChordsFace: React.FC = () => {
   const valid = n.root && n.scale && scales[n.scale as keyof typeof scales] && n.scale !== 'Chromatic';
   const chords = valid ? getScaleChords(n.root!, n.scale as keyof typeof scales) : [];
   const active = n.selected;
+  const keyChord = active && active.type !== 'custom' ? describe(active.type) : null;
   // In key: the seven chords of the key. Any chord: build any quality.
   const [tab, setTabPref] = useCardPref<'key' | 'any'>('chord', 'tab', 'key');
   const b = useChordBuilder();
@@ -52,10 +67,14 @@ export const ChordsFace: React.FC = () => {
     return (
       <div ref={wrapRef} className={s.wrap}>
         <HeroFace
+          dense
           top={tabs}
           hero={b.showing && active ? `${active.note}${active.symbol}` : '—'}
-          caption={b.showing ? b.type.formula : 'Pick a chord type'}
-          controls={<CompactBuilder b={b} rootOpen={rootOpen} onChangeRoot={() => setRootOpen(o => !o)} />}
+          caption={b.showing && active ? `${active.note} ${b.type.name}` : 'Pick a chord type'}
+          controls={<>
+            {b.showing && <Formula>{b.type.formula}</Formula>}
+            <CompactBuilder b={b} rootOpen={rootOpen} onChangeRoot={() => setRootOpen(o => !o)} />
+          </>}
         />
         {rootOpen && (
           <div className={s.pickerOverlay}>
@@ -68,6 +87,7 @@ export const ChordsFace: React.FC = () => {
   }
   return (
     <HeroFace
+      dense
       top={
         <span className={s.topRow}>
           {tabs}
@@ -77,8 +97,9 @@ export const ChordsFace: React.FC = () => {
         </span>
       }
       hero={active && active.type !== 'custom' ? `${active.note}${active.symbol}` : '—'}
-      caption={active && active.type !== 'custom' ? `${active.roman} · ${active.type}` : chords.length ? 'Pick a chord' : 'No chords for this scale'}
-      controls={
+      caption={keyChord ? `${active!.roman} · ${active!.note} ${keyChord.name}` : chords.length ? 'Pick a chord' : 'No chords for this scale'}
+      controls={<>
+        {keyChord && <Formula>{keyChord.formula}</Formula>}
         <div className={s.chips}>
           {chords.map(c => {
             const on = !!active && active.note === c.note && active.type === c.type;
@@ -91,7 +112,7 @@ export const ChordsFace: React.FC = () => {
             );
           })}
         </div>
-      }
+      </>}
     />
   );
 };

@@ -7,9 +7,11 @@ interface Props<T extends string> {
   options: Array<{ value: T; label: React.ReactNode; title?: string }>;
   onChange(v: T): void;
   size?: 'sm' | 'md';
+  /** Wrap into rows of this many segments. */
+  columns?: number;
 }
 
-export const SegmentedControl = <T extends string>({ label, value, options, onChange, size = 'md' }: Props<T>) => {
+export const SegmentedControl = <T extends string>({ label, value, options, onChange, size = 'md', columns }: Props<T>) => {
   const idx = Math.max(0, options.findIndex(o => o.value === value));
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
@@ -18,7 +20,8 @@ export const SegmentedControl = <T extends string>({ label, value, options, onCh
     onChange(options[(idx + dir + options.length) % options.length].value);
   };
   return (
-    <div role="radiogroup" aria-label={label} className={[s.group, s[size]].join(' ')} onKeyDown={onKeyDown}>
+    <div role="radiogroup" aria-label={label} className={[s.group, s[size], columns ? s.wrapped : ''].join(' ')}
+      style={columns ? ({ '--columns': String(columns) } as React.CSSProperties) : undefined} onKeyDown={onKeyDown}>
       {options.map(o => {
         const on = o.value === value;
         return (

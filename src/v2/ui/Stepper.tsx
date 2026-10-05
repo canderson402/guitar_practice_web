@@ -9,9 +9,11 @@ interface Props {
   editable?: boolean;
   /** Show only the buttons (the value is displayed elsewhere). */
   hideValue?: boolean;
+  /** With `editable`: start as a text box, ready to type. */
+  autoEdit?: boolean;
 }
 
-export const Stepper: React.FC<Props> = ({ label, value, min, max, small = 1, big, onChange, format, editable, hideValue }) => {
+export const Stepper: React.FC<Props> = ({ label, value, min, max, small = 1, big, onChange, format, editable, hideValue, autoEdit }) => {
   const clamp = (v: number) => Math.max(min, Math.min(max, v));
   const lower = label.toLowerCase();
   const btn = (delta: number) => (
@@ -25,7 +27,7 @@ export const Stepper: React.FC<Props> = ({ label, value, min, max, small = 1, bi
     <div className={s.stepper} role="group" aria-label={label}>
       {big && btn(-big)}{btn(-small)}
       {hideValue ? null : editable
-        ? <EditableNumber label={label} value={value} min={min} max={max} onChange={v => onChange(clamp(v))} className={s.value} />
+        ? <EditableNumber label={label} value={value} min={min} max={max} onChange={v => onChange(clamp(v))} className={s.value} autoEdit={autoEdit} />
         : <span className={s.value} aria-live="polite">{format ? format(value) : value}</span>}
       {btn(small)}{big && btn(big)}
     </div>

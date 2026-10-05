@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { ChevronLeft } from 'lucide-react';
 import s from './NoteTrainer.module.css';
 import { useStore } from '../../../store/useStore';
-import { Switch, SegmentedControl } from '../../ui';
+import { Switch, SegmentedControl, IconButton } from '../../ui';
 import { HeroFace } from '../HeroFace';
 import { useEscape } from '../../ui/useEscape';
 import { NotePicker } from './NotePicker';
-import { nextKey } from './keyCycle';
+import { nextKey, spell } from './keyCycle';
+import type { Accidental } from './keyCycle';
 import { useNoteTrainer } from './useNoteTrainer';
 import { PresetChips, usePresets } from './PresetChips';
 import { samePreset, Preset } from './presets';
@@ -39,11 +41,15 @@ export const KeysFace: React.FC = () => {
     return () => document.removeEventListener('pointerdown', onDown);
   }, [picking]);
   const countdown = useNoteTrainer();
-  const next = st.c.nextNote ?? nextKey(st.note, st.c.direction, false);
+  // Sharps or flats: going up in fifths switches to sharps, down in fourths
+  // to flats; random keeps the last choice. Changing it respells the note.
+  const [accidental, setAccidentalPref] = useCardPref<Accidental>('note-trainer', 'accidentals', 'sharp');
+  const setAccidental = (a: Accidental) => { setAccidentalPref(a); st.setNote(spell(st.note, a)); };
+  const next = st.c.nextNote ?? nextKey(st.note, st.c.direction, false, accidental);
   const order: Order = st.c.randomize ? 'random' : st.c.direction;
   const setOrder = (o: Order) => {
     if (o === 'random') st.setRandom(true);
-    else { st.setRandom(false); st.setDirection(o); }
+    else { st.setRandom(false); st.setDirection(o); setAccidental(o === 'clockwise' ? 'sharp' : 'flat'); }
   };
   const every = `${st.c.changeInterval} ${UNIT[st.c.changeMode]}${st.c.changeInterval === 1 ? '' : 's'}`;
   const { presets } = usePresets();
@@ -70,8 +76,11 @@ export const KeysFace: React.FC = () => {
       />
       {picking && (
         <div className={s.pickerOverlay}>
+          <IconButton size="sm" label="Back" icon={<ChevronLeft size={14} />} className={s.pickerBack} onClick={() => setPicking(false)} />
           <span className={s.pickerTitle}>Note</span>
-          <NotePicker label="Note" value={st.note} autoFocus onPick={n => { st.setNote(n); setPicking(false); }} />
+          <SegmentedControl<Accidental> label="Spelling" size="sm" value={accidental} onChange={setAccidental}
+            options={[{ value: 'sharp', label: '♯', title: 'Sharps' }, { value: 'flat', label: '♭', title: 'Flats' }]} />
+          <NotePicker label="Note" value={st.note} accidental={accidental} autoFocus onPick={n => { st.setNote(n); setPicking(false); }} />
         </div>
       )}
     </div>

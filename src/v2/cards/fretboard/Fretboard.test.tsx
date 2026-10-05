@@ -9,6 +9,19 @@ import { useV2Store } from '../../state/useV2Store';
 import { getCard } from '../registry';
 import { activePick, pickFromFretboard } from './pickNote';
 
+// Note playback goes to the sampled instruments; record what's played.
+type Played = { guitar: number[]; piano: number[]; preload: string[] };
+const played = (): Played => (globalThis as unknown as { mockPlayed: Played }).mockPlayed;
+jest.mock('../../../audio/guitar', () => ({
+  playGuitarNote: (m: number) => { (globalThis as any).mockPlayed.guitar.push(m); return Promise.resolve(); },
+  preloadGuitar: () => { (globalThis as any).mockPlayed.preload.push('guitar'); return Promise.resolve(); },
+}));
+jest.mock('../../../audio/piano', () => ({
+  playPianoNote: (m: number) => { (globalThis as any).mockPlayed.piano.push(m); return Promise.resolve(); },
+  preloadPiano: () => { (globalThis as any).mockPlayed.preload.push('piano'); return Promise.resolve(); },
+}));
+beforeEach(() => { (globalThis as unknown as { mockPlayed: Played }).mockPlayed = { guitar: [], piano: [], preload: [] }; });
+
 const STD = ['E', 'B', 'G', 'D', 'A', 'E'];
 
 describe('buildDots', () => {
@@ -201,4 +214,203 @@ it('dot labels use the names for the context (a built E♭ chord shows E♭, not
   const dots = buildDots({ tuning: STD, frets: 12, root: 'C', scaleNotes: [], show: { root: true, scale: true, selected: false }, labels: 'notes',
     degreeOf: n => n, nameOf: n => (n === 'D#' ? 'Eb' : n), chord: { root: 'Eb', pitches: [3, 7, 10] } });
   expect(dots.get('4-6')?.label).toBe('Eb');   // A string fret 6 = D#/E♭
+});
+
+describe('play notes', () => {
+  beforeEach(() => act(() => {
+    useV2Store.setState(useV2Store.getInitialState(), true);
+    useStore.getState().setTuning(STD);
+    useStore.getState().setViewMode('fretboard');
+  }));
+
+  it('off by default; when on, clicking the neck plays that note on guitar', () => {
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    const toggle = screen.getByRole('button', { name: 'Play notes' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'C on string 5, fret 3' }));
+    expect(played().guitar).toEqual([]);
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    expect(played().preload).toContain('guitar');
+    fireEvent.click(screen.getByRole('button', { name: 'C on string 5, fret 3' }));   // C3
+    fireEvent.click(screen.getByRole('button', { name: 'E on string 1, fret 0' }));   // E4
+    expect(played().guitar).toEqual([48, 64]);
+    expect(useV2Store.getState().cardPrefs.fretboard.playNotes).toBe(true);
+  });
+
+  it('clicking the selected note again (deselecting it) still plays it', () => {
+    act(() => useV2Store.getState().setCardPref('fretboard', 'playNotes', true));
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'C on string 5, fret 3' }));
+    fireEvent.click(screen.getByRole('button', { name: 'C on string 5, fret 3' }));
+    expect(played().guitar).toEqual([48, 48]);
+  });
+
+  it('in piano view, keys play on piano', () => {
+    act(() => useV2Store.getState().setCardPref('fretboard', 'playNotes', true));
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('radio', { name: 'Piano' }));
+    expect(played().preload).toContain('piano');
+    fireEvent.click(screen.getByRole('button', { name: 'C4' }));
+    expect(played().piano).toEqual([60]);
+    expect(played().guitar).toEqual([]);
+  });
+});
+
+describe('play notes with the Selected note layer off', () => {
+  beforeEach(() => act(() => {
+    useV2Store.setState(useV2Store.getInitialState(), true);
+    useStore.getState().setTuning(STD);
+    useStore.getState().setViewMode('fretboard');
+    useV2Store.getState().setCardPref('fretboard', 'playNotes', true);
+    useV2Store.getState().setCardPref('fretboard', 'showSelected', false);
+  }));
+
+  it('just plays: nothing gets selected and the layer stays off', () => {
+    const before = { index: useStore.getState().note.currentNoteIndex, picked: useV2Store.getState().pickedNote, selected: useV2Store.getState().noteSelected };
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'C on string 5, fret 3' }));
+    fireEvent.click(screen.getByRole('button', { name: 'A# on string 6, fret 6' }));
+    expect(played().guitar).toEqual([48, 46]);
+    expect(useV2Store.getState().cardPrefs.fretboard.showSelected).toBe(false);
+    expect(screen.getByRole('button', { name: 'Selected note' })).toHaveAttribute('aria-pressed', 'false');
+    expect(useStore.getState().note.currentNoteIndex).toBe(before.index);
+    expect(useV2Store.getState().pickedNote).toEqual(before.picked);
+    expect(useV2Store.getState().noteSelected).toBe(before.selected);
+  });
+});
+
+describe('piano view is independent of the guitar tuning', () => {
+  const keyNames = () => screen.getAllByRole('button').map(b => b.getAttribute('aria-label') ?? '').filter(l => /^[A-G]#?\d$/.test(l));
+  beforeEach(() => act(() => {
+    useV2Store.setState(useV2Store.getInitialState(), true);
+    useStore.getState().setViewMode('piano');
+    useStore.getState().setSelectedNote('C');
+    useStore.getState().setSelectedScale('Major (Ionian)');
+  }));
+
+  it('always shows the same keys, C2 to B5, whatever the tuning or frets', () => {
+    act(() => useStore.getState().setTuning(STD));
+    const { unmount } = render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    const standard = keyNames();
+    expect(standard).toEqual(expect.arrayContaining(['C2', 'B5']));
+    expect(standard).not.toEqual(expect.arrayContaining(['B1']));
+    expect(standard).not.toEqual(expect.arrayContaining(['C6']));
+    expect(standard).toHaveLength(48);
+    unmount();
+    act(() => { useStore.getState().setTuning(['D', 'A', 'G', 'D', 'A', 'D']); useV2Store.getState().setCardPref('fretboard', 'frets', 12); });
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    expect(keyNames()).toEqual(standard);
+  });
+
+  it('every key gets its dot from the key and scale — even ones a guitar cannot reach', () => {
+    act(() => useStore.getState().setTuning(STD));
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    expect(screen.getByRole('button', { name: 'C2' })).toHaveClass('variant-root');   // below the low E
+    expect(screen.getByRole('button', { name: 'D2' })).toHaveClass('variant-scale');
+    expect(screen.getByRole('button', { name: 'C#2' })).not.toHaveClass('variant-scale');
+  });
+
+  it('every key is playable, at its own pitch', () => {
+    act(() => { useStore.getState().setTuning(STD); useV2Store.getState().setCardPref('fretboard', 'playNotes', true); });
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'C2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'B5' }));
+    expect(played().piano).toEqual([36, 83]);
+  });
+});
+
+describe('ripple when a note plays', () => {
+  beforeEach(() => act(() => {
+    useV2Store.setState(useV2Store.getInitialState(), true);
+    useStore.getState().setTuning(STD);
+    useStore.getState().setViewMode('fretboard');
+  }));
+
+  it('a circle spreads out from the centre of the note you played, then goes away', () => {
+    act(() => useV2Store.getState().setCardPref('fretboard', 'playNotes', true));
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    const cell = screen.getByRole('button', { name: 'C on string 5, fret 3' });
+    fireEvent.pointerDown(cell);
+    fireEvent.click(cell);
+    const ripple = screen.getByTestId('note-ripple');
+    // (jsdom has no layout; in a browser this is the centre of the fret or key.)
+    expect(ripple.style.left).toMatch(/^-?\d+(\.\d+)?px$/);
+    expect(ripple.style.top).toMatch(/^-?\d+(\.\d+)?px$/);
+    // The note itself flashes grey (a dot-sized circle on the fretboard).
+    expect(screen.getByTestId('note-flash')).toHaveClass('flashDot');
+    fireEvent.animationEnd(ripple);
+    expect(screen.queryByTestId('note-ripple')).toBeNull();
+    expect(screen.queryByTestId('note-flash')).toBeNull();
+  });
+
+  it('not on piano keys (they play without a ripple or flash)', () => {
+    act(() => { useV2Store.getState().setCardPref('fretboard', 'playNotes', true); useStore.getState().setViewMode('piano'); });
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'C4' }));
+    fireEvent.click(screen.getByRole('button', { name: 'C4' }));
+    expect(played().piano).toEqual([60]);
+    expect(screen.queryByTestId('note-ripple')).toBeNull();
+    expect(screen.queryByTestId('note-flash')).toBeNull();
+  });
+
+  it('only when Play notes is on, and never for clicks off the notes', () => {
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'C on string 5, fret 3' }));
+    fireEvent.click(screen.getByRole('button', { name: 'C on string 5, fret 3' }));
+    expect(screen.queryByTestId('note-ripple')).toBeNull();
+  });
+
+  it('the flash shows the note (or its interval) — so notes without a dot show what you played', () => {
+    act(() => {
+      useV2Store.getState().setCardPref('fretboard', 'playNotes', true);
+      useStore.getState().setSelectedNote('C');
+      useStore.getState().setSelectedScale('Major (Ionian)');
+    });
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    const outOfKey = screen.getByRole('button', { name: /^(C#|Db) on string 5, fret 4$/ });
+    fireEvent.pointerDown(outOfKey);
+    fireEvent.click(outOfKey);
+    expect(screen.getByTestId('note-flash')).toHaveTextContent(/^(C#|Db)$/);
+    fireEvent.animationEnd(screen.getByTestId('note-ripple'));
+    fireEvent.click(screen.getByRole('button', { name: 'Intervals' }));
+    const e = screen.getByRole('button', { name: 'E on string 5, fret 7' });
+    fireEvent.pointerDown(e);
+    fireEvent.click(e);
+    expect(screen.getByTestId('note-flash')).toHaveTextContent('3');
+  });
+
+  it('respects reduced motion', () => {
+    const css = require('fs').readFileSync(require('path').join(__dirname, 'FretboardCard.module.css'), 'utf8') as string;
+    expect(css).toMatch(/prefers-reduced-motion[^{]*\{[^}]*\.ripple/);
+  });
+});
+
+describe('hover', () => {
+  beforeEach(() => act(() => {
+    useV2Store.setState(useV2Store.getInitialState(), true);
+    useStore.getState().setTuning(STD);
+    useStore.getState().setViewMode('fretboard');
+    useStore.getState().setSelectedNote('C');
+    useStore.getState().setSelectedScale('Major (Ionian)');
+  }));
+  const cellOf = (name: RegExp | string) => within(screen.getByRole('button', { name })).getByTestId('fret-dot');
+
+  it('an empty fret previews its note in grey (name, or interval when Intervals is on)', () => {
+    render(<MemoryRouter><FretboardFace /></MemoryRouter>);
+    const empty = cellOf(/^(C#|Db) on string 5, fret 4$/);
+    expect(empty).toHaveClass('clickable-empty');
+    expect(screen.getByTestId('fretboard')).toHaveClass('full-preview');
+    expect(empty).toHaveTextContent(/^(C#|Db)$/);
+    fireEvent.click(screen.getByRole('button', { name: 'Intervals' }));
+    expect(cellOf(/^(C#|Db) on string 5, fret 4$/)).toHaveTextContent('♭2');
+  });
+
+  it('a dot\'s own border turns white on hover (a ring exactly its size); the ghost fades in and out', () => {
+    const css = require('fs').readFileSync(require('path').join(__dirname, '../../../components/Fretboard/Fretboard.css'), 'utf8') as string;
+    expect(css).toMatch(/\.fretboard-cell-hit:hover \.fretboard-cell\.variant-root[^{]*\{[^}]*border-color:/);
+    expect(css).toMatch(/\.fretboard-ghost-label\s*\{[^}]*opacity:\s*0/);
+    // On the Fretboard card the preview is as big as a regular dot.
+    expect(css).toMatch(/\.full-preview \.fretboard-cell-hit:hover \.fretboard-cell\.clickable-empty\s*\{[^}]*width:\s*26px/);
+  });
 });

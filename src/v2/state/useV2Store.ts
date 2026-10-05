@@ -36,7 +36,12 @@ interface Persisted {
   /** "Change every" presets shared by the Note Trainer and Jam. Undefined =
    *  never edited (the defaults apply). */
   changePresets?: Preset[];
+  /** A4 in Hz — what everything is tuned to. */
+  referencePitch: number;
 }
+
+export const REFERENCE_PITCH = { default: 440, min: 200, max: 1000 };
+const clampPitch = (hz: number) => Math.max(REFERENCE_PITCH.min, Math.min(REFERENCE_PITCH.max, hz));
 
 export interface V2State extends Persisted {
   overlay: Overlay;
@@ -49,6 +54,7 @@ export interface V2State extends Persisted {
   toast: { id: number; message: string; undoable: boolean } | null;
   undo: UndoEntry | null;
   setThemeMode(m: ThemeMode): void;
+  setReferencePitch(hz: number): void;
   setActiveWorkspace(id: string): void;
   addWorkspace(name?: string): string;
   renameWorkspace(id: string, name: string): void;
@@ -135,7 +141,9 @@ export const mergePersisted = (persisted: unknown, current: V2State): V2State =>
   const savedPresets = p.changePresets ?? legacyPresets;
   const changePresets = savedPresets === undefined ? undefined : validPresets(savedPresets);
 
-  return { ...current, themeMode, workspaces, activeWorkspaceId, cardPrefs, changePresets };
+  const referencePitch = typeof p.referencePitch === 'number' && Number.isFinite(p.referencePitch) ? clampPitch(p.referencePitch) : current.referencePitch;
+
+  return { ...current, themeMode, workspaces, activeWorkspaceId, cardPrefs, changePresets, referencePitch };
 };
 
 /** Saved-format upgrades. v1 had four built-in workspaces; v2 starts over
@@ -157,6 +165,7 @@ export const useV2Store = create<V2State>()(
         workspaces: defaultWorkspaces(),
         activeWorkspaceId: DEFAULT_WORKSPACE.id,
         cardPrefs: {},
+        referencePitch: REFERENCE_PITCH.default,
         overlay: null,
         popover: null,
         pickedNote: null,
@@ -165,6 +174,7 @@ export const useV2Store = create<V2State>()(
         undo: null,
 
         setThemeMode: themeMode => set({ themeMode }),
+        setReferencePitch: hz => { if (Number.isFinite(hz)) set({ referencePitch: Math.round(clampPitch(hz) * 10) / 10 }); },
 
         setActiveWorkspace: id => {
           if (get().workspaces.some(w => w.id === id)) set({ activeWorkspaceId: id, overlay: null });
@@ -287,6 +297,7 @@ export const useV2Store = create<V2State>()(
         activeWorkspaceId: s.activeWorkspaceId,
         cardPrefs: s.cardPrefs,
         changePresets: s.changePresets,
+        referencePitch: s.referencePitch,
       }),
       // Future format changes: transform here per version; merge() then
       // validates field by field, so an unknown shape never wipes saved data.

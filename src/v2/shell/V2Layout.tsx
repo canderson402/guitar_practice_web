@@ -1,19 +1,21 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
 import s from './V2Layout.module.css';
 import { TopBar } from './TopBar';
 import { SettingsSheet } from './SettingsSheet';
 import { ToastHost } from './ToastHost';
-import { useStore } from '../../store/useStore';
-import { setMasterVolume } from '../../audio';
 import { useTimerClock } from './useTimerClock';
+import { useReferencePitchSync } from '../state/useReferencePitchSync';
+import { useClickVolumeSync } from '../state/useClickVolumeSync';
+import { useMasterVolumeSync } from '../state/useMasterVolumeSync';
 
-/** The v2 frame. Also applies master volume to the audio engine — in v1 only
- *  the Jam card did this, so v2 owns it at the shell level. */
+/** The v2 frame. Also keeps the audio engine in line with the saved
+ *  settings: master volume and mute, click volume, and reference pitch. */
 export const V2Layout: React.FC<{ dock?: React.ReactNode; sheetHost?: React.ReactNode }> = ({ dock, sheetHost }) => {
-  const master = useStore(st => st.jam.mixer.master.volume);
-  useEffect(() => { setMasterVolume(master / 100); }, [master]);
+  useMasterVolumeSync();
   useTimerClock();
+  useReferencePitchSync();
+  useClickVolumeSync();
   return (
     <div className={s.frame}>
       <TopBar />

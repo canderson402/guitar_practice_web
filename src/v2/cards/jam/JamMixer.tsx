@@ -3,7 +3,6 @@ import { useShallow } from 'zustand/react/shallow';
 import s from './Jam.module.css';
 import { useStore } from '../../../store/useStore';
 import { ChipButton, Select, Slider } from '../../ui';
-import { setClickVolume } from '../../../audio';
 import { GROOVES } from '../../../data/drumGrooves';
 import { BASS_PATTERNS } from '../../../data/jamHarmony';
 import type { BassPattern } from '../../../data/jamHarmony';
@@ -80,7 +79,7 @@ export const JamMixer: React.FC = () => {
       <ChipButton className={s.mixToggle} selected={click.muted} aria-pressed={click.muted} aria-label="Mute Click"
         onClick={() => click.setMuted(!click.muted)}>M</ChipButton>
       <span />
-      <Slider label="Click volume" value={click.volume} min={0} max={100} onChange={v => { click.setVolume(v); setClickVolume(v / 100); }} />
+      <Slider label="Click volume" value={click.volume} min={0} max={100} onChange={click.setVolume} />
       <span />
     </div>
   );

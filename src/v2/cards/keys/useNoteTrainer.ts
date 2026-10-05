@@ -3,6 +3,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../../../store/useStore';
 import { useAudibleBeat, useTransport } from '../../../audio';
 import { nextKey, nextFromHat, shouldAdvance } from './keyCycle';
+import type { Accidental } from './keyCycle';
+import { useV2Store } from '../../state/useV2Store';
 import { useShuffleBag } from './shuffleBag';
 import { useCardPref } from '../../state/useCardPref';
 
@@ -20,17 +22,19 @@ export const useNoteTrainer = (): string => {
   const lastChange = useRef(0);
 
   const [hat] = useCardPref('note-trainer', 'shuffleAll', true);
+  const [accidental] = useCardPref<Accidental>('note-trainer', 'accidentals', 'sharp');
   const shuffling = st.c.randomize && hat;
   useEffect(() => {
     // Shuffle: each key once per round, drawn out of a hat.
-    if (shuffling) st.setNext(nextFromHat(st.note, useShuffleBag.getState().record(st.note)));
-    else st.setNext(nextKey(st.note, st.c.direction, st.c.randomize));
+    if (shuffling) st.setNext(nextFromHat(st.note, useShuffleBag.getState().record(st.note), accidental));
+    else st.setNext(nextKey(st.note, st.c.direction, st.c.randomize, accidental));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [st.note, st.c.direction, st.c.randomize, shuffling]);
+  }, [st.note, st.c.direction, st.c.randomize, shuffling, accidental]);
 
   const advance = () => {
     const { note, circleOfFifths: c } = useStore.getState();
-    const to = c.nextNote ?? nextKey(note.selectedNote ?? 'C', c.direction, c.randomize);
+    const acc = (useV2Store.getState().cardPrefs['note-trainer']?.accidentals as Accidental | undefined) ?? 'sharp';
+    const to = c.nextNote ?? nextKey(note.selectedNote ?? 'C', c.direction, c.randomize, acc);
     useStore.getState().setSelectedNote(to);
   };
 

@@ -24,7 +24,7 @@ it('shows the seven chords of the key; picking one selects it (and again clears 
   fireEvent.click(screen.getByRole('button', { name: 'Am, vi' }));
   expect(chord()).toMatchObject({ note: 'A', type: 'minor', roman: 'vi' });
   expect(screen.getByTestId('hero-value')).toHaveTextContent('Am');
-  expect(screen.getByText('vi · minor')).toBeInTheDocument();
+  expect(screen.getByText('vi · A minor')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Am, vi' }));
   expect(chord()).toBeNull();
 });
@@ -102,5 +102,32 @@ describe('any chord (root + chord type)', () => {
     expect(chord()).toMatchObject({ note: 'A', symbol: 'm7♭5', intervals: [0, 3, 6, 10] });
     fireEvent.click(within(builder).getByRole('button', { name: 'm7♭5, half-diminished' }));
     expect(chord()).toBeNull();
+  });
+});
+
+describe('every chord shows its name and its formula', () => {
+  const formula = () => screen.getByTestId('chord-formula').textContent;
+
+  it('in key: the numeral and full name, plus the intervals', () => {
+    act(() => { useStore.getState().setSelectedNote('C'); useStore.getState().setSelectedScale('Major (Ionian)'); useStore.getState().setSelectedChord(null); });
+    render(<ChordsFace />);
+    fireEvent.click(screen.getByRole('button', { name: 'Dm, ii' }));
+    expect(screen.getByText('ii · D minor')).toBeInTheDocument();
+    expect(formula()).toBe('1 ♭3 5');
+    fireEvent.click(screen.getByRole('button', { name: 'B°, vii°' }));
+    expect(screen.getByText('vii° · B diminished')).toBeInTheDocument();
+    expect(formula()).toBe('1 ♭3 ♭5');
+  });
+
+  it('any chord: the full name, plus the intervals', () => {
+    act(() => useStore.getState().setSelectedChord(null));
+    render(<ChordsFace />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Any chord' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Change root/ }));
+    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Root' })).getByRole('radio', { name: 'D' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Triads' }));
+    fireEvent.click(screen.getByRole('button', { name: '°, diminished' }));
+    expect(screen.getByText('D diminished')).toBeInTheDocument();
+    expect(formula()).toBe('1 ♭3 ♭5');
   });
 });
