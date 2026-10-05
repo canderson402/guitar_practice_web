@@ -35,6 +35,15 @@ it('shifts all strings and applies presets', () => {
   expect(tuning()).toEqual(['E', 'B', 'G', 'D', 'A', 'D']);
 });
 
+it('App settings sets the guitar and piano note volumes', () => {
+  render(<MemoryRouter><SettingsSheet /></MemoryRouter>);
+  const guitar = screen.getByRole('slider', { name: 'Guitar notes volume' });
+  expect(guitar).toHaveValue(String(useStore.getState().noteVolumes.guitar));
+  fireEvent.change(guitar, { target: { value: '90' } });
+  fireEvent.change(screen.getByRole('slider', { name: 'Piano notes volume' }), { target: { value: '40' } });
+  expect(useStore.getState().noteVolumes).toEqual({ guitar: 90, piano: 40 });
+});
+
 describe('reference pitch', () => {
   it('above the strings: A4 = 440 Hz by default; type any value (decimals too), saved with your settings', () => {
     render(<MemoryRouter><SettingsSheet /></MemoryRouter>);

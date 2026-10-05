@@ -15,6 +15,15 @@ describe('design tokens', () => {
     });
   });
 
+  it('has seven position colors (Shapes), distinct from each other and from root / selected', () => {
+    (['dark', 'light'] as const).forEach(mode => {
+      const t = THEMES[mode] as Record<string, string>;
+      const pos = [1, 2, 3, 4, 5, 6, 7].map(i => t[`pos-${i}`]);
+      pos.forEach(c => expect(c).toMatch(/^#[0-9a-f]{6}$/));
+      expect(new Set([...pos, t['note-root'], t['note-chord']]).size).toBe(9);
+    });
+  });
+
   it('both themes define the same token names', () => {
     expect(Object.keys(THEMES.light).sort()).toEqual(Object.keys(THEMES.dark).sort());
   });

@@ -28,3 +28,11 @@
 .chip:hover { background: var(--fill); }
 .noteChip { border-color: var(--note-chord); }
 .chordChip { border-color: var(--note-scale); }
+/* Shapes, in the top bar: the switch, then All and one chip per position. */
+.shapes { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.shapeSwitch { display: inline-flex; align-items: center; gap: var(--space-2); }
+.shapeChips { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.shapeHint { font-size: var(--text-11); color: var(--text-muted); }
+.posSwatch { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--swatch); }
+/* On, the chip is filled with the color: a white dot keeps the shape. */
+[aria-pressed='true'] > .posSwatch { background: var(--note-label); }

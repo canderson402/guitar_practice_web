@@ -364,6 +364,9 @@ interface StoreState {
   setJamDrumPattern: (pattern: DrumPatternName) => void;
   setJamBarsPerChord: (bars: number) => void;
   setJamCountIn: (countIn: number) => void;
+  /** Volume of the guitar / piano samples (0–100; 50 = as recorded). */
+  noteVolumes: { guitar: number; piano: number };
+  setNoteVolume: (instrument: 'guitar' | 'piano', volume: number) => void;
   setJamMixerVolume: (part: keyof JamMixer, volume: number) => void;
   setJamMixerMuted: (part: JamMixerPart, muted: boolean) => void;
   /** Mute everything (the master output), keeping its level for unmute. */
@@ -418,6 +421,7 @@ export const appPrefs = (s: StoreState) => ({
   jam: { ...pick(s.jam, ['mode', 'selectedPreset', 'progression', 'algorithm', 'barsPerChord', 'countIn']), mixer: { master: s.jam.mixer.master } },
   noteReading: pick(s.noteReading, ['mode', 'fretCount', 'phraseBars', 'phraseKey', 'phraseNotesPerBar', 'trebleEnabled', 'bassEnabled']),
   viewMode: s.viewMode,
+  noteVolumes: s.noteVolumes,
 });
 type AppPrefs = ReturnType<typeof appPrefs>;
 
@@ -456,6 +460,7 @@ export const mergeAppPrefs = (persisted: unknown, current: StoreState): StoreSta
     jam,
     noteReading: over(current.noteReading, p.noteReading, keys('noteReading')),
     viewMode: p.viewMode === 'piano' || p.viewMode === 'fretboard' ? p.viewMode : current.viewMode,
+    noteVolumes: over(current.noteVolumes, p.noteVolumes, ['guitar', 'piano']),
   };
 };
 
@@ -884,6 +889,11 @@ export const useStore = create<StoreState>()(persist((set) => ({
   setJamCountIn: (countIn) => set((state) => ({
     jam: { ...state.jam, countIn: Math.max(0, countIn) },
   })),
+  noteVolumes: { guitar: 80, piano: 50 },
+  setNoteVolume: (instrument, volume) => set((state) => ({
+    noteVolumes: { ...state.noteVolumes, [instrument]: Math.max(0, Math.min(100, volume)) },
+  })),
+
   setJamMixerVolume: (part, volume) => set((state) => {
     const clamped = Math.max(0, Math.min(100, volume));
     return {

@@ -8,6 +8,8 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   target?: boolean;
   /** Selected color: the accent (default) or solid text color. */
   tone?: 'accent' | 'solid';
+  /** Its own selected color instead (e.g. a scale position's). */
+  color?: string;
 };
 
 /** The one chip-style button: every selected / hover / disabled / focus /
@@ -15,9 +17,10 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
  *  border so changing state never changes its size. Use `className` for
  *  layout (padding, two-line content), not for state colors. */
 export const ChipButton = React.forwardRef<HTMLButtonElement, Props>(
-  ({ selected, target, tone = 'accent', className, type = 'button', ...rest }, ref) => (
+  ({ selected, target, tone = 'accent', color, className, type = 'button', style, ...rest }, ref) => (
     <button ref={ref} type={type} {...rest}
-      className={[s.chip, s[tone], selected ? s.selected : '', target ? s.target : '', className].filter(Boolean).join(' ')} />
+      style={color ? { ...style, ['--chip-color' as string]: color } : style}
+      className={[s.chip, color ? s.custom : s[tone], selected ? s.selected : '', target ? s.target : '', className].filter(Boolean).join(' ')} />
   ),
 );
 ChipButton.displayName = 'ChipButton';

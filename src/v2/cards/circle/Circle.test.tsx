@@ -74,3 +74,18 @@ it('has a legend for the chord-quality colors (only when the ring shows chords)'
   act(() => useV2Store.getState().setCardPref('circle-of-fifths', 'ring', 'relatives'));
   expect(screen.queryByRole('list', { name: 'Chord qualities' })).toBeNull();
 });
+
+it('the scale name in the middle shrinks to fit its longest word (Minor Pentatonic), short names stay as they are', () => {
+  act(() => useStore.getState().setSelectedScale('Minor Pentatonic'));
+  const { unmount } = render(<CircleFace />);
+  const name = screen.getByTestId('circle-scale');
+  expect(name).toHaveTextContent('Minor Pentatonic');
+  expect(name.style.getPropertyValue('--chars')).toBe('10');   // "Pentatonic"
+  expect(name.className).toMatch(/long/);
+  unmount();
+  act(() => useStore.getState().setSelectedScale('Dorian'));
+  render(<CircleFace />);
+  expect(screen.getByTestId('circle-scale').className).not.toMatch(/long/);
+  const css = require('fs').readFileSync(require('path').join(__dirname, 'Circle.module.css'), 'utf8') as string;
+  expect(css).toMatch(/\.centerScale \{[^}]*font-size: min\(var\(--text-11\), calc\([^)]*cqw \/ var\(--chars/);
+});

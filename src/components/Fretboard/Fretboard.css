@@ -405,6 +405,14 @@
   border: 2px solid var(--fretboard-dot-color, var(--ds-color-secondary));
 }
 
+/* A dot shared by several colors (e.g. two scale positions): side-by-side
+   slices filling the whole circle, border included. */
+.fretboard-cell.split,
+.fretboard-string-label.split {
+  background: var(--fretboard-dot-fill) border-box;
+  border-color: transparent;
+}
+
 /* Subtle dark outer ring + drop shadow on every solid-fill variant — makes
    the dots visually "self-contained" beads sitting on top of the wood grain
    rather than flat colored splotches. */

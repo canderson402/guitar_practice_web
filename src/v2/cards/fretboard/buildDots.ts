@@ -19,6 +19,10 @@ export interface DotInput {
   nameOf?(note: string): string;
   /** Chord focus: only these chord tones are drawn (root = chordRoot). */
   chord?: { root: string; pitches: number[] } | null;
+  /** Shapes: when set, only these cells (posKey) get dots, colored by the
+   *  positions they're in (a shared cell is split between its colors). The
+   *  root and the selected note keep their own colors. */
+  only?: Map<string, string[]> | null;
 }
 
 // Colors come from v2 music tokens so dots follow light/dark themes.
@@ -40,7 +44,8 @@ export const dotForNote = (i: DotStyle, note: string): DotInfo | null => {
     const inChord = i.chord.pitches.includes(chromaticPosition(note));
     if (inChord && i.show.root && same(i.chord.root, note)) variant = 'root';
     else if (i.show.selected && same(i.selected, note)) variant = 'current';
-    else if (inChord && i.show.scale && !same(i.chord.root, note)) variant = 'scale';
+    // Root off: the chord's root is drawn like its other tones (not hidden).
+    else if (inChord && i.show.scale) variant = 'scale';
   } else if (i.show.root && same(i.root, note)) variant = 'root';
   else if (i.show.selected && same(i.selected, note)) variant = 'current';
   else if (i.show.scale && inScale) variant = 'scale';
@@ -52,8 +57,16 @@ export const buildDots = (i: DotInput): Map<string, DotInfo> => {
   const map = new Map<string, DotInfo>();
   generateFretboard(i.tuning, i.frets).forEach((string, si) => string.forEach(cell => {
     if (!cell || cell.fret > i.frets) return;
+    const key = posKey(si, cell.fret);
+    const colors = i.only?.get(key);
+    if (i.only && !colors) return;
     const dot = dotForNote(i, cell.note);
-    if (dot) map.set(posKey(si, cell.fret), dot);
+    if (!dot) return;
+    if (colors?.length && dot.variant === 'scale') {
+      dot.color = colors[0];
+      if (colors.length > 1) dot.colors = colors;
+    }
+    map.set(key, dot);
   }));
   return map;
 };

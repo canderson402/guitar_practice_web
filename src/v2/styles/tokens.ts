@@ -23,6 +23,14 @@ const dark = {
   'note-chord': '#3d8bff',
   'note-muted': '#3a3446',
   'note-label': '#ffffff',
+  // Shapes: one color per scale position; white labels stay readable on each.
+  'pos-1': '#d9480f',
+  'pos-2': '#a87600',
+  'pos-3': '#2f9e44',
+  'pos-4': '#0c8599',
+  'pos-5': '#7048e8',
+  'pos-6': '#a0522d',
+  'pos-7': '#5c6f8a',
   'overlay': '#07060acc',
 };
 
@@ -47,6 +55,14 @@ const light: Record<TokenName, string> = {
   'note-chord': '#2563eb',
   'note-muted': '#d4cde0',
   'note-label': '#ffffff',
+  // Shapes: one color per scale position; white labels stay readable on each.
+  'pos-1': '#d9480f',
+  'pos-2': '#a87600',
+  'pos-3': '#2f9e44',
+  'pos-4': '#0c8599',
+  'pos-5': '#7048e8',
+  'pos-6': '#a0522d',
+  'pos-7': '#5c6f8a',
   'overlay': '#1c182466',
 };
 
@@ -94,6 +110,7 @@ export const CONTRAST_PAIRS: Array<{ fg: TokenName | '#ffffff'; bg: TokenName; m
   { fg: 'danger', bg: 'surface', min: 3 },
   { fg: 'warning', bg: 'surface', min: 3 },
   { fg: 'note-label', bg: 'note-root', min: 3 },
+  ...([1, 2, 3, 4, 5, 6, 7].map(i => ({ fg: 'note-label' as const, bg: `pos-${i}` as TokenName, min: 3 as const }))),
 ];
 
 const luminance = (hex: string): number => {

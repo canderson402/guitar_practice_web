@@ -1,5 +1,6 @@
 import { Soundfont } from 'smplr';
-import { getAudioContext, getMasterGain } from './engine';
+import { getAudioContext } from './engine';
+import { instrumentOutput } from './instrumentVolume';
 import { referenceCents } from './pitch';
 import { playFallbackTone } from './fallbackTone';
 
@@ -13,7 +14,7 @@ const getGuitar = (): Promise<Soundfont> => {
   const instance = new Soundfont(ctx, {
     kit: 'MusyngKite',
     instrument: 'acoustic_guitar_nylon',
-    destination: getMasterGain(),
+    destination: instrumentOutput('guitar'),
   });
   loading = instance.load.then(() => {
     guitar = instance;

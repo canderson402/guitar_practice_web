@@ -12,6 +12,8 @@ import { intervalSymbol, scaleDegreeLabels, chromaticPosition } from '../../musi
 import { buildDots, dotForNote } from './buildDots';
 import type { DotStyle } from './buildDots';
 import { useFretboardPrefs } from './useFretboardPrefs';
+import { positionCount, shapesAvailable, positionRegionMap } from '../../../data/scalePositions';
+import { ShapesBar, positionColor } from './ShapesBar';
 import { useV2Store } from '../../state/useV2Store';
 import { activePick, pickFromFretboard } from './pickNote';
 import { cellToMidi, midiToPitch } from '../../../data/pitch';
@@ -41,6 +43,17 @@ export const FretboardFace: React.FC = () => {
   const scaleNotes = useMemo(() => (n.root
     ? (n.scale && scales[n.scale as keyof typeof scales] ? getScaleNotes(n.root, n.scale as keyof typeof scales) : getChromaticScale(n.root))
     : []), [n.root, n.scale]);
+  // Shapes: only the neck the enabled positions cover gets dots (when the scale
+  // and tuning allow) — a selected note or chord tone outside the key still shows there.
+  const shapeCount = positionCount(n.scale);
+  const shapeReason = shapeCount === 0 ? 'No shapes for this scale yet'
+    : !shapesAvailable(n.tuning) ? 'Shapes need standard tuning (any pitch)' : null;
+  const only = useMemo(() => {
+    if (!p.shapes || shapeReason) return null;
+    const region = positionRegionMap({ root: n.root, scale: n.scale, tuning: n.tuning, frets: p.frets, positions: p.positions });
+    // Colors off: the same notes, drawn in the normal root / scale / selected colors.
+    return new Map(Array.from(region, ([key, positions]) => [key, p.positionColors ? positions.map(positionColor) : []]));
+  }, [p.shapes, shapeReason, n.root, n.scale, n.tuning, p.frets, p.positions, p.positionColors]);
   // The note the Scale card is on — highlighted separately; the root never changes.
   // An out-of-key note clicked on the neck overrides it until something moves on.
   const ctx = { root: n.root, scale: n.scale, index: n.index };
@@ -126,7 +139,7 @@ export const FretboardFace: React.FC = () => {
     nameOf: n.chord ? chordNameOf(n.chord) : scaleNameOf(scaleNotes),
     chord: n.chord ? { root: n.chord.note, pitches: chordPitches(n.chord) } : null,
   }), [n.root, scaleNotes, selected, p.showRoot, p.showScale, p.showSelected, p.labels, degrees, n.chord]);
-  const dots = useMemo(() => buildDots({ ...style, tuning: n.tuning, frets: p.frets }), [style, n.tuning, p.frets]);
+  const dots = useMemo(() => buildDots({ ...style, tuning: n.tuning, frets: p.frets, only }), [style, n.tuning, p.frets, only]);
 
   // A note's label as the dots show it (empty frets preview it on hover; the
   // played-note flash shows it too).
@@ -145,6 +158,10 @@ export const FretboardFace: React.FC = () => {
       <div className={s.bar}>
         <SegmentedControl<View> label="View" size="sm" value={n.view} onChange={n.setView}
           options={[{ value: 'fretboard', label: 'Fretboard' }, { value: 'piano', label: 'Piano' }]} />
+        {n.view === 'fretboard' && (
+          <ShapesBar count={shapeCount} reason={shapeReason} on={p.shapes} setOn={p.setShapes}
+            positions={p.positions} setPositions={p.setPositions} colors={p.positionColors} setColors={p.setPositionColors} />
+        )}
         {/* What's selected right now — each dismissible — kept apart from the layer toggles. */}
         <div role="group" aria-label="Selection" className={s.selection}>
           {selected && (

@@ -29,6 +29,10 @@ const at = (i: number, radius: number) => {
 
 /** The circle of fifths for the shared key and scale: the key's chords are
  *  highlighted with their Roman numerals (or the ring shows relative keys). */
+// The middle of the circle is narrow: the scale name's text shrinks so its
+// longest word (it wraps between words) always fits.
+const longestWord = (name: string) => Math.max(1, ...name.split(/\s+/).map(w => w.length));
+
 export const CircleFace: React.FC = () => {
   const n = useStore(useShallow(st => ({ root: st.note.selectedNote, scale: st.note.selectedScale, setNote: st.setSelectedNote })));
   const [ring] = useCardPref<Ring>('circle-of-fifths', 'ring', 'chords');
@@ -70,7 +74,10 @@ export const CircleFace: React.FC = () => {
           })}
           <div className={s.center}>
             <span className={s.centerKey}>{n.root ?? '—'}</span>
-            <span className={s.centerScale}>{scaleShortName(n.scale)}</span>
+            <span data-testid="circle-scale" className={[s.centerScale, longestWord(scaleShortName(n.scale)) > 7 ? s.long : ''].join(' ')}
+              style={{ ['--chars' as string]: String(longestWord(scaleShortName(n.scale))) }}>
+              {scaleShortName(n.scale)}
+            </span>
           </div>
         </div>
       </div>

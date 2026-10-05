@@ -1,5 +1,6 @@
 import { SplendidGrandPiano } from 'smplr';
-import { getAudioContext, getMasterGain } from './engine';
+import { getAudioContext } from './engine';
+import { instrumentOutput } from './instrumentVolume';
 import { referenceCents } from './pitch';
 import { playFallbackTone } from './fallbackTone';
 
@@ -12,7 +13,7 @@ const getPiano = (): Promise<SplendidGrandPiano> => {
   if (loading) return loading;
   const ctx = getAudioContext();
   const instance = new SplendidGrandPiano(ctx, {
-    destination: getMasterGain(),
+    destination: instrumentOutput('piano'),
     // One velocity layer (the one notes play at) — a fifth of the download.
     notesToLoad: { notes: ALL_KEYS, velocityRange: [85, 100] },
   });

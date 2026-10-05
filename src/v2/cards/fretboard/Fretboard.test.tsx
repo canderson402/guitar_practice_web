@@ -45,11 +45,44 @@ describe('buildDots', () => {
     expect(buildDots({ ...base, chord, selected: 'B', show: { ...show, selected: false } }).has('5-7')).toBe(false);
   });
 
+  it('with a chord showing and Root off, the chord\'s root still shows — in the chord-tone color, like the key\'s root does', () => {
+    const chord = { root: 'A', pitches: [9, 0, 4] };   // A minor: A C E
+    const dots = buildDots({ ...base, chord, show: { root: false, scale: true } });
+    expect(dots.get('5-5')?.variant).toBe('scale');     // A, the chord's root
+    expect(dots.get('5-8')?.variant).toBe('scale');     // C
+  });
+
   it('when the selected note is the root, the root color shows (not the selected color)', () => {
     const dots = buildDots({ ...base, selected: 'A', show: { root: true, scale: true, selected: true } });
     expect(dots.get('5-5')?.variant).toBe('root');                 // low E fret 5 = A, the root
     // With the root layer hidden, the selected highlight still shows it.
     expect(buildDots({ ...base, selected: 'A', show: { root: false, scale: true, selected: true } }).get('5-5')?.variant).toBe('current');
+  });
+
+  it('with `only`, draws dots just on those cells', () => {
+    const only = new Map([['5-5', ['red']], ['5-7', ['red']], ['5-6', ['red']]]);   // A, B, and A# (not in the scale)
+    const dots = buildDots({ ...base, only });
+    expect(Array.from(dots.keys()).sort()).toEqual(['5-5', '5-7']);
+    expect(dots.get('5-5')?.variant).toBe('root');
+  });
+
+  it('with `only` and a chord, only chord tones inside the cells are drawn', () => {
+    const chord = { root: 'A', pitches: [9, 0, 4] };   // A C E
+    const only = new Map(['5-5', '5-7', '5-8', '4-7'].map(k => [k, ['red']]));  // A, B, C on low E; E on A string
+    const dots = buildDots({ ...base, chord, only, show: { root: true, scale: true, selected: true } });
+    expect(Array.from(dots.keys()).sort()).toEqual(['4-7', '5-5', '5-8']);
+  });
+
+  it('with `only`, notes take their position colors (split when shared); the root and selected note keep theirs', () => {
+    const only = new Map([['5-5', ['P1']], ['5-7', ['P1']], ['5-8', ['P1', 'P2']]]);
+    const dots = buildDots({ ...base, only, selected: 'B', show: { root: true, scale: true, selected: true } });
+    expect(dots.get('5-5')).toMatchObject({ variant: 'root', color: 'var(--note-root)' });
+    expect(dots.get('5-5')?.colors).toBeUndefined();
+    expect(dots.get('5-7')).toMatchObject({ variant: 'current', color: 'var(--note-chord)' });
+    expect(dots.get('5-8')).toMatchObject({ variant: 'scale', color: 'P1', colors: ['P1', 'P2'] });
+    // One position: just its color, no split.
+    expect(buildDots({ ...base, only, selected: null }).get('5-7')).toMatchObject({ color: 'P1' });
+    expect(buildDots({ ...base, only, selected: null }).get('5-7')?.colors).toBeUndefined();
   });
 
   it('marks the root over scale tones, and skips notes outside the scale', () => {
@@ -412,5 +445,155 @@ describe('hover', () => {
     expect(css).toMatch(/\.fretboard-ghost-label\s*\{[^}]*opacity:\s*0/);
     // On the Fretboard card the preview is as big as a regular dot.
     expect(css).toMatch(/\.full-preview \.fretboard-cell-hit:hover \.fretboard-cell\.clickable-empty\s*\{[^}]*width:\s*26px/);
+  });
+});
+
+describe('Shapes', () => {
+  // Drawn dots only (every cell has a fret-dot element; empty ones preview on hover).
+  const dotCount = () => screen.queryAllByTestId('fret-dot').filter(d => /\bvariant-/.test(d.className)).length;
+  const setup = (scale = 'Major (Ionian)', tuning = STD) => act(() => {
+    useV2Store.setState(useV2Store.getInitialState(), true);
+    const st = useStore.getState();
+    st.setSelectedNote('C'); st.setSelectedScale(scale); st.setTuning(tuning); st.setViewMode('fretboard'); st.setSelectedChord(null);
+  });
+  afterEach(() => act(() => useStore.getState().setTuning(STD)));
+
+  it('the switch shows position chips (1–7 for major) and narrows the board to position 1', () => {
+    setup();
+    render(<FretboardFace />);
+    const all = dotCount();
+    expect(screen.queryByRole('group', { name: 'Positions' })).toBeNull();
+    fireEvent.click(screen.getByRole('switch', { name: 'Shapes' }));
+    const chips = within(screen.getByRole('group', { name: 'Positions' })).getAllByRole('button');
+    expect(chips.map(c => c.textContent)).toEqual(['All', 'Clear', '1', '2', '3', '4', '5', '6', '7']);
+    expect(screen.getByRole('button', { name: 'Position 1' })).toHaveAttribute('aria-pressed', 'true');
+    // C major position 1 on 24 frets: 16 notes at frets 7–10, again at 19–22.
+    expect(dotCount()).toBe(32);
+    expect(dotCount()).toBeLessThan(all);
+    expect(useV2Store.getState().cardPrefs.fretboard).toMatchObject({ shapes: true });
+  });
+
+  it('chips toggle positions; All turns every position on', () => {
+    setup();
+    render(<FretboardFace />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Shapes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Position 2' }));
+    expect(useV2Store.getState().cardPrefs.fretboard?.positions).toEqual([1, 2]);
+    const oneAndTwo = dotCount();
+    expect(oneAndTwo).toBeGreaterThan(32);
+    fireEvent.click(screen.getByRole('button', { name: 'Position 1' }));
+    expect(useV2Store.getState().cardPrefs.fretboard?.positions).toEqual([2]);
+    expect(screen.getByRole('button', { name: 'All positions' })).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'All positions' }));
+    expect(useV2Store.getState().cardPrefs.fretboard?.positions).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(screen.getByRole('button', { name: 'All positions' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('pentatonics have 5; positions 6–7 are ignored there and come back for major', () => {
+    setup();
+    act(() => useV2Store.getState().setCardPref('fretboard', 'shapes', true));
+    act(() => useV2Store.getState().setCardPref('fretboard', 'positions', [6, 7]));
+    render(<FretboardFace />);
+    const majorDots = dotCount();
+    expect(majorDots).toBeGreaterThan(0);
+    act(() => useStore.getState().setSelectedScale('Minor Pentatonic'));
+    const chips = within(screen.getByRole('group', { name: 'Positions' })).getAllByRole('button');
+    expect(chips.map(c => c.textContent)).toEqual(['All', 'Clear', '1', '2', '3', '4', '5']);
+    expect(chips.filter(c => c.getAttribute('aria-pressed') === 'true')).toHaveLength(0);
+    expect(dotCount()).toBe(0);
+    act(() => useStore.getState().setSelectedScale('Major (Ionian)'));
+    expect(dotCount()).toBe(majorDots);
+  });
+
+  it('is disabled, with the reason, for scales without shapes (Chromatic) and non-standard tunings — the full scale shows', () => {
+    setup('Chromatic');
+    act(() => useV2Store.getState().setCardPref('fretboard', 'shapes', true));
+    const { unmount } = render(<FretboardFace />);
+    expect(screen.getByRole('switch', { name: 'Shapes' })).toBeDisabled();
+    expect(screen.getByText('No shapes for this scale yet')).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Positions' })).toBeNull();
+    expect(dotCount()).toBeGreaterThan(32);
+    unmount();
+    setup('Major (Ionian)', ['E', 'B', 'G', 'D', 'A', 'D']);
+    act(() => useV2Store.getState().setCardPref('fretboard', 'shapes', true));
+    render(<FretboardFace />);
+    expect(screen.getByRole('switch', { name: 'Shapes' })).toBeDisabled();
+    expect(screen.getByText('Shapes need standard tuning (any pitch)')).toBeInTheDocument();
+    // The saved choice is kept for when shapes apply again.
+    expect(useV2Store.getState().cardPrefs.fretboard?.shapes).toBe(true);
+  });
+
+  it('half step down still works', () => {
+    setup('Major (Ionian)', ['Eb', 'Bb', 'Gb', 'Db', 'Ab', 'Eb']);
+    render(<FretboardFace />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Shapes' }));
+    expect(dotCount()).toBe(32);
+  });
+
+  it('inside a box, notes outside the key still show: the selected note and chord tones', () => {
+    setup();
+    render(<FretboardFace />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Shapes' }));
+    // C# on low E fret 9 sits inside C major position 1 (frets 7–10).
+    fireEvent.click(screen.getByRole('button', { name: /^(C#|Db) on string 6, fret 9$/ }));
+    expect(within(screen.getByRole('button', { name: /^(C#|Db) on string 6, fret 9$/ })).getByTestId('fret-dot')).toHaveClass('variant-current');
+    // An E major chord: its G# on the B string fret 9 is inside the box (B string 8–10) and shows.
+    act(() => useStore.getState().setSelectedChord({ note: 'E', type: 'major', symbol: '', roman: 'III' }));
+    expect(within(screen.getByRole('button', { name: /^(G#|Ab) on string 2, fret 9$/ })).getByTestId('fret-dot')).toHaveClass(/variant-/);
+    // …but not outside it: G# on the low E string fret 4 is in no box (they span 8–10 and 20–22 there).
+    expect(within(screen.getByRole('button', { name: /^(G#|Ab) on string 6, fret 4$/ })).getByTestId('fret-dot')).not.toHaveClass(/variant-/);
+  });
+
+  it('each position has its color: on its chip, and on its notes (a shared note is split)', () => {
+    setup();
+    render(<FretboardFace />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Shapes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Position 2' }));
+    expect(within(screen.getByRole('button', { name: 'Position 2' })).getByTestId('position-swatch').style.getPropertyValue('--swatch')).toBe('var(--pos-2)');
+    // A position that's on fills its chip with its own color (not the app's pink).
+    expect(screen.getByRole('button', { name: 'Position 2' }).style.getPropertyValue('--chip-color')).toBe('var(--pos-2)');
+    expect(screen.getByRole('button', { name: 'Position 2' })).toHaveClass('custom');
+    const dotAt = (name: RegExp) => within(screen.getByRole('button', { name })).getByTestId('fret-dot');
+    // E (low E fret 12) is only in position 2; D (fret 10) is in 1 and 2; C (fret 8) is the root.
+    expect(dotAt(/^E on string 6, fret 12$/).style.getPropertyValue('--fretboard-dot-color')).toBe('var(--pos-2)');
+    const shared = dotAt(/^D on string 6, fret 10$/);
+    expect(shared).toHaveClass('split');
+    expect(shared.style.getPropertyValue('--fretboard-dot-fill')).toMatch(/var\(--pos-1\).*var\(--pos-2\)/);
+    expect(dotAt(/^C on string 6, fret 8$/).style.getPropertyValue('--fretboard-dot-color')).toBe('var(--note-root)');
+  });
+
+  it('the Colors switch turns position colors off on the fretboard: same notes, normal scale colors (chips keep theirs)', () => {
+    setup();
+    render(<FretboardFace />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Shapes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Position 2' }));
+    const before = dotCount();
+    const dotAt = (name: RegExp) => within(screen.getByRole('button', { name })).getByTestId('fret-dot');
+    expect(screen.getByRole('switch', { name: 'Position colors' })).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(screen.getByRole('switch', { name: 'Position colors' }));
+    expect(useV2Store.getState().cardPrefs.fretboard?.positionColors).toBe(false);
+    expect(dotCount()).toBe(before);
+    expect(dotAt(/^E on string 6, fret 12$/).style.getPropertyValue('--fretboard-dot-color')).toBe('var(--note-scale)');
+    expect(dotAt(/^D on string 6, fret 10$/)).not.toHaveClass('split');
+    expect(screen.getByRole('button', { name: 'Position 2' })).toHaveClass('custom');
+    expect(screen.getByRole('button', { name: 'Position 2' }).style.getPropertyValue('--chip-color')).toBe('var(--pos-2)');
+  });
+
+  it('Clear turns every position off (and is disabled when none are on)', () => {
+    setup();
+    render(<FretboardFace />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Shapes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'All positions' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear positions' }));
+    expect(useV2Store.getState().cardPrefs.fretboard?.positions).toEqual([]);
+    expect(screen.getByRole('button', { name: 'Clear positions' })).toBeDisabled();
+    expect(dotCount()).toBe(0);
+  });
+
+  it('the column is hidden in Piano view', () => {
+    setup();
+    act(() => useStore.getState().setViewMode('piano'));
+    render(<FretboardFace />);
+    expect(screen.queryByRole('switch', { name: 'Shapes' })).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { generateFretboard, fretMarkers, doubleFretMarkers } from '../../data/guitarData';
-import { FretboardProps, posKey } from './types';
+import { DotInfo, FretboardProps, posKey } from './types';
 import './Fretboard.css';
 
 // ---------------------------------------------------------------------------
@@ -19,6 +19,19 @@ const cellButton = (label: string, activate: () => void) => ({
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
   },
 });
+
+
+/** Equal side-by-side slices, left to right, for a dot with several colors. */
+const splitFill = (colors: string[]) =>
+  `linear-gradient(90deg, ${colors.map((c, k) => `${c} ${(k * 100) / colors.length}% ${((k + 1) * 100) / colors.length}%`).join(', ')})`;
+/** Inline style carrying a dot's color(s) to the CSS. */
+const dotStyle = (dot: DotInfo | undefined): React.CSSProperties | undefined => {
+  if (!dot?.color && !dot?.colors) return undefined;
+  return {
+    ...(dot.color ? { ['--fretboard-dot-color' as any]: dot.color } : {}),
+    ...(dot.colors ? { ['--fretboard-dot-fill' as any]: splitFill(dot.colors) } : {}),
+  };
+};
 
 export const Fretboard: React.FC<FretboardProps> = ({
   strings,
@@ -67,6 +80,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                 'fretboard-string-label',
                 openDot ? `has-variant-${openDot.variant}` : '',
                 openDot?.faint ? 'faint' : '',
+                openDot?.colors ? 'split' : '',
                 openDot?.nonDiatonic ? 'non-diatonic' : '',
                 openDot?.dropTargetHint ? 'drop-target' : '',
                 onCellClick ? 'clickable' : '',
@@ -74,9 +88,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
               ]
                 .filter(Boolean)
                 .join(' ');
-              const style = openDot?.color
-                ? { ['--fretboard-dot-color' as any]: openDot.color }
-                : undefined;
+              const style = dotStyle(openDot);
               return (
                 <div
                   key={index}
@@ -167,15 +179,14 @@ export const Fretboard: React.FC<FretboardProps> = ({
                       visualDot?.nonDiatonic ? 'non-diatonic' : '',
                       visualDot?.dropTargetHint ? 'drop-target' : '',
                       visualDot?.faint ? 'faint' : '',
+                      visualDot?.colors ? 'split' : '',
                       clickableEmpty && !visualDot ? 'clickable-empty' : '',
                     ]
                       .filter(Boolean)
                       .join(' ');
 
                     // CSS var lets variant color be overridden per-dot
-                    const style: React.CSSProperties | undefined = visualDot?.color
-                      ? { ['--fretboard-dot-color' as any]: visualDot.color }
-                      : undefined;
+                    const style = dotStyle(visualDot);
 
                     const labelText = visualDot?.label ?? (visualDot ? noteName : '');
                     const showLabel = visualDot !== undefined;

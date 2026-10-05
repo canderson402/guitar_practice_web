@@ -1,6 +1,6 @@
 .face { height: 100%; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding-bottom: var(--space-2); }
 .circleWrap { flex: 1; min-height: 0; width: 100%; display: grid; place-items: center; container-type: size; }
-.circle { position: relative; height: min(100cqh, 100cqw, 240px); aspect-ratio: 1; }
+.circle { position: relative; height: min(100cqh, 100cqw, 240px); aspect-ratio: 1; container-type: inline-size; }
 .legend { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--space-3); font-size: var(--text-11); font-weight: 600; }
 .legend li { display: inline-flex; align-items: center; gap: 5px; }
 .swatch { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
@@ -17,9 +17,12 @@
 .minor { color: var(--note-chord); }
 .diminished, .augmented { color: var(--text-muted); }
 .relCurrent { color: var(--accent); }
-.center { position: absolute; inset: 38%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.center { position: absolute; inset: 38%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .centerKey { font-family: var(--font-mono); font-weight: 700; font-size: var(--text-20); line-height: 1; }
-.centerScale { font-size: var(--text-11); color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; }
+/* The middle is ~24% of the circle wide; size the name so its longest word
+   (--chars letters) fits, up to the normal size. Long words drop the tracking. */
+.centerScale { font-size: min(var(--text-11), calc(30cqw / var(--chars, 6))); color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; line-height: 1.15; }
+.centerScale.long { font-size: min(var(--text-11), calc(32cqw / var(--chars, 6))); letter-spacing: 0; }
 .field { display: flex; flex-direction: column; gap: var(--space-2); }
 .label { font-size: var(--text-12); color: var(--text-muted); }
 .hint { color: var(--text-muted); font-size: var(--text-12); }

@@ -12,6 +12,15 @@ it('is one chip button with its states built in (selected, drop target)', () => 
   expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('type', 'button');
 });
 
+it('a chip can take its own color when selected (e.g. a scale position)', () => {
+  render(<><ChipButton selected color="var(--pos-3)">Three</ChipButton><ChipButton color="var(--pos-4)">Four</ChipButton></>);
+  const on = screen.getByRole('button', { name: 'Three' });
+  expect(on).toHaveClass('chip', 'selected', 'custom');
+  expect(on.style.getPropertyValue('--chip-color')).toBe('var(--pos-3)');
+  const css = fs.readFileSync(path.join(__dirname, 'ChipButton.module.css'), 'utf8');
+  expect(css).toMatch(/\.custom\.selected[^{]*\{[^}]*background: var\(--chip-color\)/);
+});
+
 it('its states never change its size and draw on the chip itself', () => {
   const css = fs.readFileSync(path.join(__dirname, 'ChipButton.module.css'), 'utf8');
   // A constant 1px border: selected only recolors it, so nothing shifts or shows through a gap.

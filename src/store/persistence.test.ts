@@ -63,3 +63,11 @@ it('a reload brings them back', () => {
     expect(fresh.getState().metronome.bpm).toBe(66);
   });
 });
+
+it('saves the guitar and piano note volumes (defaults: guitar 80, piano 50)', () => {
+  expect(useStore.getInitialState().noteVolumes).toEqual({ guitar: 80, piano: 50 });
+  act(() => { useStore.getState().setNoteVolume('guitar', 95); useStore.getState().setNoteVolume('piano', 120); });
+  expect(saved().noteVolumes).toEqual({ guitar: 95, piano: 100 });   // clamped to 0–100
+  const merged = mergeAppPrefs({ noteVolumes: { guitar: 30, piano: 'loud' } }, useStore.getInitialState());
+  expect(merged.noteVolumes).toEqual({ guitar: 30, piano: 50 });
+});

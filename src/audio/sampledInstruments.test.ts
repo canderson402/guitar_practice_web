@@ -13,7 +13,11 @@ jest.mock('smplr', () => {
   }
   return { SplendidGrandPiano: Inst, Soundfont: Inst };
 });
-jest.mock('./engine', () => ({ getAudioContext: () => ({}), getMasterGain: () => ({}) }));
+const gains: any[] = [];
+jest.mock('./engine', () => ({
+  getAudioContext: () => ({ createGain: () => { const g = { gain: { value: 1 }, connect: () => {} }; gains.push(g); return g; } }),
+  getMasterGain: () => ({}),
+}));
 jest.mock('./fallbackTone', () => ({ playFallbackTone: (...args: unknown[]) => { fallback.push(args); } }));
 // eslint-disable-next-line import/first
 import { playPianoNote, preloadPiano } from './piano';
@@ -21,6 +25,8 @@ import { playPianoNote, preloadPiano } from './piano';
 import { playGuitarNote, preloadGuitar } from './guitar';
 // eslint-disable-next-line import/first
 import { setReferencePitch } from './pitch';
+// eslint-disable-next-line import/first
+import { setInstrumentVolume, volumeToGain } from './instrumentVolume';
 
 const flush = () => new Promise(r => setTimeout(r, 0));
 afterEach(() => { setReferencePitch(440); starts.length = 0; fallback.length = 0; });
@@ -54,4 +60,23 @@ it('at another reference pitch, piano and guitar notes are detuned to match', as
   await playGuitarNote(52, 1, 2);
   starts.forEach(ev => expect(ev.detune).toBeCloseTo(-31.77, 1));
   expect(starts[1]).toMatchObject({ note: 52, time: 2 });
+});
+
+it('volume: 50% is the samples\' own level, 100% four times as loud (+12 dB), 0 silent', () => {
+  expect(volumeToGain(50)).toBeCloseTo(1);
+  expect(volumeToGain(100)).toBeCloseTo(4);
+  expect(volumeToGain(0)).toBe(0);
+  expect(volumeToGain(150)).toBeCloseTo(4);   // clamped
+});
+
+it('each instrument plays through its own volume: guitar louder by default (80%), piano as recorded (50%)', async () => {
+  await preloadGuitar();
+  await preloadPiano();
+  const dest = (kind: 'guitar' | 'piano') => created.find(o => (kind === 'guitar' ? o.instrument : o.notesToLoad))!.destination;
+  expect(dest('guitar').gain.value).toBeCloseTo(volumeToGain(80));
+  expect(dest('piano').gain.value).toBeCloseTo(1);
+  setInstrumentVolume('guitar', 100);
+  setInstrumentVolume('piano', 25);
+  expect(dest('guitar').gain.value).toBeCloseTo(4);
+  expect(dest('piano').gain.value).toBeCloseTo(0.25);
 });
