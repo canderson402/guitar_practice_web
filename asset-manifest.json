@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/guitar_practice_web/static/css/main.25a76b77.css",
-    "main.js": "/guitar_practice_web/static/js/main.61ac4d1e.js",
+    "main.js": "/guitar_practice_web/static/js/main.0df567da.js",
     "static/js/206.c4040007.chunk.js": "/guitar_practice_web/static/js/206.c4040007.chunk.js",
     "static/media/inter-latin-ext-600-normal.woff": "/guitar_practice_web/static/media/inter-latin-ext-600-normal.4d0d5017d71ea1750fc1.woff",
     "static/media/inter-latin-ext-700-normal.woff": "/guitar_practice_web/static/media/inter-latin-ext-700-normal.d4a91814dd3f1e022ab1.woff",
@@ -99,6 +99,6 @@
   },
   "entrypoints": [
     "static/css/main.25a76b77.css",
-    "static/js/main.61ac4d1e.js"
+    "static/js/main.0df567da.js"
   ]
 }
