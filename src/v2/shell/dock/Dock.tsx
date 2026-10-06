@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { Play, Square, SlidersHorizontal } from 'lucide-react';
+import { Play, Square, SlidersHorizontal, Mail } from 'lucide-react';
 import s from './Dock.module.css';
 import { useStore } from '../../../store/useStore';
 import { useV2Store } from '../../state/useV2Store';
@@ -9,6 +9,7 @@ import { BeatDots } from './BeatDots';
 import { KeyPopover, scaleShortName } from './KeyPopover';
 import { TempoPopover } from './TempoPopover';
 import { MeterPopover, SUBDIVISIONS, timeSignatureLabel } from './MeterPopover';
+import { ContactPopover } from './ContactPopover';
 
 export const Dock: React.FC = () => {
   useShortcuts();
@@ -22,7 +23,8 @@ export const Dock: React.FC = () => {
   const keyRef = useRef<HTMLButtonElement>(null);
   const tempoRef = useRef<HTMLButtonElement>(null);
   const meterRef = useRef<HTMLButtonElement>(null);
-  const toggle = (id: 'key' | 'tempo' | 'meter') => setPopover(openId === id ? null : id);
+  const contactRef = useRef<HTMLButtonElement>(null);
+  const toggle = (id: 'key' | 'tempo' | 'meter' | 'contact') => setPopover(openId === id ? null : id);
   const close = () => setPopover(null);
   const subLabel = SUBDIVISIONS.find(x => x.value === st.sub)?.label ?? '♩';
 
@@ -48,9 +50,14 @@ export const Dock: React.FC = () => {
         <SlidersHorizontal size={14} className={s.summaryIcon} aria-hidden="true" />
         <span className={s.summaryText}>{timeSignatureLabel(st.beats, st.unit)} · {subLabel} · {Math.min(st.master, 100)}%</span>
       </button>
+      <button ref={contactRef} type="button" className={s.contact} aria-haspopup="dialog" aria-expanded={openId === 'contact'}
+        aria-label="Contact" onClick={() => toggle('contact')}>
+        <Mail size={14} aria-hidden="true" /><span className={s.contactText}>Contact</span>
+      </button>
       <KeyPopover open={openId === 'key'} onClose={close} anchorRef={keyRef} />
       <TempoPopover open={openId === 'tempo'} onClose={close} anchorRef={tempoRef} />
       <MeterPopover open={openId === 'meter'} onClose={close} anchorRef={meterRef} />
+      <ContactPopover open={openId === 'contact'} onClose={close} anchorRef={contactRef} />
     </div>
   );
 };

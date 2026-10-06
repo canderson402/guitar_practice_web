@@ -29,7 +29,7 @@ export const scaleShortName = (scale: string | null): string =>
  *  settings sheets — all views onto the same state. Every scale is listed in
  *  one set so major and minor are seen in context as modes, not as a
  *  separate switch. */
-export const KeyPicker: React.FC = () => {
+export const KeyPicker: React.FC<{ /** Just the 12 keys (no mode / scale lists). */ keyOnly?: boolean }> = ({ keyOnly }) => {
   const { note, scale, setSelectedNote, setSelectedScale } = useStore(useShallow(st => ({
     note: st.note.selectedNote, scale: st.note.selectedScale,
     setSelectedNote: st.setSelectedNote, setSelectedScale: st.setSelectedScale,
@@ -39,12 +39,14 @@ export const KeyPicker: React.FC = () => {
       {/* The key may be spelled either way (the Note Trainer uses C# and Db): highlight it by pitch. */}
       <Picker label="Key" value={CIRCLE_KEYS.find(k => getChromaticPosition(k) === getChromaticPosition(note ?? 'C')) ?? 'C'} onChange={setSelectedNote}
         options={CIRCLE_KEYS.map(k => ({ value: k, label: k }))} />
+      {!keyOnly && <>
       <span className={s.group}>Modes</span>
       <Picker label="Modes" value={scale ?? MAJOR} onChange={setSelectedScale} columns={2}
         options={MAJOR_MODES.map(name => ({ value: name, label: scaleDisplayName(name) }))} />
       <span className={s.group}>Other</span>
       <Picker label="Other" value={scale ?? MAJOR} onChange={setSelectedScale} columns={2}
         options={OTHER_SCALES.map(name => ({ value: name, label: scaleDisplayName(name) }))} />
+      </>}
     </>
   );
 };

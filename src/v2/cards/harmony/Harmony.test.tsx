@@ -211,3 +211,10 @@ it('Play plays the pairs in order as quarter notes at the tempo, highlighting ea
   jest.useRealTimers();
 });
 
+
+it('the melody / harmony rows never squeeze the fretboard into a scroll box: the neck keeps its height, the rows take what\'s left', () => {
+  expect(getCard('harmony')!.size.rowSpan).toBe(9);   // room for the neck and both rows
+  const css = require('fs').readFileSync(require('path').join(__dirname, 'Harmony.module.css'), 'utf8') as string;
+  expect(css).toMatch(/\.neck \{[^}]*flex: none;[^}]*overflow-y: hidden;/);
+  expect(css).toMatch(/\.rows \{[^}]*flex: 1;[^}]*min-height: 0;[^}]*overflow-y: auto;/);
+});

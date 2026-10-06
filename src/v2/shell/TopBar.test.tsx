@@ -18,12 +18,10 @@ it('shows just the two sections — Practice and Sight Reading (no Learn, no log
   expect(screen.queryByRole('link', { name: 'Learn' })).toBeNull();
 });
 
-it('cycles theme mode dark → light → system → dark', () => {
+it('has no theme button: the theme is set in App settings, and dark is the default', () => {
   renderAt('/');
-  const btn = screen.getByRole('button', { name: /theme/i });
-  fireEvent.click(btn); expect(useV2Store.getState().themeMode).toBe('light');
-  fireEvent.click(btn); expect(useV2Store.getState().themeMode).toBe('system');
-  fireEvent.click(btn); expect(useV2Store.getState().themeMode).toBe('dark');
+  expect(screen.queryByRole('button', { name: /theme/i })).toBeNull();
+  expect(useV2Store.getInitialState().themeMode).toBe('dark');
 });
 
 it('opens app settings', () => {
@@ -35,4 +33,10 @@ it('opens app settings', () => {
 it('names the reading section "Sight Reading"', () => {
   renderAt('/sight-reading');
   expect(screen.getByRole('link', { name: 'Sight Reading' })).toHaveAttribute('aria-current', 'page');
+});
+
+it('has an About button that opens the About modal', () => {
+  renderAt('/');
+  fireEvent.click(screen.getByRole('button', { name: 'About' }));
+  expect(useV2Store.getState().overlay).toEqual({ kind: 'about' });
 });

@@ -47,6 +47,9 @@ it('sheet has the key picker and the inner-ring choice', () => {
   fireEvent.click(screen.getByRole('radio', { name: 'Relative keys' }));
   expect(useV2Store.getState().cardPrefs['circle-of-fifths'].ring).toBe('relatives');
   expect(screen.getByRole('radiogroup', { name: 'Key' })).toBeInTheDocument();
+  // Just the key: no mode or scale lists here (the circle is about keys).
+  expect(screen.queryByRole('radiogroup', { name: 'Modes' })).toBeNull();
+  expect(screen.queryByRole('radiogroup', { name: 'Other' })).toBeNull();
 });
 
 it('colors keys by chord quality and dims out-of-key notes, but the current key is always just highlighted', () => {
@@ -75,17 +78,52 @@ it('has a legend for the chord-quality colors (only when the ring shows chords)'
   expect(screen.queryByRole('list', { name: 'Chord qualities' })).toBeNull();
 });
 
-it('the scale name in the middle shrinks to fit its longest word (Minor Pentatonic), short names stay as they are', () => {
+describe('relative keys', () => {
+  beforeEach(() => act(() => useV2Store.getState().setCardPref('circle-of-fifths', 'ring', 'relatives')));
+  const classes = (name: string) => screen.getByRole('button', { name }).className.split(' ').filter(Boolean).sort();
+
+  it('looks as before: plain keys, the current key filled and its relative minor in the accent', () => {
+    render(<CircleFace />);   // C major
+    expect(classes('C')).toEqual(['current', 'key']);
+    expect(classes('G')).toEqual(['key']);
+    expect(classes('A minor')).toEqual(['minorKey', 'relCurrent', 'ringLabel']);
+    expect(classes('E minor')).toEqual(['minorKey', 'ringLabel']);
+  });
+
+  it('click a minor key to make it the key (Aeolian); the pair is marked the same way (C filled, Am in the accent)', () => {
+    act(() => useStore.getState().setSelectedNote('G'));
+    render(<CircleFace />);
+    fireEvent.click(screen.getByRole('button', { name: 'A minor' }));
+    expect(useStore.getState().note).toMatchObject({ selectedNote: 'A', selectedScale: 'Aeolian (Natural Minor)' });
+    expect(classes('C')).toEqual(['current', 'key']);
+    expect(classes('A')).toEqual(['key']);
+    expect(classes('A minor')).toEqual(['minorKey', 'relCurrent', 'ringLabel']);
+  });
+
+  it('clicking a major key still just changes the key', () => {
+    render(<CircleFace />);
+    fireEvent.click(screen.getByRole('button', { name: 'G' }));
+    expect(useStore.getState().note).toMatchObject({ selectedNote: 'G', selectedScale: 'Major (Ionian)' });
+  });
+
+  it('sharp minor keys keep their usual names (C#m, not Dbm)', () => {
+    render(<CircleFace />);
+    fireEvent.click(screen.getByRole('button', { name: 'C# minor' }));
+    expect(useStore.getState().note.selectedNote).toBe('C#');
+  });
+});
+
+it('the middle looks the same for every scale: one size for the name, small enough for the longest (Pentatonic)', () => {
   act(() => useStore.getState().setSelectedScale('Minor Pentatonic'));
   const { unmount } = render(<CircleFace />);
-  const name = screen.getByTestId('circle-scale');
-  expect(name).toHaveTextContent('Minor Pentatonic');
-  expect(name.style.getPropertyValue('--chars')).toBe('10');   // "Pentatonic"
-  expect(name.className).toMatch(/long/);
+  const longName = screen.getByTestId('circle-scale');
+  expect(longName).toHaveTextContent('Minor Pentatonic');
+  const longClass = longName.className;
   unmount();
   act(() => useStore.getState().setSelectedScale('Dorian'));
   render(<CircleFace />);
-  expect(screen.getByTestId('circle-scale').className).not.toMatch(/long/);
+  expect(screen.getByTestId('circle-scale').className).toBe(longClass);
+  expect(screen.getByTestId('circle-scale')).not.toHaveAttribute('style');
   const css = require('fs').readFileSync(require('path').join(__dirname, 'Circle.module.css'), 'utf8') as string;
-  expect(css).toMatch(/\.centerScale \{[^}]*font-size: min\(var\(--text-11\), calc\([^)]*cqw \/ var\(--chars/);
+  expect(css).toMatch(/\.centerScale \{[^}]*font-size: min\(var\(--text-11\), [\d.]+cqw\)/);
 });

@@ -8,7 +8,16 @@
 .muted { color: var(--text-muted); font-size: var(--text-11); }
 .summary { margin-left: auto; background: transparent; color: var(--text-muted); font-weight: 500; display: inline-flex; align-items: center; gap: var(--space-2); }
 .summaryIcon { display: none; }
-@media (max-width: 767px) { .summaryText { display: none; } .summaryIcon { display: block; } }
+/* Contact, after meter & volume: a quiet pill like the meter summary; just
+   the mail icon on narrow screens. Its pop-up shows the email with Copy. */
+.contact { display: inline-flex; align-items: center; gap: var(--space-2); border: 1px solid var(--line); background: transparent; color: var(--text-muted); border-radius: var(--radius-pill); padding: 6px 12px; font: inherit; font-size: var(--text-12); font-weight: 500; cursor: pointer; white-space: nowrap; }
+.contact:hover, .contact[aria-expanded='true'] { border-color: var(--accent); color: var(--text); }
+.contactNote { margin: 0 0 var(--space-2); font-size: var(--text-12); color: var(--text-muted); }
+.contactRow { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3); background: var(--fill); border-radius: var(--radius-md); }
+.contactEmail { min-width: 0; font-weight: 600; font-size: var(--text-14); color: var(--text); user-select: all; white-space: nowrap; }
+.contactMail { display: inline-block; margin-top: var(--space-2); font-size: var(--text-12); color: var(--text-muted); }
+.contactMail:hover { color: var(--text); }
+@media (max-width: 767px) { .summaryText, .contactText { display: none; } .summaryIcon { display: block; } }
 .keyChip { display: inline-flex; align-items: center; padding-left: 0; padding-right: 0; }
 .keyPart { width: 3.2em; text-align: center; font-family: var(--font-mono); font-weight: 700; font-size: var(--text-14); }
 /* Wide enough for the longest mode name (Major Pentatonic) — never cut off. */

@@ -1,16 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Moon, Sun, Monitor, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import s from './TopBar.module.css';
 import { IconButton } from '../ui';
-import { useV2Store, ThemeMode } from '../state/useV2Store';
-
-const NEXT: Record<ThemeMode, ThemeMode> = { dark: 'light', light: 'system', system: 'dark' };
-const ICON: Record<ThemeMode, React.ReactNode> = { dark: <Moon size={16} />, light: <Sun size={16} />, system: <Monitor size={16} /> };
+import { useV2Store } from '../state/useV2Store';
 
 export const TopBar: React.FC = () => {
-  const themeMode = useV2Store(st => st.themeMode);
-  const setThemeMode = useV2Store(st => st.setThemeMode);
   const setOverlay = useV2Store(st => st.setOverlay);
   const link = ({ isActive }: { isActive: boolean }) => [s.link, isActive ? s.on : ''].join(' ');
   return (
@@ -20,7 +15,7 @@ export const TopBar: React.FC = () => {
         <NavLink to="/sight-reading" className={link}>Sight Reading</NavLink>
       </nav>
       <div className={s.right}>
-        <IconButton label={`Theme: ${themeMode}`} icon={ICON[themeMode]} onClick={() => setThemeMode(NEXT[themeMode])} />
+        <button type="button" className={s.about} onClick={() => setOverlay({ kind: 'about' })}>About</button>
         <IconButton label="App settings" icon={<Settings size={16} />} data-sheet-trigger onClick={() => setOverlay({ kind: 'settings' })} />
       </div>
     </header>

@@ -16,11 +16,12 @@ export type ThemeMode = 'dark' | 'light' | 'system';
 export type Overlay =
   | { kind: 'cardSheet'; cardId: string }
   | { kind: 'settings' }
+  | { kind: 'about' }
   | { kind: 'workspace' }
   | null;
 
 /** Dock quick pop-ups — tracked separately so they don't close a sheet. */
-export type PopoverId = 'key' | 'tempo' | 'meter';
+export type PopoverId = 'key' | 'tempo' | 'meter' | 'contact';
 
 /** What Undo puts back: only the removed item, never a whole snapshot. */
 type UndoEntry =

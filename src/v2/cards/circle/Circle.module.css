@@ -17,12 +17,16 @@
 .minor { color: var(--note-chord); }
 .diminished, .augmented { color: var(--text-muted); }
 .relCurrent { color: var(--accent); }
+/* Relative keys: the minor labels are clickable (they look the same). */
+.minorKey { pointer-events: auto; border: none; background: transparent; padding: 2px 4px; border-radius: var(--radius-sm); font-family: inherit; cursor: pointer; }
+.minorKey:hover { color: var(--text); }
+.minorKey.relCurrent { color: var(--accent); }
 .center { position: absolute; inset: 38%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .centerKey { font-family: var(--font-mono); font-weight: 700; font-size: var(--text-20); line-height: 1; }
-/* The middle is ~24% of the circle wide; size the name so its longest word
-   (--chars letters) fits, up to the normal size. Long words drop the tracking. */
-.centerScale { font-size: min(var(--text-11), calc(30cqw / var(--chars, 6))); color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; line-height: 1.15; }
-.centerScale.long { font-size: min(var(--text-11), calc(32cqw / var(--chars, 6))); letter-spacing: 0; }
+/* The middle is ~24% of the circle wide. The scale name is one size for
+   every scale — small enough that the longest word ("Pentatonic") fits — so
+   the middle looks the same whatever's selected. */
+.centerScale { font-size: min(var(--text-11), 3.1cqw); color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; line-height: 1.15; }
 .field { display: flex; flex-direction: column; gap: var(--space-2); }
 .label { font-size: var(--text-12); color: var(--text-muted); }
 .hint { color: var(--text-muted); font-size: var(--text-12); }

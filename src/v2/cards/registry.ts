@@ -86,7 +86,7 @@ export const CARDS: CardDef[] = [
     id: 'harmony',
     title: 'Harmony',
     description: 'Place notes on the neck and see their harmony in the key — numbered in play order.',
-    size: { colSpan: 12, rowSpan: 8 },
+    size: { colSpan: 12, rowSpan: 9 },
     Face: HarmonyFace,
     Sheet: HarmonySheet,
   },

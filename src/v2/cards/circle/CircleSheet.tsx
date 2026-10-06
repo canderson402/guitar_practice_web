@@ -10,12 +10,12 @@ export const CircleSheet: React.FC = () => {
   const [ring, setRing] = useCardPref<Ring>('circle-of-fifths', 'ring', 'chords');
   return (
     <>
-      <div className={s.field}><span className={s.label}>Key &amp; scale</span><KeyPicker /></div>
+      <div className={s.field}><span className={s.label}>Key</span><KeyPicker keyOnly /></div>
       <div className={s.field}><span className={s.label}>Inner ring</span>
         <SegmentedControl<Ring> label="Inner ring" value={ring} onChange={setRing}
           options={[{ value: 'chords', label: 'Chords in the key' }, { value: 'relatives', label: 'Relative keys' }]} />
       </div>
-      <p className={s.hint}>Click any key on the circle to make it the current key.</p>
+      <p className={s.hint}>Click any key on the circle to make it the current key. With relative keys showing, click a minor key for the minor.</p>
     </>
   );
 };

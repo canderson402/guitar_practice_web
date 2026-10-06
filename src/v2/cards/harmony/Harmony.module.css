@@ -2,7 +2,9 @@
 .bar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .muted { color: var(--text-muted); font-size: var(--text-12); }
 .grow { flex: 1; }
-.neck { flex: 1; min-height: 0; display: flex; align-items: center; overflow-x: auto; }
+/* The neck keeps its full height (only scrolls sideways on narrow screens);
+   the melody / harmony rows below take what's left and scroll if long. */
+.neck { flex: none; display: flex; align-items: center; overflow-x: auto; overflow-y: hidden; }
 .neck > * { width: 100%; }
 .legend { display: flex; gap: var(--space-4); flex-wrap: wrap; font-size: var(--text-11); color: var(--text-muted); min-height: 16px; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -13,7 +15,7 @@
 .over .current .field { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
 .label { font-size: var(--text-12); color: var(--text-muted); }
 .inline { display: flex; align-items: center; justify-content: space-between; }
-.rows { display: flex; flex-direction: column; gap: var(--space-1); }
+.rows { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-1); }
 /* Rows don't clip their chips: the strip wraps instead of scrolling. */
 .row { display: flex; align-items: center; gap: var(--space-2); min-height: 32px; }
 .rowLabel { flex: none; width: 64px; font-size: var(--text-11); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }

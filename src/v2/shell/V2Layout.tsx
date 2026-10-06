@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import s from './V2Layout.module.css';
 import { TopBar } from './TopBar';
 import { SettingsSheet } from './SettingsSheet';
+import { AboutModal } from './AboutModal';
 import { ToastHost } from './ToastHost';
 import { useTimerClock } from './useTimerClock';
 import { useReferencePitchSync } from '../state/useReferencePitchSync';
@@ -26,6 +27,7 @@ export const V2Layout: React.FC<{ dock?: React.ReactNode; sheetHost?: React.Reac
       {dock}
       {sheetHost}
       <SettingsSheet />
+      <AboutModal />
       <ToastHost />
     </div>
   );

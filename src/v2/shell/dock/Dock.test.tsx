@@ -153,3 +153,20 @@ it('the key picker highlights the key whichever way it is spelled (C# lights up 
   fireEvent.click(screen.getByTestId('dock-key'));
   expect(screen.getByRole('radio', { name: 'Db' })).toHaveAttribute('aria-checked', 'true');
 });
+
+it('Contact (right end, after meter & volume) shows the email with Copy — no mail app needed — and an optional mail link', async () => {
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.assign(navigator, { clipboard: { writeText } });
+  render(<Dock />);
+  const contact = screen.getByRole('button', { name: 'Contact' });
+  const meter = screen.getByRole('button', { name: /meter & volume/i });
+  // eslint-disable-next-line no-bitwise
+  expect(meter.compareDocumentPosition(contact) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  fireEvent.click(contact);
+  const dialog = screen.getByRole('dialog', { name: 'Contact' });
+  expect(within(dialog).getByText('canderson1192@gmail.com')).toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole('button', { name: /copy/i }));
+  expect(writeText).toHaveBeenCalledWith('canderson1192@gmail.com');
+  expect(await within(dialog).findByText(/copied/i)).toBeInTheDocument();
+  expect(within(dialog).getByRole('link', { name: /mail app/i })).toHaveAttribute('href', 'mailto:canderson1192@gmail.com');
+});

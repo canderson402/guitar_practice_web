@@ -3,12 +3,14 @@ import { useShallow } from 'zustand/react/shallow';
 import s from './Circle.module.css';
 import { useStore } from '../../../store/useStore';
 import { getScaleChords, scales } from '../../../data/musicData';
-import { CIRCLE_KEYS, scaleShortName } from '../../shell/KeyPicker';
+import { CIRCLE_KEYS, scaleShortName, MINOR } from '../../shell/KeyPicker';
 import { chromaticPosition } from '../../music/intervals';
 import { useCardPref } from '../../state/useCardPref';
 
-// Relative minor of each major key, in circle order.
+// Relative minor of each major key, in circle order (their usual spellings).
 const RELATIVE_MINORS = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'D#m', 'Bbm', 'Fm', 'Cm', 'Gm', 'Dm'];
+// Scales the relative-keys ring treats as the minor of the pair.
+const MINOR_SCALES = [MINOR, 'Minor Pentatonic', 'Harmonic Minor'];
 
 type Ring = 'chords' | 'relatives';
 
@@ -29,12 +31,8 @@ const at = (i: number, radius: number) => {
 
 /** The circle of fifths for the shared key and scale: the key's chords are
  *  highlighted with their Roman numerals (or the ring shows relative keys). */
-// The middle of the circle is narrow: the scale name's text shrinks so its
-// longest word (it wraps between words) always fits.
-const longestWord = (name: string) => Math.max(1, ...name.split(/\s+/).map(w => w.length));
-
 export const CircleFace: React.FC = () => {
-  const n = useStore(useShallow(st => ({ root: st.note.selectedNote, scale: st.note.selectedScale, setNote: st.setSelectedNote })));
+  const n = useStore(useShallow(st => ({ root: st.note.selectedNote, scale: st.note.selectedScale, setNote: st.setSelectedNote, setScale: st.setSelectedScale })));
   const [ring] = useCardPref<Ring>('circle-of-fifths', 'ring', 'chords');
   const valid = n.root && n.scale && scales[n.scale as keyof typeof scales] && n.scale !== 'Chromatic';
   const chords = valid ? getScaleChords(n.root!, n.scale as keyof typeof scales) : [];
@@ -42,6 +40,29 @@ export const CircleFace: React.FC = () => {
   const isCurrent = (key: string) => !!n.root && chromaticPosition(key) === chromaticPosition(n.root);
 
   const qualities = ['major', 'minor', 'diminished', 'augmented'].filter(q => q !== 'augmented' || chords.some(c => c.type === q));
+
+  // Relative keys: the key is one of a major / minor pair, marked the same way
+  // either way — the major filled, its relative minor in the accent. The minor
+  // keys can be clicked to make them the key.
+  const rootPc = n.root ? chromaticPosition(n.root) : null;
+  const pairMajor = rootPc === null ? null : MINOR_SCALES.includes(n.scale ?? '') ? (rootPc + 3) % 12 : rootPc;
+  const relativeKeyButtons = (key: string, i: number) => {
+    const minorRoot = RELATIVE_MINORS[i].slice(0, -1);
+    const onPair = chromaticPosition(key) === pairMajor;
+    return (
+      <React.Fragment key={key}>
+        <button type="button" style={at(i, KEY_R)} aria-label={key} onClick={() => n.setNote(key)}
+          className={[s.key, onPair ? s.current : ''].filter(Boolean).join(' ')}>
+          {key}
+        </button>
+        <button type="button" style={at(i, NUMERAL_R)} aria-label={`${minorRoot} minor`}
+          onClick={() => { n.setNote(minorRoot); n.setScale(MINOR); }}
+          className={[s.ringLabel, s.minorKey, onPair ? s.relCurrent : ''].filter(Boolean).join(' ')}>
+          {RELATIVE_MINORS[i]}
+        </button>
+      </React.Fragment>
+    );
+  };
 
   return (
     <div className={s.face}>
@@ -51,8 +72,8 @@ export const CircleFace: React.FC = () => {
           {/* Separates the keys from the inner ring's numerals. */}
           <span className={s.divider} style={ringInset(DIVIDER_R)} aria-hidden="true" />
           <span className={s.inner} style={ringInset(INNER_R)} aria-hidden="true" />
-          {CIRCLE_KEYS.map((key, i) => {
-            const chord = ring === 'chords' ? chordAt(key) : undefined;
+          {ring === 'relatives' ? CIRCLE_KEYS.map(relativeKeyButtons) : CIRCLE_KEYS.map((key, i) => {
+            const chord = chordAt(key);
             const quality = chord?.type ?? '';
             return (
               <React.Fragment key={key}>
@@ -61,23 +82,19 @@ export const CircleFace: React.FC = () => {
                   className={[s.key,
                     // The current key is just highlighted: its chord color (e.g.
                     // diminished grey) would be unreadable on the accent.
-                    isCurrent(key) ? s.current : ring === 'chords' && !chord ? s.dim : s[quality] ?? '',
+                    isCurrent(key) ? s.current : !chord ? s.dim : s[quality] ?? '',
                   ].filter(Boolean).join(' ')}>
                   {key}
                 </button>
-                <span aria-hidden="true" style={at(i, NUMERAL_R)}
-                  className={[s.ringLabel, s[quality] ?? '', ring === 'relatives' && isCurrent(key) ? s.relCurrent : ''].join(' ')}>
-                  {ring === 'chords' ? chord?.roman ?? '' : RELATIVE_MINORS[i]}
+                <span aria-hidden="true" style={at(i, NUMERAL_R)} className={[s.ringLabel, s[quality] ?? ''].join(' ')}>
+                  {chord?.roman ?? ''}
                 </span>
               </React.Fragment>
             );
           })}
           <div className={s.center}>
             <span className={s.centerKey}>{n.root ?? '—'}</span>
-            <span data-testid="circle-scale" className={[s.centerScale, longestWord(scaleShortName(n.scale)) > 7 ? s.long : ''].join(' ')}
-              style={{ ['--chars' as string]: String(longestWord(scaleShortName(n.scale))) }}>
-              {scaleShortName(n.scale)}
-            </span>
+            <span data-testid="circle-scale" className={s.centerScale}>{scaleShortName(n.scale)}</span>
           </div>
         </div>
       </div>

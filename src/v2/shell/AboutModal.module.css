@@ -1,0 +1,54 @@
+.scrim { position: fixed; inset: 0; z-index: 50; background: var(--overlay); display: grid; place-items: center; padding: var(--space-4); animation: about-fade 200ms var(--ease) both; }
+.scrim[data-state='closing'] { animation: about-fade-out 180ms ease-in both; }
+
+/* The panel springs up from below the About button (top right) with a small
+   overshoot and wobble, like a plucked string settling. */
+/* The stage carries the motion; the panel inside it scrolls if it's tall,
+   and the notes sit behind it (outside its scroll box, so they're not cut off). */
+.stage { position: relative; width: min(560px, 100%); transform-origin: 85% 0%; animation: about-pluck 620ms cubic-bezier(.2, .9, .3, 1.2) both; }
+.stage[data-state='closing'] { animation: about-shrink 180ms ease-in both; }
+.panel { position: relative; z-index: 1; max-height: 80vh; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; background: var(--surface-raised); border: 1px solid var(--line-strong); border-radius: var(--radius-lg); box-shadow: var(--elev-3); }
+@keyframes about-pluck {
+  0% { opacity: 0; transform: translateY(-24px) scale(.6) rotate(-3deg); }
+  45% { opacity: 1; transform: translateY(6px) scale(1.04) rotate(1.5deg); }
+  65% { transform: translateY(-2px) scale(.99) rotate(-.8deg); }
+  82% { transform: translateY(1px) scale(1.005) rotate(.3deg); }
+  100% { transform: none; }
+}
+@keyframes about-shrink { to { opacity: 0; transform: translateY(-12px) scale(.9); } }
+@keyframes about-fade { from { opacity: 0; } }
+@keyframes about-fade-out { to { opacity: 0; } }
+
+/* Notes start hidden behind the panel's top edge, pop out above it and
+   drift up, swaying, then fade — once, as it opens. */
+.note { position: absolute; top: 28px; z-index: 0; font-size: 28px; line-height: 1; color: var(--accent); opacity: 0; pointer-events: none; animation: about-note 1500ms cubic-bezier(.2, .7, .4, 1) both; }
+.note:nth-child(even) { color: var(--note-scale); font-size: 22px; animation-duration: 1700ms; }
+.note:nth-child(3n) { color: var(--note-chord); }
+@keyframes about-note {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  12% { opacity: 1; }
+  40% { transform: translate(-10px, -90px) rotate(-12deg); }
+  70% { opacity: .8; transform: translate(8px, -150px) rotate(10deg); }
+  100% { opacity: 0; transform: translate(-4px, -200px) rotate(-6deg); }
+}
+
+.close { position: absolute; top: var(--space-3); right: var(--space-3); z-index: 2; }
+.body { position: relative; z-index: 1; padding: var(--space-6) var(--space-6) var(--space-5); }
+.body h2 { margin: 0 0 var(--space-3); font-family: var(--font-display); font-size: var(--text-24); background: var(--gradient-signature); background-origin: border-box; -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* ## sections stand above ### items (e.g. each card). */
+.body h3 { margin: var(--space-6) 0 var(--space-2); font-family: var(--font-display); font-size: var(--text-20); color: var(--text); }
+.body h4 { margin: var(--space-4) 0 var(--space-1); font-size: var(--text-14); color: var(--accent); }
+.body ul ul { margin-top: var(--space-1); }
+.body strong { color: var(--text); }
+.body code { font-family: var(--font-mono); font-size: .9em; background: var(--fill); padding: 1px 5px; border-radius: var(--radius-sm); }
+.body a { color: var(--accent); }
+.body p, .body li { margin: 0 0 var(--space-2); color: var(--text-muted); font-size: var(--text-14); line-height: 1.55; }
+.body ul { margin: 0; padding-left: var(--space-5); }
+.contact { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.contact h3 { margin-top: 0; font-size: var(--text-16); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stage, .stage[data-state='closing'] { animation: about-fade 150ms linear both; transform: none; }
+  .stage[data-state='closing'] { animation-name: about-fade-out; }
+  .note { display: none; }
+}
