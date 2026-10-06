@@ -270,6 +270,10 @@ export const configurationPresets: ConfigurationPreset[] = [
  *  fretboard-consuming components respect this flag. */
 export type ViewMode = 'fretboard' | 'piano';
 
+/** Tempo ladder: from `start`, the tempo goes up by `step` every `every`
+ *  bars (or every `seconds` of playing), then holds at `top`. */
+export interface TempoLadder { on: boolean; start: number; top: number; step: number; every: number; seconds: number; unit: 'bars' | 'time' }
+
 interface StoreState {
   timer: TimerState;
   metronome: MetronomeState;
@@ -364,6 +368,8 @@ interface StoreState {
   setJamDrumPattern: (pattern: DrumPatternName) => void;
   setJamBarsPerChord: (bars: number) => void;
   setJamCountIn: (countIn: number) => void;
+  tempoLadder: TempoLadder;
+  setTempoLadder: (patch: Partial<TempoLadder>) => void;
   /** Volume of the guitar / piano samples (0–100; 50 = as recorded). */
   noteVolumes: { guitar: number; piano: number };
   setNoteVolume: (instrument: 'guitar' | 'piano', volume: number) => void;
@@ -422,6 +428,7 @@ export const appPrefs = (s: StoreState) => ({
   noteReading: pick(s.noteReading, ['mode', 'fretCount', 'phraseBars', 'phraseKey', 'phraseNotesPerBar', 'trebleEnabled', 'bassEnabled']),
   viewMode: s.viewMode,
   noteVolumes: s.noteVolumes,
+  tempoLadder: s.tempoLadder,
 });
 type AppPrefs = ReturnType<typeof appPrefs>;
 
@@ -461,6 +468,7 @@ export const mergeAppPrefs = (persisted: unknown, current: StoreState): StoreSta
     noteReading: over(current.noteReading, p.noteReading, keys('noteReading')),
     viewMode: p.viewMode === 'piano' || p.viewMode === 'fretboard' ? p.viewMode : current.viewMode,
     noteVolumes: over(current.noteVolumes, p.noteVolumes, ['guitar', 'piano']),
+    tempoLadder: ((l) => (l.unit === 'bars' || l.unit === 'time' ? l : { ...l, unit: 'bars' as const }))(over(current.tempoLadder, p.tempoLadder, ['on', 'start', 'top', 'step', 'every', 'seconds', 'unit'])),
   };
 };
 
@@ -889,6 +897,13 @@ export const useStore = create<StoreState>()(persist((set) => ({
   setJamCountIn: (countIn) => set((state) => ({
     jam: { ...state.jam, countIn: Math.max(0, countIn) },
   })),
+  tempoLadder: { on: false, start: 80, top: 120, step: 5, every: 4, seconds: 120, unit: 'bars' },
+  setTempoLadder: (patch) => set((state) => {
+    const l = { ...state.tempoLadder, ...patch };
+    const whole = (v: number, min: number) => Math.max(min, Math.round(v));
+    const start = whole(l.start, 1);
+    return { tempoLadder: { ...l, start, top: Math.max(start, whole(l.top, 1)), step: whole(l.step, 1), every: whole(l.every, 1), seconds: whole(l.seconds, 1) } };
+  }),
   noteVolumes: { guitar: 80, piano: 50 },
   setNoteVolume: (instrument, volume) => set((state) => ({
     noteVolumes: { ...state.noteVolumes, [instrument]: Math.max(0, Math.min(100, volume)) },

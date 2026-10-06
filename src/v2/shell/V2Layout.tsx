@@ -10,16 +10,18 @@ import { useReferencePitchSync } from '../state/useReferencePitchSync';
 import { useClickVolumeSync } from '../state/useClickVolumeSync';
 import { useMasterVolumeSync } from '../state/useMasterVolumeSync';
 import { useNoteVolumeSync } from '../state/useNoteVolumeSync';
+import { useTempoLadder } from '../state/useTempoLadder';
 
 /** The v2 frame. Also keeps the audio engine in line with the saved
  *  settings: master volume and mute, click volume, guitar / piano note
- *  volumes, and reference pitch. */
+ *  volumes, and reference pitch — and runs the tempo ladder. */
 export const V2Layout: React.FC<{ dock?: React.ReactNode; sheetHost?: React.ReactNode }> = ({ dock, sheetHost }) => {
   useMasterVolumeSync();
   useTimerClock();
   useReferencePitchSync();
   useClickVolumeSync();
   useNoteVolumeSync();
+  useTempoLadder();
   return (
     <div className={s.frame}>
       <TopBar />

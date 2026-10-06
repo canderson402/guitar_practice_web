@@ -20,3 +20,4 @@ export { EditableNumber } from './EditableNumber';
 export { TimeSignatureInput } from './TimeSignatureInput';
 export { Disclosure } from './Disclosure';
 export { ChipButton, ChipSub } from './ChipButton';
+export { DurationInput } from './DurationInput';

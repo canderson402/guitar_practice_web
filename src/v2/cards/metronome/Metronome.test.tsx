@@ -82,3 +82,42 @@ it('the face fits a small card: tempo steps and Play share a row, the subdivisio
   expect(within(row).getByRole('button', { name: 'Increase tempo by 1' })).toBeInTheDocument();
   expect(within(row).queryByRole('radiogroup', { name: 'Subdivision' })).toBeNull();
 });
+
+describe('tempo ladder', () => {
+  beforeEach(() => act(() => useStore.getState().setTempoLadder({ on: false, start: 80, top: 120, step: 5, every: 4, seconds: 120, unit: 'bars' })));
+
+  it('settings: a "Tempo ladder" section sets it up — on, start, top, step, every N bars', () => {
+    render(<MetronomeSheet />);
+    fireEvent.click(screen.getByRole('button', { name: /tempo ladder/i }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Tempo ladder' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Increase ladder top tempo by 5' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Increase ladder step by 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease ladder bars by 1' }));
+    expect(useStore.getState().tempoLadder).toMatchObject({ on: true, start: 80, top: 125, step: 6, every: 3, unit: 'bars' });
+  });
+
+  it('settings: or every so much time — one field, minutes : seconds', () => {
+    render(<MetronomeSheet />);
+    fireEvent.click(screen.getByRole('button', { name: /tempo ladder/i }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Time' }));
+    expect(screen.queryByRole('button', { name: 'Decrease ladder bars by 1' })).toBeNull();
+    const field = screen.getByRole('group', { name: 'Ladder time' });
+    expect(field).toHaveTextContent('2:00');
+    fireEvent.click(within(field).getByRole('button', { name: /minutes/i }));
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes' }), { target: { value: '3' } });
+    fireEvent.keyDown(screen.getByRole('spinbutton', { name: 'Minutes' }), { key: 'Enter' });
+    fireEvent.click(within(field).getByRole('button', { name: /seconds/i }));
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Seconds' }), { target: { value: '5' } });
+    fireEvent.keyDown(screen.getByRole('spinbutton', { name: 'Seconds' }), { key: 'Enter' });
+    expect(useStore.getState().tempoLadder).toMatchObject({ unit: 'time', seconds: 185 });
+    expect(field).toHaveTextContent('3:05');
+  });
+
+  it('is off by default, and the card face never shows it (it lives in settings)', () => {
+    expect(useStore.getInitialState().tempoLadder.on).toBe(false);
+    act(() => useStore.getState().setTempoLadder({ on: true }));
+    render(<MetronomeFace />);
+    expect(screen.queryByText(/ladder/i)).toBeNull();
+    expect(screen.queryByRole('switch', { name: 'Tempo ladder' })).toBeNull();
+  });
+});
