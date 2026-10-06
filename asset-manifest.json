@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/guitar_practice_web/static/css/main.139de7b6.css",
-    "main.js": "/guitar_practice_web/static/js/main.f248014e.js",
-    "static/js/453.48b64c58.chunk.js": "/guitar_practice_web/static/js/453.48b64c58.chunk.js",
+    "main.css": "/guitar_practice_web/static/css/main.25a76b77.css",
+    "main.js": "/guitar_practice_web/static/js/main.61ac4d1e.js",
+    "static/js/206.c4040007.chunk.js": "/guitar_practice_web/static/js/206.c4040007.chunk.js",
     "static/media/inter-latin-ext-600-normal.woff": "/guitar_practice_web/static/media/inter-latin-ext-600-normal.4d0d5017d71ea1750fc1.woff",
     "static/media/inter-latin-ext-700-normal.woff": "/guitar_practice_web/static/media/inter-latin-ext-700-normal.d4a91814dd3f1e022ab1.woff",
     "static/media/inter-latin-ext-500-normal.woff": "/guitar_practice_web/static/media/inter-latin-ext-500-normal.2f93aaa35e870cec4704.woff",
@@ -95,13 +95,10 @@
     "static/media/jetbrains-mono-cyrillic-ext-700-normal.woff": "/guitar_practice_web/static/media/jetbrains-mono-cyrillic-ext-700-normal.7a2e45f316108b48ea72.woff",
     "index.html": "/guitar_practice_web/index.html",
     "static/media/jetbrains-mono-cyrillic-ext-500-normal.woff2": "/guitar_practice_web/static/media/jetbrains-mono-cyrillic-ext-500-normal.12b2790f450a0135a4cd.woff2",
-    "static/media/jetbrains-mono-cyrillic-ext-700-normal.woff2": "/guitar_practice_web/static/media/jetbrains-mono-cyrillic-ext-700-normal.5ec92f9402c68a8c4489.woff2",
-    "main.139de7b6.css.map": "/guitar_practice_web/static/css/main.139de7b6.css.map",
-    "main.f248014e.js.map": "/guitar_practice_web/static/js/main.f248014e.js.map",
-    "453.48b64c58.chunk.js.map": "/guitar_practice_web/static/js/453.48b64c58.chunk.js.map"
+    "static/media/jetbrains-mono-cyrillic-ext-700-normal.woff2": "/guitar_practice_web/static/media/jetbrains-mono-cyrillic-ext-700-normal.5ec92f9402c68a8c4489.woff2"
   },
   "entrypoints": [
-    "static/css/main.139de7b6.css",
-    "static/js/main.f248014e.js"
+    "static/css/main.25a76b77.css",
+    "static/js/main.61ac4d1e.js"
   ]
 }
