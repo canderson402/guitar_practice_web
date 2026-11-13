@@ -1,0 +1,58 @@
+.page { max-width: 880px; margin: 0 auto; padding: var(--space-6) var(--space-4); display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+.title { font-size: var(--text-32); }
+
+/* Title row: the settings live in a side panel; only a quiet summary shows here. */
+.top { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); position: relative; width: 100%; }
+.top > :last-child { position: absolute; top: 0; right: 0; }
+.summary { border: none; background: transparent; color: var(--text-muted); font-size: var(--text-12); cursor: pointer; padding: 2px var(--space-2); border-radius: var(--radius-sm); }
+.summary:hover { color: var(--text); background: var(--fill); }
+
+/* Side panel. */
+.panel { display: flex; flex-direction: column; gap: var(--space-5); }
+.field { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+.fieldLabel { font-size: var(--text-12); color: var(--text-muted); font-weight: 600; }
+.switchField { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-12); color: var(--text-muted); }
+.presets { display: flex; gap: 2px; background: var(--fill); border-radius: var(--radius-sm); padding: 2px; }
+.preset { border: none; background: transparent; color: var(--text-muted); border-radius: 5px; height: 26px; padding: 0 var(--space-3); font-size: var(--text-12); font-weight: 500; cursor: pointer; }
+.preset.on { background: var(--text); color: var(--text-inverse); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.chip { display: flex; height: 28px; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; color: var(--text-muted); }
+.chip.on { background: var(--fill); border-color: var(--line-strong); color: var(--text); }
+.chipToggle { min-width: 36px; border: none; background: transparent; color: inherit; font-family: var(--font-mono); font-weight: 600; font-size: var(--text-12); cursor: pointer; }
+.chipListen { width: 24px; border: none; border-left: 1px solid var(--line); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.chipListen:hover { color: var(--text); }
+
+/* The practice card. */
+.card { width: 100%; min-height: 260px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); }
+.center { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+.hint { color: var(--text-muted); font-size: var(--text-12); text-align: center; }
+.promptLine { width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--space-3); }
+.promptLine > :last-child { justify-self: end; }
+.score { font-family: var(--font-mono); font-weight: 700; font-size: var(--text-20); font-variant-numeric: tabular-nums; }
+.feedback { font-weight: 600; font-size: var(--text-16); min-height: 24px; }
+.good { color: var(--success); }
+.bad { color: var(--danger); }
+
+.answers { width: 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--space-2); }
+.answer { position: relative; display: flex; align-items: center; justify-content: center; height: 48px; padding: 0 var(--space-3); border: 1px solid var(--line); background: var(--fill); color: var(--text); border-radius: var(--radius-md); cursor: pointer; }
+.answer:hover { border-color: var(--line-strong); }
+.answerName { font-weight: 600; font-size: var(--text-14); }
+.hotkey { position: absolute; top: 3px; right: 6px; font-family: var(--font-mono); font-size: var(--text-11); color: var(--text-muted); }
+.right { background: var(--success); border-color: var(--success); color: var(--text-inverse); }
+.right .hotkey { color: inherit; }
+/* "CORRECT!" rises out of the button that was clicked and fades. */
+.pop { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); pointer-events: none; white-space: nowrap; font-weight: 800; font-size: var(--text-20); letter-spacing: .06em; color: var(--success); animation: rise 900ms ease-out forwards; z-index: 2; }
+@keyframes rise {
+  0% { opacity: 0; transform: translate(-50%, 12px) scale(.8); }
+  20% { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+  100% { opacity: 0; transform: translate(-50%, -48px) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pop { animation: fade 700ms ease-out forwards; }
+  @keyframes fade { 0% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%); } }
+}
+.wrong { background: transparent; color: var(--danger); border-color: var(--danger); }
+.controls { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
+
+/* The fretboard / piano under the practice card. */
+.board { width: 100%; overflow-x: auto; }

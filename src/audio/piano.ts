@@ -36,6 +36,8 @@ export const playPianoNote = async (
   midi: number,
   duration = 1.2,
   time?: number,
+  /** Tag the note so stopPianoNotes(stopId) can cut it early. */
+  stopId?: string,
 ): Promise<void> => {
   // Still downloading: play a synth tone now rather than queueing the note
   // to sound late (all at once) when the samples arrive.
@@ -49,9 +51,14 @@ export const playPianoNote = async (
   if (ctx.state === 'suspended') void ctx.resume();
   // Samples are recorded at A4 = 440: retune them to the reference pitch.
   const detune = referenceCents();
-  piano.start(
-    time !== undefined
-      ? { note: midi, duration, time, detune }
-      : { note: midi, duration, detune },
-  );
+  piano.start({
+    note: midi, duration, detune,
+    ...(time !== undefined ? { time } : {}),
+    ...(stopId !== undefined ? { stopId } : {}),
+  });
+};
+
+/** Cut notes started with this stopId now, including ones not yet sounding. */
+export const stopPianoNotes = (stopId: string): void => {
+  piano?.stop(stopId);
 };

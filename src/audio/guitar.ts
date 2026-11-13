@@ -33,6 +33,8 @@ export const playGuitarNote = async (
   midi: number,
   duration = 1.2,
   time?: number,
+  /** Tag the note so stopGuitarNotes(stopId) can cut it early. */
+  stopId?: string,
 ): Promise<void> => {
   // Still downloading: play a synth tone now rather than queueing the note
   // to sound late (all at once) when the samples arrive.
@@ -46,9 +48,14 @@ export const playGuitarNote = async (
   if (ctx.state === 'suspended') void ctx.resume();
   // Samples are recorded at A4 = 440: retune them to the reference pitch.
   const detune = referenceCents();
-  guitar.start(
-    time !== undefined
-      ? { note: midi, duration, time, detune }
-      : { note: midi, duration, detune },
-  );
+  guitar.start({
+    note: midi, duration, detune,
+    ...(time !== undefined ? { time } : {}),
+    ...(stopId !== undefined ? { stopId } : {}),
+  });
+};
+
+/** Cut notes started with this stopId now, including ones not yet sounding. */
+export const stopGuitarNotes = (stopId: string): void => {
+  guitar?.stop(stopId);
 };

@@ -8,6 +8,7 @@ import { CardSheetHost } from './cards/CardSheetHost';
 import { PracticePage } from './pages/PracticePage';
 import { KitPage } from './pages/KitPage';
 import { SightReadingPage } from './sight/SightReadingPage';
+import { EarTrainingPage } from './ear/EarTrainingPage';
 
 const V2App: React.FC = () => {
   const themeMode = useV2Store(s => s.themeMode);
@@ -18,6 +19,7 @@ const V2App: React.FC = () => {
         <Route element={<V2Layout dock={<Dock />} sheetHost={<CardSheetHost />} />}>
           <Route index element={<PracticePage />} />
           <Route path="sight-reading" element={<SightReadingPage />} />
+          <Route path="ear-training" element={<EarTrainingPage />} />
           <Route path="read" element={<Navigate to="/sight-reading" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

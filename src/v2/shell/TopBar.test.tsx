@@ -9,10 +9,10 @@ beforeEach(() => act(() => useV2Store.setState(useV2Store.getInitialState(), tru
 
 const renderAt = (path: string) => render(<MemoryRouter initialEntries={[path]}><TopBar /></MemoryRouter>);
 
-it('shows just the two sections — Practice and Sight Reading (no Learn, no logo or app name)', () => {
+it('shows just the three sections — Practice, Sight Reading and Ear Training (no Learn, no logo or app name)', () => {
   renderAt('/sight-reading');
   expect(screen.queryByText(BRAND.name)).toBeNull();
-  expect(screen.getAllByRole('link').map(l => l.textContent)).toEqual(['Practice', 'Sight Reading']);
+  expect(screen.getAllByRole('link').map(l => l.textContent)).toEqual(['Practice', 'Sight Reading', 'Ear Training']);
   expect(screen.getByRole('link', { name: 'Sight Reading' })).toHaveAttribute('aria-current', 'page');
   expect(screen.getByRole('link', { name: 'Practice' })).not.toHaveAttribute('aria-current');
   expect(screen.queryByRole('link', { name: 'Learn' })).toBeNull();

@@ -13,6 +13,7 @@ export const TopBar: React.FC = () => {
       <nav className={s.nav} aria-label="Sections">
         <NavLink to="/" end className={link}>Practice</NavLink>
         <NavLink to="/sight-reading" className={link}>Sight Reading</NavLink>
+        <NavLink to="/ear-training" className={link}>Ear Training</NavLink>
       </nav>
       <div className={s.right}>
         <button type="button" className={s.about} onClick={() => setOverlay({ kind: 'about' })}>About</button>
